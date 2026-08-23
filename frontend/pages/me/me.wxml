@@ -1,0 +1,55 @@
+<view class="page">
+  <view class="page-body">
+    <view class="header">
+      <view class="header-title">我的</view>
+      <view class="icon-btn">⚙</view>
+    </view>
+
+    <view class="card card-pad profile-card">
+      <view class="avatar">{{me.avatar}}</view>
+      <view class="profile-main">
+        <view class="item-title">{{me.name}}</view>
+        <view class="item-meta">目标：{{me.goal}} · 已坚持 {{me.streak}}</view>
+      </view>
+      <view class="profile-arrow">›</view>
+    </view>
+
+    <view class="spacer-24"></view>
+    <view class="grid-2">
+      <view class="card card-pad">
+        <view class="muted">身高</view>
+        <view class="item-title">{{me.height}}</view>
+      </view>
+      <view class="card card-pad">
+        <view class="muted">体重</view>
+        <view class="item-title">{{me.weight}}</view>
+      </view>
+      <view class="card card-pad">
+        <view class="muted">本月训练</view>
+        <view class="item-title">{{me.trainingCount}}</view>
+      </view>
+      <view class="card card-pad">
+        <view class="muted">连续记录</view>
+        <view class="item-title">{{me.streak}}</view>
+      </view>
+    </view>
+
+    <view class="spacer-24"></view>
+    <view class="list">
+      <view class="list-item menu" bindtap="goBody">
+        <text>📈 身体数据</text><text>></text>
+      </view>
+      <view class="list-item menu" bindtap="goTrainingHistory">
+        <text>🏋 训练历史</text><text>></text>
+      </view>
+      <view class="list-item menu" bindtap="goFavorites">
+        <text>♡ 收藏动作</text><text>></text>
+      </view>
+      <view class="list-item menu" bindtap="goPrivacy">
+        <text>🔒 隐私与数据</text><text>></text>
+      </view>
+    </view>
+  </view>
+
+  <bottom-nav active="/pages/me/me" current="/pages/me/me" bind:change="onBottomNav" />
+</view>

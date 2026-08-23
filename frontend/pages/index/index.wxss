@@ -1,0 +1,54 @@
+@import "../../styles/common.wxss";
+
+.page-body {
+  padding-top: 140rpx;
+}
+
+.brand {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16rpx;
+  margin-bottom: 42rpx;
+}
+
+.logo {
+  width: 200rpx;
+  height: 200rpx;
+  border-radius: 52rpx;
+  background: #4f8168;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 72rpx;
+}
+
+.brand-title {
+  font-size: 54rpx;
+  font-weight: 800;
+}
+
+.brand-subtitle {
+  color: #6d8077;
+  font-size: 28rpx;
+}
+
+.hero {
+  height: 420rpx;
+  margin-bottom: 28rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(180deg, #a9c3ae 0%, #dcead9 100%);
+}
+
+.runner {
+  font-size: 104rpx;
+}
+
+.agreement {
+  text-align: center;
+  color: #7b8e84;
+  font-size: 24rpx;
+  margin-top: 28rpx;
+}

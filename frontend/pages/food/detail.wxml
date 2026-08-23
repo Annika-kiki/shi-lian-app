@@ -1,0 +1,56 @@
+<view class="page">
+  <scroll-view class="page-scroll" scroll-y="true">
+    <view class="page-body">
+      <view class="header">
+        <view class="icon-btn" bindtap="onBottomNav" data-route="/pages/food/home">←</view>
+        <text class="header-title">食谱详情</text>
+        <view class="icon-btn">♡</view>
+      </view>
+
+      <view class="hero card">
+        <view class="hero-mark">🍅</view>
+      </view>
+
+      <view class="spacer-24"></view>
+      <view class="item-title">{{recipe.name}}</view>
+      <view class="item-meta">{{recipe.minutes}} 分钟 · 高蛋白 · 少油</view>
+
+      <view class="spacer-24"></view>
+      <view class="grid-2">
+        <view class="card card-pad">
+          <view class="muted">热量</view>
+          <view class="item-title">{{recipe.kcal}} kcal</view>
+        </view>
+        <view class="card card-pad">
+          <view class="muted">蛋白质</view>
+          <view class="item-title">{{recipe.protein}} g</view>
+        </view>
+      </view>
+
+      <view class="spacer-24"></view>
+      <view class="card card-pad">
+        <view class="section-title">食材</view>
+        <block wx:for="{{recipe.ingredients}}" wx:key="name">
+          <view class="row-between ingredient">
+            <text>{{item.name}}</text>
+            <text>{{item.amount}}</text>
+          </view>
+        </block>
+      </view>
+
+      <view class="spacer-24"></view>
+      <view class="card card-pad">
+        <view class="section-title">步骤</view>
+        <block wx:for="{{recipe.steps}}" wx:key="index">
+          <view class="step">{{index + 1}}. {{item}}</view>
+        </block>
+      </view>
+
+      <view class="spacer-24"></view>
+      <view class="btn" bindtap="saveMeal">记入今日饮食</view>
+      <view class="footer-space"></view>
+    </view>
+  </scroll-view>
+
+  <bottom-nav active="/pages/food/home" current="/pages/food/detail" bind:change="onBottomNav" />
+</view>

@@ -1,0 +1,46 @@
+<view class="page">
+  <view class="page-body">
+    <view class="header">
+      <view class="icon-btn" bindtap="onBottomNav" data-route="/pages/training/home">×</view>
+      <text class="header-title">训练记录</text>
+      <view class="header-subtitle">历史</view>
+    </view>
+
+    <view class="card card-soft card-pad">
+      <view class="muted">正在训练 · {{workout.part}}</view>
+      <view class="item-title">{{workout.name}}</view>
+      <view class="item-meta">已训练 {{workout.startedAt}} · 预计消耗 {{workout.kcal}} kcal</view>
+    </view>
+
+    <view class="spacer-24"></view>
+    <view class="row-between muted">
+      <text>组</text>
+      <text>重量 kg</text>
+      <text>次数</text>
+      <text>完成</text>
+    </view>
+
+    <view class="spacer-24"></view>
+    <view class="list">
+      <block wx:for="{{sets}}" wx:key="group">
+        <view class="row-between set-row">
+          <view class="set-index">{{item.group}}</view>
+          <view class="set-box">{{item.weight}}</view>
+          <view class="set-box">{{item.reps}}</view>
+          <view class="set-done {{item.done ? 'done' : ''}}" data-index="{{index}}" bindtap="toggleDone">{{item.done ? '✓' : ''}}</view>
+        </view>
+      </block>
+    </view>
+
+    <view class="spacer-24"></view>
+    <view class="list-item add-row" bindtap="addSet">
+      <view>+ 添加一组</view>
+      <view class="muted">休息 01:08</view>
+    </view>
+
+    <view class="spacer-24"></view>
+    <view class="btn" bindtap="finishWorkout">完成本次训练</view>
+  </view>
+
+  <bottom-nav active="/pages/training/home" current="/pages/training/record" bind:change="onBottomNav" />
+</view>

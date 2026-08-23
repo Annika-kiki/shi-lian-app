@@ -1,0 +1,48 @@
+<view class="page">
+  <view class="page-body">
+    <view class="header">
+      <view>
+        <text class="header-subtitle">今天练什么？</text>
+        <view class="header-title">训练</view>
+      </view>
+      <view class="icon-btn">⌕</view>
+    </view>
+
+    <view class="card card-soft card-pad">
+      <view class="muted">今日建议</view>
+      <view class="spacer-24"></view>
+      <view class="item-title">{{summary.focus}}</view>
+      <view class="item-meta">{{summary.moves}} 个动作 · 约 {{summary.minutes}} 分钟</view>
+      <view class="spacer-24"></view>
+      <view class="btn" bindtap="openRecent">开始训练</view>
+    </view>
+
+    <view class="spacer-24"></view>
+    <text class="section-title">按部位查找</text>
+    <view class="grid-3">
+      <block wx:for="{{bodyParts}}" wx:key="part">
+        <view class="card card-pad part-card" data-part="{{item.part}}" bindtap="openList">
+          <view class="part-icon">{{item.icon}}</view>
+          <view class="part-label">{{item.label}}</view>
+        </view>
+      </block>
+    </view>
+
+    <view class="spacer-24"></view>
+    <view class="row-between">
+      <text class="section-title">最近训练</text>
+      <text class="muted" bindtap="openList" data-part="all">全部 ></text>
+    </view>
+    <view class="list-item" bindtap="openRecent">
+      <view class="row-between">
+        <view>
+          <view class="item-title">{{summary.recent.title}}</view>
+          <view class="item-meta">{{summary.recent.detail}}</view>
+        </view>
+        <view class="item-title">{{summary.recentDate}}</view>
+      </view>
+    </view>
+  </view>
+
+  <bottom-nav active="/pages/training/home" current="/pages/training/home" bind:change="onBottomNav" />
+</view>

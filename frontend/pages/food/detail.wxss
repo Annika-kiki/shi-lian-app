@@ -1,0 +1,37 @@
+@import "../../styles/common.wxss";
+
+.page {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.page-scroll {
+  flex: 1;
+  min-height: 0;
+}
+
+.hero {
+  height: 300rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(180deg, #4f8168 0%, #9ab99f 100%);
+}
+
+.hero-mark {
+  font-size: 96rpx;
+}
+
+.ingredient,
+.step {
+  font-size: 28rpx;
+  padding: 18rpx 0;
+  border-bottom: 2rpx solid #eee6d8;
+}
+
+.step:last-child,
+.ingredient:last-child {
+  border-bottom: 0;
+}

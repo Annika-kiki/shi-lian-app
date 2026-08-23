@@ -1,0 +1,57 @@
+<view class="page">
+  <view class="page-body">
+    <view class="header">
+      <view class="icon-btn" bindtap="onBottomNav" data-route="/pages/me/me">←</view>
+      <text class="header-title">身体数据</text>
+      <view class="header-subtitle">+ 记录</view>
+    </view>
+
+    <view class="grid-2">
+      <view class="card card-pad">
+        <view class="muted">当前体重</view>
+        <view class="item-title">{{weightText}} kg</view>
+      </view>
+      <view class="card card-pad">
+        <view class="muted">近 30 天</view>
+        <view class="item-title">↓ {{last30DaysText}} kg</view>
+      </view>
+    </view>
+
+    <view class="spacer-24"></view>
+    <view class="card card-pad">
+      <view class="row-between">
+        <text class="section-title">体重趋势</text>
+        <text class="muted">近 30 天</text>
+      </view>
+      <view class="chart">
+        <block wx:for="{{chartBars}}" wx:key="index">
+          <view class="chart-bar" style="height: {{item.height}}rpx; left: {{item.left}};">
+            <view class="dot"></view>
+          </view>
+        </block>
+        <view class="chart-axis">
+          <block wx:for="{{labels}}" wx:key="*this">
+            <text>{{item}}</text>
+          </block>
+        </view>
+      </view>
+    </view>
+
+    <view class="spacer-24"></view>
+    <view class="card card-pad">
+      <view class="row-between">
+        <text class="section-title">目标体重</text>
+        <text class="item-title">{{goalWeightText}} kg</text>
+      </view>
+      <view class="row-between summary-line">
+        <text>距离目标</text>
+        <text class="item-title">还差 {{distanceText}} kg</text>
+      </view>
+    </view>
+
+    <view class="spacer-24"></view>
+    <view class="btn" bindtap="recordWeight">记录今天体重</view>
+  </view>
+
+  <bottom-nav active="/pages/me/me" current="/pages/body/body" bind:change="onBottomNav" />
+</view>

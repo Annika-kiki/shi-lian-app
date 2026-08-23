@@ -1,0 +1,19 @@
+<view class="page">
+  <view class="page-body">
+    <view class="brand">
+      <view class="logo">🍃</view>
+      <text class="brand-title">练食记</text>
+      <text class="brand-subtitle">记录每一次训练，吃好每一餐</text>
+    </view>
+
+    <view class="hero card">
+      <view class="runner">🏃</view>
+    </view>
+
+    <view class="btn" bindtap="goProfile">微信一键登录</view>
+    <view class="spacer-24"></view>
+    <view class="btn btn-outline" bindtap="skip">先逛一逛</view>
+
+    <view class="agreement">登录即代表同意《用户协议》和《隐私政策》</view>
+  </view>
+</view>

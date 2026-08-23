@@ -1,0 +1,38 @@
+@import "../../styles/common.wxss";
+
+.week-row,
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 14rpx;
+}
+
+.week-row {
+  margin-bottom: 18rpx;
+  color: #7b8e84;
+  font-size: 26rpx;
+  text-align: center;
+}
+
+.day {
+  height: 92rpx;
+  border-radius: 20rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  background: transparent;
+  font-size: 28rpx;
+}
+
+.marked {
+  background: #dfeedd;
+}
+
+.selected {
+  border: 4rpx solid #4f8168;
+}
+
+.summary-line {
+  padding-top: 18rpx;
+}

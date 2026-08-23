@@ -1,0 +1,33 @@
+@import "../../styles/common.wxss";
+
+.page {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.page-scroll {
+  flex: 1;
+  min-height: 0;
+}
+
+.input-box {
+  width: 100%;
+  height: 94rpx;
+  border: 2rpx solid #d8cfbe;
+  border-radius: 24rpx;
+  padding: 0 28rpx;
+  box-sizing: border-box;
+  font-size: 30rpx;
+  background: #fffdf8;
+}
+
+.chip {
+  gap: 10rpx;
+}
+
+.chip-x {
+  font-size: 24rpx;
+  color: #6d8077;
+}

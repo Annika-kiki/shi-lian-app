@@ -1,0 +1,20 @@
+@import "../../styles/common.wxss";
+
+.part-card {
+  min-height: 168rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12rpx;
+  text-align: center;
+}
+
+.part-icon {
+  font-size: 42rpx;
+}
+
+.part-label {
+  font-size: 28rpx;
+  font-weight: 700;
+}

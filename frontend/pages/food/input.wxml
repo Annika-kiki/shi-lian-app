@@ -1,0 +1,54 @@
+<view class="page">
+  <scroll-view class="page-scroll" scroll-y="true">
+    <view class="page-body">
+      <view class="header">
+        <view class="icon-btn" bindtap="onBottomNav" data-route="/pages/food/home">←</view>
+        <text class="header-title">用现有食材做一餐</text>
+        <view class="header-subtitle">输入越快越好</view>
+      </view>
+
+      <text class="muted">输入家里已有的食材，AI 帮你搭配</text>
+
+      <view class="spacer-24"></view>
+      <text class="section-title">已有食材</text>
+      <view class="card card-pad">
+        <view class="pill-row">
+          <block wx:for="{{chips}}" wx:key="index">
+            <view class="pill chip" data-index="{{index}}" bindtap="removeChip">
+              <text>{{item}}</text>
+              <text class="chip-x">×</text>
+            </view>
+          </block>
+        </view>
+        <view class="spacer-24"></view>
+        <input class="input-box" placeholder="继续输入食材..." value="{{inputValue}}" bindinput="onInput" confirm-type="done" bindconfirm="addChip" />
+        <view class="spacer-24"></view>
+        <view class="btn btn-outline" bindtap="addChip">添加食材</view>
+      </view>
+
+      <view class="spacer-24"></view>
+      <text class="section-title">这顿想吃多少</text>
+      <view class="pill-row">
+        <block wx:for="{{calorieOptions}}" wx:key="*this">
+          <view class="pill {{calories === item ? 'pill-active' : ''}}" data-value="{{item}}" bindtap="setCalories">{{item}}</view>
+        </block>
+      </view>
+
+      <view class="spacer-24"></view>
+      <text class="section-title">偏好</text>
+      <view class="pill-row">
+        <block wx:for="{{tastes}}" wx:key="label">
+          <view class="pill {{item.selected ? 'pill-active' : ''}}" data-value="{{item.label}}" bindtap="toggleTaste">{{item.label}}</view>
+        </block>
+      </view>
+
+      <view class="spacer-24"></view>
+      <view class="card card-pad muted">AI 将决定菜品和食材克数，营养数据由数据库计算。</view>
+
+      <view class="spacer-24"></view>
+      <view class="btn" bindtap="generate">✨ 生成食谱</view>
+    </view>
+  </scroll-view>
+
+  <bottom-nav active="/pages/food/home" current="/pages/food/input" bind:change="onBottomNav" />
+</view>

@@ -1,0 +1,22 @@
+@import "../../styles/common.wxss";
+
+.gender {
+  text-align: center;
+  font-size: 32rpx;
+  font-weight: 700;
+}
+
+.input-box {
+  width: 100%;
+  min-height: 96rpx;
+  display: flex;
+  align-items: center;
+  box-sizing: border-box;
+  background: #fffdf8;
+  color: #243a33;
+}
+
+.input-like {
+  font-size: 34rpx;
+  font-weight: 700;
+}

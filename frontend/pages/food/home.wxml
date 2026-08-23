@@ -1,0 +1,42 @@
+<view class="page">
+  <view class="page-body">
+    <view class="header">
+      <view class="header-title">饮食</view>
+      <view class="icon-btn">⋯</view>
+    </view>
+
+    <view class="card card-soft card-pad">
+      <view class="muted">今日摄入</view>
+      <view class="spacer-24"></view>
+      <view class="item-title">{{totalText}} <text class="muted">/ 1,800 kcal</text></view>
+      <view class="spacer-24"></view>
+      <view class="bar"><view class="fill" style="width: {{intakePercent}};"></view></view>
+      <view class="muted">今日还可摄入约 {{remain}} kcal</view>
+    </view>
+
+    <view class="spacer-24"></view>
+    <view class="btn" bindtap="goInput">✨ 用现有食材生成一餐</view>
+
+    <view class="spacer-24"></view>
+    <view class="row-between">
+      <text class="section-title">今日饮食</text>
+      <text class="section-title" bindtap="goInput">+ 添加</text>
+    </view>
+
+    <view class="list">
+      <block wx:for="{{meals}}" wx:key="key">
+        <view class="list-item" data-index="{{index}}" bindtap="goRecipe">
+          <view class="row-between">
+            <view>
+              <view class="item-title">{{item.icon}} {{item.label}}</view>
+              <view class="item-meta">{{item.detail}}</view>
+            </view>
+            <view class="item-title">{{item.kcal}}</view>
+          </view>
+        </view>
+      </block>
+    </view>
+  </view>
+
+  <bottom-nav active="/pages/food/home" current="/pages/food/home" bind:change="onBottomNav" />
+</view>

@@ -1,0 +1,73 @@
+<view class="page">
+  <view class="page-body">
+    <view class="header">
+      <view>
+        <text class="header-subtitle">{{summary.date}}</text>
+        <view class="header-title">{{summary.greeting}} 👋</view>
+      </view>
+      <view class="icon-btn">◐</view>
+    </view>
+
+    <view class="card card-soft card-pad">
+      <view class="muted">今日概览</view>
+      <view class="spacer-24"></view>
+      <view class="row-between">
+        <view>
+          <view class="item-title">{{summary.kcalText}}</view>
+          <view class="muted">已摄入 kcal</view>
+        </view>
+        <view>
+          <view class="item-title">{{summary.workout}} min</view>
+          <view class="muted">训练时长</view>
+        </view>
+      </view>
+    </view>
+
+    <view class="spacer-24"></view>
+    <text class="section-title">今日营养</text>
+    <view class="card card-pad">
+      <view class="macro">
+        <text>蛋白质</text>
+        <text>{{summary.protein.current}} / {{summary.protein.target}} g</text>
+      </view>
+      <view class="bar"><view class="fill" style="width: {{summary.proteinPercent}};"></view></view>
+      <view class="macro">
+        <text>碳水</text>
+        <text>{{summary.carbs.current}} / {{summary.carbs.target}} g</text>
+      </view>
+      <view class="bar"><view class="fill" style="width: {{summary.carbsPercent}};"></view></view>
+      <view class="macro">
+        <text>脂肪</text>
+        <text>{{summary.fat.current}} / {{summary.fat.target}} g</text>
+      </view>
+      <view class="bar"><view class="fill" style="width: {{summary.fatPercent}};"></view></view>
+    </view>
+
+    <view class="spacer-24"></view>
+    <view class="btn-row">
+      <view class="btn" bindtap="goFood">+ 记录一餐</view>
+      <view class="btn" bindtap="goTraining">▶ 开始训练</view>
+    </view>
+
+    <view class="spacer-24"></view>
+    <view class="row-between">
+      <text class="section-title">最近饮食</text>
+      <text class="muted" bindtap="goFood">查看全部</text>
+    </view>
+    <view class="list">
+      <block wx:for="{{meals}}" wx:key="key">
+        <view class="list-item" data-index="{{index}}" bindtap="goMealDetail">
+          <view class="row-between">
+            <view>
+              <view class="item-title">{{item.icon}} {{item.label}}</view>
+              <view class="item-meta">{{item.detail}}</view>
+            </view>
+            <view class="item-title">{{item.kcal}}</view>
+          </view>
+        </view>
+      </block>
+    </view>
+  </view>
+
+  <bottom-nav active="/pages/home/home" current="/pages/home/home" bind:change="onBottomNav" />
+</view>

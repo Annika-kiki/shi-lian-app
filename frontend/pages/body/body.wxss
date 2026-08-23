@@ -1,0 +1,38 @@
+@import "../../styles/common.wxss";
+
+.chart {
+  position: relative;
+  height: 320rpx;
+  margin-top: 16rpx;
+  padding-bottom: 54rpx;
+}
+
+.chart-bar {
+  position: absolute;
+  bottom: 54rpx;
+  width: 14rpx;
+  background: #4f8168;
+  border-radius: 999rpx;
+  transform: translateX(-50%);
+}
+
+.dot {
+  position: absolute;
+  top: -12rpx;
+  left: -7rpx;
+  width: 32rpx;
+  height: 32rpx;
+  border-radius: 50%;
+  background: #4f8168;
+}
+
+.chart-axis {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  justify-content: space-between;
+  color: #6d8077;
+  font-size: 24rpx;
+}

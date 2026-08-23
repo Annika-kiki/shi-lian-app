@@ -1,0 +1,45 @@
+<view class="page">
+  <scroll-view class="page-scroll" scroll-y="true">
+    <view class="page-body">
+      <view class="header">
+        <view class="icon-btn" bindtap="onBottomNav" data-route="/pages/training/home">←</view>
+        <text class="header-title">动作详情</text>
+        <view class="icon-btn">♡</view>
+      </view>
+
+      <view class="video-card card">
+        <video
+          class="video"
+          src="{{detail.videoSrc}}"
+          controls
+          object-fit="cover"
+        ></video>
+      </view>
+
+      <view class="spacer-24"></view>
+      <text class="muted">{{detail.part}}</text>
+      <view class="item-title">{{exercise.title}}</view>
+      <view class="item-meta">主要肌群：{{detail.main}}  辅助：{{detail.assist}}</view>
+
+      <view class="spacer-24"></view>
+      <view class="card card-pad">
+        <text class="section-title">动作步骤</text>
+        <block wx:for="{{detail.steps}}" wx:key="index">
+          <view class="step">{{index + 1}}. {{item}}</view>
+        </block>
+      </view>
+
+      <view class="spacer-24"></view>
+      <view class="card card-pad">
+        <text class="section-title">注意事项</text>
+        <text class="muted">{{detail.notes}}</text>
+      </view>
+
+      <view class="spacer-24"></view>
+      <view class="btn" bindtap="startRecord">开始记录</view>
+      <view class="footer-space"></view>
+    </view>
+  </scroll-view>
+
+  <bottom-nav active="/pages/training/home" current="/pages/training/detail" bind:change="onBottomNav" />
+</view>

@@ -1,0 +1,53 @@
+<view class="page">
+  <view class="page-body">
+    <view class="header">
+      <view class="icon-btn" bindtap="saveAndStart">←</view>
+      <text class="header-title">了解你的身体</text>
+      <view class="header-subtitle">1/2</view>
+    </view>
+
+    <text class="muted">用于制定更合适的训练与饮食目标</text>
+
+    <view class="spacer-24"></view>
+    <text class="section-title">昵称</text>
+    <input class="card card-pad input-like input-box" type="text" value="{{name}}" bindinput="onNameInput" />
+
+    <view class="spacer-24"></view>
+    <text class="section-title">你的目标</text>
+    <view class="pill-row">
+      <view class="pill {{goal === '增肌' ? 'pill-active' : ''}}" data-value="增肌" bindtap="setGoal">增肌</view>
+      <view class="pill {{goal === '减脂' ? 'pill-active' : ''}}" data-value="减脂" bindtap="setGoal">减脂</view>
+      <view class="pill {{goal === '保持健康' ? 'pill-active' : ''}}" data-value="保持健康" bindtap="setGoal">保持健康</view>
+    </view>
+
+    <view class="spacer-24"></view>
+    <text class="section-title">性别</text>
+    <view class="btn-row">
+      <view class="card card-pad gender {{gender === '女' ? 'pill-active' : ''}}" data-value="女" bindtap="setGender">♀ 女</view>
+      <view class="card card-pad gender {{gender === '男' ? 'pill-active' : ''}}" data-value="男" bindtap="setGender">♂ 男</view>
+    </view>
+
+    <view class="spacer-24"></view>
+    <text class="section-title">年龄</text>
+    <input class="card card-pad input-like input-box" type="number" value="{{age}}" bindinput="onAgeInput" />
+
+    <view class="spacer-24"></view>
+    <view class="grid-2">
+      <view>
+        <text class="section-title">身高</text>
+        <input class="card card-pad input-like input-box" type="number" value="{{height}}" bindinput="onHeightInput" />
+      </view>
+      <view>
+        <text class="section-title">当前体重</text>
+        <input class="card card-pad input-like input-box" type="digit" value="{{weight}}" bindinput="onWeightInput" />
+      </view>
+    </view>
+
+    <view class="spacer-24"></view>
+    <text class="section-title">目标体重</text>
+    <input class="card card-pad input-like input-box" type="digit" value="{{targetWeight}}" bindinput="onTargetWeightInput" />
+
+    <view class="spacer-32"></view>
+    <view class="btn" bindtap="saveAndStart">保存并开始</view>
+  </view>
+</view>

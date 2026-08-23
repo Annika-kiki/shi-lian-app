@@ -1,0 +1,40 @@
+<view class="page">
+  <scroll-view class="page-scroll" scroll-y="true">
+    <view class="page-body">
+      <view class="header">
+        <view class="icon-btn" bindtap="onBottomNav" data-route="/pages/food/input">←</view>
+        <text class="header-title">为你生成 3 个方案</text>
+        <view class="icon-btn">↻</view>
+      </view>
+
+      <text class="muted">约 500 kcal · 高蛋白 · 少油</text>
+
+      <view class="spacer-24"></view>
+      <view class="list">
+        <block wx:for="{{recipes}}" wx:key="id">
+          <view class="list-item" data-id="{{item.id}}" bindtap="goDetail">
+            <view class="row-between">
+              <view>
+                <view class="item-title">{{item.name}}</view>
+                <view class="item-meta">{{item.minutes}} 分钟 · 推荐</view>
+                <view class="item-meta">鸡胸肉 {{item.ingredients[0].amount}} · 鸡蛋 {{item.ingredients[1].amount}} · 西红柿 {{item.ingredients[2].amount}}</view>
+              </view>
+              <view class="item-title">{{item.kcal}}</view>
+            </view>
+            <view class="spacer-24"></view>
+            <view class="pill-row">
+              <block wx:for="{{item.tags}}" wx:for-item="tag" wx:key="*this">
+                <view class="pill">{{tag}}</view>
+              </block>
+            </view>
+          </view>
+        </block>
+      </view>
+
+      <view class="spacer-24"></view>
+      <view class="btn btn-outline" bindtap="regenerate">重新生成</view>
+    </view>
+  </scroll-view>
+
+  <bottom-nav active="/pages/food/home" current="/pages/food/result" bind:change="onBottomNav" />
+</view>
