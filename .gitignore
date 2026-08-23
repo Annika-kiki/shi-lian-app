@@ -4,3 +4,4 @@ __pycache__/
 *.py[cod]
 shi_lian.db
 .pytest_cache/
+.DS_Store
