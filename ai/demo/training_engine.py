@@ -18,9 +18,13 @@ EXERCISES = [
 
 ILLUSTRATIONS = {
     "chest-01": {"url": "/assets/exercises/barbell-bench-press.png", "active_muscles": ["胸大肌", "肱三头肌", "三角肌前束"]},
+    "chest-02": {"url": "/assets/exercises/incline-dumbbell-press.png", "active_muscles": ["胸大肌上束", "肱三头肌", "三角肌前束"]},
     "back-01": {"url": "/assets/exercises/lat-pulldown.png", "active_muscles": ["背阔肌", "肱二头肌", "菱形肌"]},
+    "back-02": {"url": "/assets/exercises/seated-cable-row.png", "active_muscles": ["背阔肌", "菱形肌", "斜方肌中束"]},
     "leg-01": {"url": "/assets/exercises/goblet-squat.png", "active_muscles": ["股四头肌", "臀大肌", "核心"]},
-    "core-01": {"url": "/assets/exercises/forearm-plank.png", "active_muscles": ["腹横肌", "腹直肌", "臀大肌"]},
+    "leg-02": {"url": "/assets/exercises/dumbbell-romanian-deadlift.png", "active_muscles": ["臀大肌", "腘绳肌", "竖脊肌"]},
+    "shoulder-02": {"url": "/assets/exercises/dumbbell-lateral-raise.png", "active_muscles": ["三角肌中束", "冈上肌", "斜方肌"]},
+    "core-02": {"url": "/assets/exercises/dead-bug.png", "active_muscles": ["腹横肌", "腹直肌", "髂腰肌"]},
 }
 
 GOAL_REPS = {"减脂": "10–15", "增肌": "8–12", "保持健康": "10–12"}

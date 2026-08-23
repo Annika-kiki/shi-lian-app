@@ -42,6 +42,8 @@ class TrainingTests(unittest.TestCase):
     def test_exercise_database(self):
         self.assertGreaterEqual(len(list_exercises()), 12)
         self.assertTrue(list_exercises(muscle="胸"))
+        self.assertGreaterEqual(
+            sum(bool(item["illustration"]) for item in list_exercises()), 8)
 
     def test_plan_structure(self):
         plan = generate_plan("减脂", "新手", 3)
