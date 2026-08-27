@@ -1,4 +1,5 @@
 const { getUser, saveUser } = require("../../utils/user")
+const { saveProfile } = require("../../utils/api")
 
 Page({
   data: {
@@ -47,8 +48,17 @@ Page({
     const userProfile = saveUser(this.data)
     const app = getApp()
     app.setUserProfile(userProfile)
-    wx.redirectTo({
-      url: "/pages/home/home"
+    wx.showLoading({ title: "保存中" })
+    saveProfile(userProfile).catch(() => {
+      wx.showToast({
+        title: "后端未启动，已使用本地模式",
+        icon: "none"
+      })
+    }).then(() => {
+      wx.hideLoading()
+      wx.redirectTo({
+        url: "/pages/home/home"
+      })
     })
   }
 })

@@ -2,7 +2,7 @@
   <scroll-view class="page-scroll" scroll-y="true">
     <view class="page-body">
       <view class="header">
-        <view class="icon-btn" bindtap="onBottomNav" data-route="/pages/food/home">←</view>
+        <view class="icon-btn back-btn" bindtap="goBack">←</view>
         <text class="header-title">食谱详情</text>
         <view class="icon-btn">♡</view>
       </view>

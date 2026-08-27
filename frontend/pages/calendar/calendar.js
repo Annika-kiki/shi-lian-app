@@ -1,4 +1,7 @@
 const { calendarData } = require("../../utils/mock")
+const { getCalendar } = require("../../utils/api")
+
+let markedDays = [2, 4, 6, 9, 12, 15]
 
 function buildMonth(year, month) {
   const first = new Date(year, month - 1, 1)
@@ -10,7 +13,7 @@ function buildMonth(year, month) {
   for (let day = 1; day <= days; day += 1) {
     cells.push({
       day,
-      marked: [2, 4, 6, 9, 12, 15].includes(day),
+      marked: markedDays.includes(day),
       selected: day === 17
     })
   }
@@ -30,6 +33,26 @@ Page({
   },
 
   onLoad() {
+    const now = new Date()
+    const year = now.getFullYear()
+    const month = now.getMonth() + 1
+    getCalendar(year, month).then((records) => {
+      markedDays = records.map((item) => Number(String(item.date).slice(-2)))
+      this.setData({
+        monthLabel: `${year} 年 ${month} 月`,
+        cells: buildMonth(year, month),
+        overview: {
+          count: records.length,
+          duration: records.reduce((sum, item) => sum + (item.duration_min || 0), 0),
+          top: records.length ? "已完成训练" : "暂无训练"
+        },
+        history: records.map((item) => ({
+          day: String(item.date).slice(5).replace("-", " 月 ") + " 日",
+          name: "训练记录",
+          duration: `${item.duration_min || 0} min`
+        }))
+      })
+    }).catch(() => {})
     this.setData({
       cells: buildMonth(2026, 8)
     })
@@ -38,7 +61,7 @@ Page({
   selectDay(event) {
     const day = event.currentTarget.dataset.day
     if (!day) return
-    const marked = [2, 4, 6, 9, 12, 15].includes(day)
+    const marked = markedDays.includes(day)
     this.setData({
       selectedDay: `8 月 ${day} 日${day === 17 ? " · 今天" : ""}`,
       selectedTitle: marked ? "训练日" : "休息日",

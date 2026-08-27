@@ -11,3 +11,12 @@
   flex: 1;
   min-height: 0;
 }
+
+.back-btn {
+  width: auto;
+  min-width: 96rpx;
+  padding: 0 20rpx;
+  justify-content: flex-start;
+  font-size: 30rpx;
+  color: #243a33;
+}

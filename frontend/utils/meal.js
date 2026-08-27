@@ -4,14 +4,46 @@ const MEAL_SLOTS = [
   { key: "dinner", label: "晚餐", icon: "🌙" }
 ]
 
+const { getUser, calculateNutritionTargets } = require("./user")
+
 const DAILY_TARGET = 1800
+const STORAGE_KEY = "mealRecords"
+
+function getTodayKey() {
+  const now = new Date()
+  const year = now.getFullYear()
+  const month = `${now.getMonth() + 1}`.padStart(2, "0")
+  const day = `${now.getDate()}`.padStart(2, "0")
+  return `${year}-${month}-${day}`
+}
 
 function readMealRecords() {
   try {
-    return wx.getStorageSync("mealRecords") || {}
+    const stored = wx.getStorageSync(STORAGE_KEY) || {}
+    const today = getTodayKey()
+
+    if (stored.date === today && stored.records) {
+      return stored.records
+    }
+
+    if (stored.date !== today) {
+      wx.setStorageSync(STORAGE_KEY, {
+        date: today,
+        records: {}
+      })
+    }
+
+    return {}
   } catch (error) {
     return {}
   }
+}
+
+function writeMealRecords(records) {
+  wx.setStorageSync(STORAGE_KEY, {
+    date: getTodayKey(),
+    records
+  })
 }
 
 function formatIngredientPreview(recipe) {
@@ -45,21 +77,21 @@ function buildMealItems() {
 function getMealSummary() {
   const items = buildMealItems()
   const total = items.reduce((sum, item) => sum + (item.recorded ? Number(item.kcal) || 0 : 0), 0)
-  const remain = Math.max(0, DAILY_TARGET - total)
+  const dailyTarget = calculateNutritionTargets(getUser()).dailyCalorieTarget || DAILY_TARGET
+  const remain = Math.max(0, dailyTarget - total)
   return {
     items,
     total,
     remain,
-    percent: `${Math.min(100, (total / DAILY_TARGET) * 100)}%`
+    dailyTarget,
+    percent: `${Math.min(100, (total / dailyTarget) * 100)}%`
   }
 }
 
 function saveMeal(recipe, preferredSlot) {
   const records = readMealRecords()
-  const nextSlot =
-    preferredSlot ||
-    MEAL_SLOTS.find((slot) => !records[slot.key])?.key ||
-    MEAL_SLOTS[0].key
+  const emptySlot = MEAL_SLOTS.find((slot) => !records[slot.key])
+  const nextSlot = preferredSlot || (emptySlot && emptySlot.key) || MEAL_SLOTS[0].key
 
   records[nextSlot] = {
     recipeId: recipe.id,
@@ -68,7 +100,7 @@ function saveMeal(recipe, preferredSlot) {
     detail: formatIngredientPreview(recipe) || "已记录"
   }
 
-  wx.setStorageSync("mealRecords", records)
+  writeMealRecords(records)
   return getMealSummary()
 }
 
@@ -76,5 +108,6 @@ module.exports = {
   DAILY_TARGET,
   MEAL_SLOTS,
   getMealSummary,
-  saveMeal
+  saveMeal,
+  getTodayKey
 }

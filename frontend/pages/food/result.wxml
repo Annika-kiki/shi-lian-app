@@ -2,12 +2,12 @@
   <scroll-view class="page-scroll" scroll-y="true">
     <view class="page-body">
       <view class="header">
-        <view class="icon-btn" bindtap="onBottomNav" data-route="/pages/food/input">←</view>
-        <text class="header-title">为你生成 3 个方案</text>
+        <view class="icon-btn back-btn" bindtap="goBack" catchtap="goBack">←</view>
+        <text class="header-title">为你生成多种方案</text>
         <view class="icon-btn">↻</view>
       </view>
 
-      <text class="muted">约 500 kcal · 高蛋白 · 少油</text>
+      <text class="muted">{{summaryText}}</text>
 
       <view class="spacer-24"></view>
       <view class="list">
@@ -17,7 +17,7 @@
               <view>
                 <view class="item-title">{{item.name}}</view>
                 <view class="item-meta">{{item.minutes}} 分钟 · 推荐</view>
-                <view class="item-meta">鸡胸肉 {{item.ingredients[0].amount}} · 鸡蛋 {{item.ingredients[1].amount}} · 西红柿 {{item.ingredients[2].amount}}</view>
+                <view class="item-meta">{{item.ingredientSummary}}</view>
               </view>
               <view class="item-title">{{item.kcal}}</view>
             </view>

@@ -11,10 +11,10 @@ python3 -m venv .venv
 source .venv/bin/activate
 pip install -r backend/requirements.txt
 cp .env.example .env
-uvicorn backend.main:app --reload
+uvicorn backend.main:app --reload --host 127.0.0.1 --port 8001
 ```
 
-首次启动自动创建 SQLite 数据库 `shi_lian.db` 并写入动作、食材和三份基础食谱；也可执行 `python -m backend.database.seed`。接口文档：<http://127.0.0.1:8000/docs>，健康检查：`GET /health`。将 `DATABASE_URL` 换为 SQLAlchemy 兼容的 MySQL URL 即可迁移数据库。
+首次启动自动创建 SQLite 数据库 `shi_lian.db` 并写入动作、食材和三份基础食谱；也可执行 `python -m backend.database.seed`。接口文档：<http://127.0.0.1:8001/docs>，健康检查：`GET /health`。将 `DATABASE_URL` 换为 SQLAlchemy 兼容的 MySQL URL 即可迁移数据库。
 
 ## 本地登录与鉴权
 

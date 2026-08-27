@@ -18,13 +18,46 @@ def current_user(x_user_id: int | None = Header(None), db: Session = Depends(get
     user = db.get(User, x_user_id)
     if not user: raise HTTPException(401, "用户不存在")
     return user
-def profile_dict(p): return {k: getattr(p, k) for k in ("gender","age","height_cm","current_weight_kg","target_weight_kg","goal_type","daily_calorie_target","protein_target_g","carb_target_g","fat_target_g","profile_completed")}
+
+def round_to_five(value: float) -> int:
+    return max(0, round(value / 5) * 5)
+
+def profile_targets(p):
+    weight = p.current_weight_kg or 56.5
+    height = p.height_cm or 165
+    age = p.age or 21
+    goal = p.goal_type or "保持健康"
+    gender = (p.gender or "").lower()
+    is_male = p.gender == "男" or gender == "male"
+    bmr = (10 * weight) + (6.25 * height) - (5 * age) + (5 if is_male else -161)
+    activity_calories = max(1200, bmr * 1.35)
+    daily_factor = 0.85 if goal == "减脂" else 1.1 if goal == "增肌" else 1
+    daily = round_to_five(min(3500, max(1200, activity_calories * daily_factor)))
+    protein_factor = 1.8 if goal == "增肌" else 1.6 if goal == "减脂" else 1.2
+    fat_factor = 0.9 if goal == "增肌" else 0.8
+    protein = round_to_five(weight * protein_factor)
+    fat = round_to_five(weight * fat_factor)
+    carb = round_to_five(max(80, (daily - (protein * 4) - (fat * 9)) / 4))
+    return {
+        "daily_calorie_target": daily,
+        "protein_target_g": protein,
+        "carb_target_g": carb,
+        "fat_target_g": fat,
+    }
+
+def apply_profile_targets(p):
+    for key, value in profile_targets(p).items():
+        setattr(p, key, value)
+
+def profile_dict(p):
+    apply_profile_targets(p)
+    return {k: getattr(p, k) for k in ("gender","age","height_cm","current_weight_kg","target_weight_kg","goal_type","daily_calorie_target","protein_target_g","carb_target_g","fat_target_g","profile_completed")}
 
 class LoginIn(BaseModel): nickname: str = Field(default="练食记用户", max_length=64); avatar: str | None = None; mock_openid: str | None = None
 class ProfileIn(BaseModel):
-    gender: str | None = None; age: int | None = Field(None, ge=1, le=120); height_cm: float | None = Field(None, ge=50, le=260); current_weight_kg: float | None = Field(None, gt=0, le=500); target_weight_kg: float | None = Field(None, gt=0, le=500); goal_type: str = "保持健康"; daily_calorie_target: float = Field(2000, gt=0); protein_target_g: float = Field(100, ge=0); carb_target_g: float = Field(250, ge=0); fat_target_g: float = Field(60, ge=0)
+    gender: str | None = None; age: int | None = Field(None, ge=1, le=120); height_cm: float | None = Field(None, ge=50, le=260); current_weight_kg: float | None = Field(None, gt=0, le=500); target_weight_kg: float | None = Field(None, gt=0, le=500); goal_type: str = "保持健康"; daily_calorie_target: float | None = Field(None, gt=0); protein_target_g: float | None = Field(None, ge=0); carb_target_g: float | None = Field(None, ge=0); fat_target_g: float | None = Field(None, ge=0)
 class WeightIn(BaseModel): record_date: date = Field(default_factory=date.today); weight_kg: float = Field(gt=0, le=500)
-class RecipeGenerateIn(BaseModel): ingredients: list[str] = Field(min_length=1); meal_type: str; target_calories: int = Field(500, ge=100, le=2000); preference: str | None = None
+class RecipeGenerateIn(BaseModel): ingredients: list[str] = Field(min_length=1); meal_type: str; target_calories: int = Field(500, ge=100, le=2000); preference: str | None = None; recipe_round: int = Field(0, ge=0)
 class MealIngredientIn(BaseModel): ingredient_id: int; amount_g: float = Field(gt=0, le=3000)
 class MealIn(BaseModel): record_date: date = Field(default_factory=date.today); meal_type: str; name: str | None = None; recipe_id: int | None = None; ingredients: list[MealIngredientIn] = Field(default_factory=list); note: str | None = None
 class SessionIn(BaseModel): workout_date: date = Field(default_factory=date.today); title: str = Field(min_length=1,max_length=100); duration_min: int | None = Field(None, ge=0, le=1440)
@@ -50,14 +83,20 @@ def me(user=Depends(current_user), db: Session=Depends(get_db)):
 @router.put("/users/me/profile")
 def update_profile(body: ProfileIn, user=Depends(current_user), db: Session=Depends(get_db)):
     p=db.get(UserProfile,user.id)
+    if not p:
+        p=UserProfile(user_id=user.id); db.add(p)
     for k,v in body.model_dump().items(): setattr(p,k,v)
+    apply_profile_targets(p)
     p.profile_completed=True; db.commit(); return ok(profile_dict(p))
 @router.post("/users/me/weights")
 def weight(body: WeightIn,user=Depends(current_user),db:Session=Depends(get_db)):
     r=db.query(WeightRecord).filter_by(user_id=user.id,record_date=body.record_date).first()
     if r: r.weight_kg=body.weight_kg
     else: r=WeightRecord(user_id=user.id,record_date=body.record_date,weight_kg=body.weight_kg); db.add(r)
-    db.get(UserProfile,user.id).current_weight_kg=body.weight_kg; db.commit(); return ok({"id":r.id,"record_date":r.record_date,"weight_kg":r.weight_kg})
+    p=db.get(UserProfile,user.id)
+    if not p:
+        p=UserProfile(user_id=user.id); db.add(p)
+    p.current_weight_kg=body.weight_kg; apply_profile_targets(p); db.commit(); return ok({"id":r.id,"record_date":r.record_date,"weight_kg":r.weight_kg})
 @router.get("/users/me/weights")
 def weights(days:int=Query(30,ge=1,le=366),user=Depends(current_user),db:Session=Depends(get_db)):
     since=date.today()-timedelta(days=days-1); r=db.query(WeightRecord).filter(WeightRecord.user_id==user.id,WeightRecord.record_date>=since).order_by(WeightRecord.record_date).all(); return ok([{"date":x.record_date,"weight_kg":x.weight_kg} for x in r])
@@ -73,7 +112,7 @@ def recipe(recipe_id:int,db:Session=Depends(get_db)):
     if not x: raise HTTPException(404,"食谱不存在")
     return ok(recipe_payload(db,x))
 @router.post("/recipes/generate")
-def generate(body:RecipeGenerateIn,db:Session=Depends(get_db)): return ok(LocalRecipeProvider().generate(db,body.ingredients,body.target_calories,body.preference))
+def generate(body:RecipeGenerateIn,db:Session=Depends(get_db)): return ok(LocalRecipeProvider().generate(db,body.ingredients,body.target_calories,body.preference,body.recipe_round))
 @router.post("/meals")
 def create_meal(body:MealIn,user=Depends(current_user),db:Session=Depends(get_db)):
     if body.recipe_id:
@@ -182,11 +221,14 @@ def complete(session_id:int,user=Depends(current_user),db:Session=Depends(get_db
 @router.get("/dashboard/today")
 def dashboard(user=Depends(current_user),db:Session=Depends(get_db)):
     today=date.today(); p=db.get(UserProfile,user.id); meals=db.query(MealRecord).filter_by(user_id=user.id,record_date=today).all(); ws=db.query(WorkoutSession).filter_by(user_id=user.id,workout_date=today,status="已完成").all()
+    if not p:
+        p=UserProfile(user_id=user.id); db.add(p)
+    apply_profile_targets(p)
     nutrients={k:round(sum(getattr(m,k) for m in meals),1) for k in ("calories_kcal","protein_g","carb_g","fat_g")}; duration=sum(w.duration_min or 0 for w in ws); burned=round(sum(w.calories_kcal for w in ws),1)
     active_dates={d for (d,) in db.query(MealRecord.record_date).filter_by(user_id=user.id).distinct()} | {d for (d,) in db.query(WorkoutSession.workout_date).filter_by(user_id=user.id).distinct()}
     streak=0; cursor=today
     while cursor in active_dates: streak+=1;cursor-=timedelta(days=1)
-    return ok({"date":today,"intake_calories_kcal":nutrients["calories_kcal"],"remaining_calories_kcal":round(p.daily_calorie_target-nutrients["calories_kcal"],1),"nutrition":{"protein":{"consumed":nutrients["protein_g"],"target":p.protein_target_g},"carb":{"consumed":nutrients["carb_g"],"target":p.carb_target_g},"fat":{"consumed":nutrients["fat_g"],"target":p.fat_target_g}},"workout_duration_min":duration,"workout_calories_kcal":burned,"streak_days":streak})
+    return ok({"date":today,"daily_calorie_target":p.daily_calorie_target,"intake_calories_kcal":nutrients["calories_kcal"],"remaining_calories_kcal":round(p.daily_calorie_target-nutrients["calories_kcal"],1),"nutrition":{"protein":{"consumed":nutrients["protein_g"],"target":p.protein_target_g},"carb":{"consumed":nutrients["carb_g"],"target":p.carb_target_g},"fat":{"consumed":nutrients["fat_g"],"target":p.fat_target_g}},"workout_duration_min":duration,"workout_calories_kcal":burned,"streak_days":streak})
 @router.get("/stats/calendar")
 def calendar(year:int,month:int,user=Depends(current_user),db:Session=Depends(get_db)):
     start=date(year,month,1); end=date(year,month,monthrange(year,month)[1]); xs=db.query(WorkoutSession).filter(WorkoutSession.user_id==user.id,WorkoutSession.workout_date.between(start,end)).all(); out={}

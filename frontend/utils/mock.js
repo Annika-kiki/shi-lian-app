@@ -1,3 +1,5 @@
+const { calculateNutritionTargets } = require("./user")
+
 const navItems = [
   { label: "首页", icon: "⌂", route: "/pages/home/home" },
   { label: "饮食", icon: "◔", route: "/pages/food/home" },
@@ -17,79 +19,124 @@ const profile = {
   streak: 16
 }
 
+const mockTargets = calculateNutritionTargets(profile)
+
 const homeSummary = {
   date: "8月17日 · 星期一",
   greeting: "晚上好，用户",
   kcal: 1260,
   workout: 45,
-  protein: { current: 68, target: 100 },
-  carbs: { current: 130, target: 200 },
-  fat: { current: 35, target: 50 }
+  protein: { current: 68, target: mockTargets.proteinTargetG },
+  carbs: { current: 130, target: mockTargets.carbTargetG },
+  fat: { current: 35, target: mockTargets.fatTargetG }
 }
 
 const meals = [
-  { label: "早餐", icon: "🥣", kcal: 380, detail: "燕麦牛奶 · 水煮蛋 · 香蕉" },
-  { label: "午餐", icon: "🍱", kcal: 620, detail: "杂粮饭 · 番茄鸡胸肉 · 西兰花" },
+  { label: "早餐", icon: "🍳", kcal: 380, detail: "燕麦牛奶 · 水煮蛋 · 香蕉" },
+  { label: "午餐", icon: "🍱", kcal: 620, detail: "杂粮饭 · 鸡胸肉 · 西兰花" },
   { label: "晚餐", icon: "🌙", kcal: "尚未记录", detail: "建议补充蛋白与蔬菜" }
 ]
 
 const recipePlans = [
   {
     id: "1",
-    name: "番茄鸡胸滑蛋",
-    minutes: 20,
-    kcal: 520,
-    protein: 48,
-    fat: 20,
-    tags: ["高蛋白", "少油"],
+    name: "番茄鸡胸荞麦面",
+    minutes: 18,
+    kcal: 510,
+    protein: 44,
+    fat: 16,
+    tags: ["高蛋白", "均衡"],
     ingredients: [
       { name: "鸡胸肉", amount: "150 g" },
-      { name: "鸡蛋", amount: "2 个" },
-      { name: "西红柿", amount: "200 g" }
+      { name: "番茄", amount: "200 g" },
+      { name: "荞麦面", amount: "120 g" }
     ],
-    steps: ["鸡胸肉切块腌制", "鸡蛋炒至半熟盛出", "番茄炒出汁，加入鸡胸肉和鸡蛋"]
+    steps: ["荞麦面先煮熟过凉", "鸡胸肉煎熟切片，番茄炒出汁", "把面和鸡胸肉拌入番茄酱汁即可"]
   },
   {
     id: "2",
-    name: "西兰花鸡胸烘蛋",
+    name: "三文鱼烤盘蔬菜",
     minutes: 25,
-    kcal: 485,
-    protein: 42,
-    fat: 18,
-    tags: ["高蛋白", "低脂"],
+    kcal: 490,
+    protein: 38,
+    fat: 20,
+    tags: ["低脂", "少油"],
     ingredients: [
-      { name: "鸡胸肉", amount: "120 g" },
-      { name: "鸡蛋", amount: "2 个" },
-      { name: "西兰花", amount: "180 g" }
+      { name: "三文鱼", amount: "140 g" },
+      { name: "菜花", amount: "180 g" },
+      { name: "胡萝卜", amount: "120 g" }
     ],
-    steps: ["西兰花焯水", "鸡胸肉煎熟切块", "蛋液混合后烘烤至定型"]
+    steps: ["三文鱼和蔬菜切好后平铺在烤盘里", "撒盐、黑胡椒和少量橄榄油", "烤至表面微焦后直接出炉"]
   },
   {
     id: "3",
-    name: "番茄鸡胸暖沙拉",
+    name: "虾仁蒸蛋碗",
     minutes: 15,
-    kcal: 450,
-    protein: 36,
+    kcal: 430,
+    protein: 35,
     fat: 14,
-    tags: ["快手", "轻负担"],
+    tags: ["快手", "清爽"],
     ingredients: [
-      { name: "鸡胸肉", amount: "160 g" },
-      { name: "番茄", amount: "1 个" },
-      { name: "西兰花", amount: "120 g" }
+      { name: "虾仁", amount: "120 g" },
+      { name: "鸡蛋", amount: "2 个" },
+      { name: "白菜", amount: "120 g" }
     ],
-    steps: ["鸡胸肉煎熟", "蔬菜焯水后过冷", "拌匀后淋少量酱汁"]
+    steps: ["鸡蛋打散加温水，先蒸到半凝固", "放入虾仁和白菜继续蒸熟", "出锅后淋少量芝麻油即可"]
+  },
+  {
+    id: "4",
+    name: "牛肉土豆焖锅",
+    minutes: 28,
+    kcal: 560,
+    protein: 42,
+    fat: 22,
+    tags: ["饱足", "高蛋白"],
+    ingredients: [
+      { name: "牛肉", amount: "140 g" },
+      { name: "土豆", amount: "160 g" },
+      { name: "洋葱", amount: "80 g" }
+    ],
+    steps: ["牛肉先煎香，土豆和洋葱切块备用", "加入少量热水，小火焖煮到土豆软糯", "收汁后出锅，风味更浓郁"]
+  },
+  {
+    id: "5",
+    name: "豆腐菌菇汤",
+    minutes: 20,
+    kcal: 380,
+    protein: 30,
+    fat: 12,
+    tags: ["清爽", "少油"],
+    ingredients: [
+      { name: "北豆腐", amount: "180 g" },
+      { name: "香菇", amount: "120 g" },
+      { name: "金针菇", amount: "100 g" }
+    ],
+    steps: ["香菇和金针菇先煮出鲜味", "加入豆腐块，小火煮几分钟", "最后淋少量芝麻油，清汤就完成了"]
   }
 ]
 
-const ingredientChips = ["鸡胸肉", "西红柿", "鸡蛋", "西兰花"]
-const calorieOptions = ["约 400 kcal", "约 500 kcal", "约 600 kcal"]
+const ingredientChips = [
+  "鸡胸肉",
+  "鸡蛋",
+  "牛肉",
+  "三文鱼",
+  "虾仁",
+  "北豆腐",
+  "米饭",
+  "糙米饭",
+  "燕麦",
+  "红薯",
+  "西兰花",
+  "番茄"
+]
+const calorieOptions = ["约400 kcal", "约500 kcal", "约600 kcal"]
 const tasteOptions = ["少油", "高蛋白", "15 分钟内"]
 
 const bodyParts = [
   { label: "胸", icon: "◉", part: "chest" },
   { label: "背", icon: "◇", part: "back" },
   { label: "肩", icon: "△", part: "shoulder" },
-  { label: "手臂", icon: "≋", part: "arm" },
+  { label: "手臂", icon: "⚡", part: "arm" },
   { label: "腿臀", icon: "∧", part: "leg" },
   { label: "核心", icon: "◎", part: "core" }
 ]
@@ -102,7 +149,7 @@ const exercises = [
     equipment: "杠铃",
     level: "中级",
     part: "chest",
-    icon: "🏋"
+    icon: "🏋️"
   },
   {
     id: "incline",
@@ -120,34 +167,7 @@ const exercises = [
     equipment: "固定器械",
     level: "新手",
     part: "chest",
-    icon: "⚙"
-  },
-  {
-    id: "fly",
-    title: "绳索夹胸",
-    muscle: "胸大肌",
-    equipment: "龙门架",
-    level: "中级",
-    part: "chest",
-    icon: "↔"
-  },
-  {
-    id: "back-row",
-    title: "器械划船",
-    muscle: "背阔肌",
-    equipment: "器械",
-    level: "新手",
-    part: "back",
-    icon: "⟷"
-  },
-  {
-    id: "shoulder-press",
-    title: "哑铃推举",
-    muscle: "三角肌",
-    equipment: "哑铃",
-    level: "中级",
-    part: "shoulder",
-    icon: "▲"
+    icon: "🎯"
   }
 ]
 
@@ -157,7 +177,7 @@ const exerciseDetail = {
     part: "胸部 · 杠铃",
     main: "胸大肌",
     assist: "肱三头肌",
-    steps: ["双脚踩稳，肩胛骨向后收紧", "杠铃下降至胸部中下方", "呼气推起，手肘不要完全锁死"],
+    steps: ["双脚踩实，肩胛骨向后收紧", "杠铃下降至胸部中下方", "呼气推起，手肘不要完全锁死"],
     notes: "保持手腕中立；新手建议有人保护。"
   }
 }
@@ -205,7 +225,7 @@ const bodyTrend = {
 }
 
 const me = {
-  avatar: "🍃",
+  avatar: "🌿",
   name: profile.name,
   goal: profile.goal,
   height: `${profile.height} cm`,

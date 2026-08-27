@@ -2,18 +2,17 @@
   <scroll-view class="page-scroll" scroll-y="true">
     <view class="page-body">
       <view class="header">
-        <view class="icon-btn" bindtap="onBottomNav" data-route="/pages/training/home">←</view>
+        <view class="icon-btn back-btn" bindtap="goBack">←</view>
         <text class="header-title">动作详情</text>
         <view class="icon-btn">♡</view>
       </view>
 
-      <view class="video-card card">
-        <video
-          class="video"
-          src="{{detail.videoSrc}}"
-          controls
-          object-fit="cover"
-        ></video>
+      <view class="exercise-cover card">
+        <image
+          class="cover-image"
+          src="{{detail.coverSrc}}"
+          mode="aspectFill"
+        />
       </view>
 
       <view class="spacer-24"></view>

@@ -2,7 +2,7 @@
   <view class="page-body">
     <view class="brand">
       <view class="logo">🍃</view>
-      <text class="brand-title">练食记</text>
+      <text class="brand-title">食练周期</text>
       <text class="brand-subtitle">记录每一次训练，吃好每一餐</text>
     </view>
 

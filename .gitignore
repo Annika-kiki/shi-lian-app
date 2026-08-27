@@ -5,3 +5,5 @@ __pycache__/
 shi_lian.db
 .pytest_cache/
 .DS_Store
+project.private.config.json
+frontend/project.private.config.json

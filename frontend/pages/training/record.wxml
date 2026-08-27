@@ -1,7 +1,7 @@
 <view class="page">
   <view class="page-body">
     <view class="header">
-      <view class="icon-btn" bindtap="onBottomNav" data-route="/pages/training/home">×</view>
+      <view class="icon-btn back-btn" bindtap="goBack">←</view>
       <text class="header-title">训练记录</text>
       <view class="header-subtitle">历史</view>
     </view>

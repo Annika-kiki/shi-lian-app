@@ -1,0 +1,12 @@
+<view class="bar">
+  <block wx:for="{{items}}" wx:key="route">
+    <view
+      class="item {{active === item.route ? 'active' : ''}}"
+      data-route="{{item.route}}"
+      bindtap="handleChange"
+    >
+      <text class="icon">{{item.icon}}</text>
+      <text class="label">{{item.label}}</text>
+    </view>
+  </block>
+</view>

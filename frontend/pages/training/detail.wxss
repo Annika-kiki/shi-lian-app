@@ -12,16 +12,16 @@
   min-height: 0;
 }
 
-.video-card {
+.exercise-cover {
   overflow: hidden;
   border-radius: 32rpx;
+  background: #8bb39a;
 }
 
-.video {
+.cover-image {
   width: 100%;
   height: 360rpx;
   display: block;
-  background: #8bb39a;
 }
 
 .step {

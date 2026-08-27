@@ -1,4 +1,27 @@
 const { getExerciseList } = require("../../utils/mock")
+const { getExercises } = require("../../utils/api")
+function navigateBackOrRedirect(fallbackUrl) {
+  const pages = getCurrentPages()
+  if (pages.length > 1) {
+    wx.navigateBack({ delta: 1 })
+    return
+  }
+  if (fallbackUrl) {
+    wx.redirectTo({ url: fallbackUrl })
+  }
+}
+
+
+function titleForPart(part) {
+  return {
+    chest: "胸部动作",
+    back: "背部动作",
+    shoulder: "肩部动作",
+    arm: "手臂动作",
+    leg: "腿臀动作",
+    core: "核心动作"
+  }[part] || "动作列表"
+}
 
 Page({
   data: {
@@ -13,20 +36,31 @@ Page({
 
   onLoad(query) {
     const part = query.part || "chest"
-    const exercises = getExerciseList(part)
     this.setData({
       part,
-      exercises,
-      filteredExercises: exercises,
-      title: {
-        chest: "胸部动作",
-        back: "背部动作",
-        shoulder: "肩部动作",
-        arm: "手臂动作",
-        leg: "腿臀动作",
-        core: "核心动作"
-      }[part] || "动作列表"
+      title: titleForPart(part)
     })
+    this.loadExercises(part)
+  },
+
+  loadExercises(part) {
+    const fallback = getExerciseList(part)
+    this.setData({
+      exercises: fallback,
+      filteredExercises: fallback
+    })
+    getExercises(part).then((remoteExercises) => {
+      this.setData({
+        exercises: remoteExercises,
+        filteredExercises: remoteExercises
+      }, () => this.updateFiltered())
+    }).catch(() => {
+      this.updateFiltered()
+    })
+  },
+
+  goBack() {
+    navigateBackOrRedirect("/pages/training/home")
   },
 
   setEquipment(event) {
@@ -48,8 +82,8 @@ Page({
   updateFiltered() {
     const { exercises, equipment, keyword } = this.data
     const filteredExercises = exercises.filter((item) => {
-      const equipmentMatch = equipment === "全部" || equipment === "all" || item.equipment.includes(equipment)
-      const keywordMatch = !keyword || item.title.includes(keyword) || item.muscle.includes(keyword)
+      const equipmentMatch = equipment === "全部" || equipment === "all" || String(item.equipment || "").includes(equipment)
+      const keywordMatch = !keyword || String(item.title || "").includes(keyword) || String(item.muscle || "").includes(keyword) || String(item.equipment || "").includes(keyword)
       return equipmentMatch && keywordMatch
     })
     this.setData({ filteredExercises })
