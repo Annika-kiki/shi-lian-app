@@ -20,7 +20,7 @@ def current_user(x_user_id: int | None = Header(None), db: Session = Depends(get
     return user
 def profile_dict(p): return {k: getattr(p, k) for k in ("gender","age","height_cm","current_weight_kg","target_weight_kg","goal_type","daily_calorie_target","protein_target_g","carb_target_g","fat_target_g","profile_completed")}
 
-class LoginIn(BaseModel): nickname: str = Field(default="练食记用户", max_length=64); avatar: str | None = None; mock_openid: str | None = None
+class LoginIn(BaseModel): nickname: str = Field(default="食练周期用户", max_length=64); avatar: str | None = None; mock_openid: str | None = None
 class ProfileIn(BaseModel):
     gender: str | None = None; age: int | None = Field(None, ge=1, le=120); height_cm: float | None = Field(None, ge=50, le=260); current_weight_kg: float | None = Field(None, gt=0, le=500); target_weight_kg: float | None = Field(None, gt=0, le=500); goal_type: str = "保持健康"; daily_calorie_target: float = Field(2000, gt=0); protein_target_g: float = Field(100, ge=0); carb_target_g: float = Field(250, ge=0); fat_target_g: float = Field(60, ge=0)
 class WeightIn(BaseModel): record_date: date = Field(default_factory=date.today); weight_kg: float = Field(gt=0, le=500)
@@ -132,11 +132,53 @@ def unfav_exercise(exercise_id:int,user=Depends(current_user),db:Session=Depends
     x=db.query(FavoriteExercise).filter_by(user_id=user.id,exercise_id=exercise_id).first()
     if x: db.delete(x);db.commit()
     return ok()
+GOAL_ALIASES = {"塑形":"shaping", "保持健康":"shaping", "增肌":"shaping",
+                "减脂":"fat_loss", "提升运动水平":"performance"}
+
+@router.get("/training-goals")
+def training_goals(db:Session=Depends(get_db)):
+    goals=db.query(TrainingGoal).filter_by(active=True).order_by(TrainingGoal.code).all()
+    return ok([{"code":x.code,"name":x.name,"description":x.description,
+                "resistance_principle":x.resistance_principle,
+                "cardio_principle":x.cardio_principle} for x in goals])
+
 @router.get("/workouts/recommendation")
-def recommendation(user=Depends(current_user),db:Session=Depends(get_db)):
-    p=db.get(UserProfile,user.id); target="胸部" if p.goal_type in ("增肌","减脂") else "腿部"
-    xs=db.query(Exercise).filter_by(body_part=target).all()
-    return ok({"title":f"{target} + 核心训练","estimated_duration_min":40,"goal_type":p.goal_type,"exercises":[{"exercise_id":x.id,"name":x.name,"sets":3,"reps":"8-12"} for x in xs]})
+def recommendation(level:str=Query("新手",pattern="^(新手|中级|高级)$"),
+                   user=Depends(current_user),db:Session=Depends(get_db)):
+    profile=db.get(UserProfile,user.id)
+    goal_code=GOAL_ALIASES.get(profile.goal_type, "shaping")
+    goal=db.get(TrainingGoal,goal_code)
+    rows=(db.query(GoalExercisePrescription,Exercise)
+          .join(Exercise,GoalExercisePrescription.exercise_id==Exercise.id)
+          .filter(GoalExercisePrescription.goal_code==goal_code)
+          .order_by(GoalExercisePrescription.priority).all())
+    cardio=db.query(CardioPrescription).filter_by(goal_code=goal_code,level=level).first()
+    exercises=[]
+    for prescription, exercise_item in rows:
+        reps=(f"{prescription.reps_min}-{prescription.reps_max}次"
+              if prescription.reps_min is not None else f"{prescription.duration_seconds}秒")
+        exercises.append({"exercise_id":exercise_item.id,"name":exercise_item.name,
+                          "body_part":exercise_item.body_part,
+                          "movement_pattern":prescription.movement_pattern,
+                          "sets":f"{prescription.sets_min}-{prescription.sets_max}组",
+                          "reps":reps,"rest_seconds":prescription.rest_seconds,
+                          "rir":f"{prescription.rir_min}-{prescription.rir_max}",
+                          "notes":prescription.notes})
+    cardio_data=None if not cardio else {
+        "modes":cardio.modes.split(","),
+        "sessions_per_week":f"{cardio.sessions_min}-{cardio.sessions_max}次",
+        "minutes_per_session":f"{cardio.minutes_min}-{cardio.minutes_max}分钟",
+        "intensity":{"method":cardio.intensity_method,
+                     "range":f"{cardio.intensity_min:g}-{cardio.intensity_max:g}"},
+        "interval":None if cardio.interval_work_seconds is None else {
+            "work_seconds":cardio.interval_work_seconds,
+            "rest_seconds":cardio.interval_rest_seconds},
+        "notes":cardio.notes}
+    return ok({"title":f"{goal.name}推荐训练","estimated_duration_min":50,
+               "goal":{"code":goal.code,"name":goal.name,"description":goal.description},
+               "level":level,"principles":{"resistance":goal.resistance_principle,
+               "cardio":goal.cardio_principle},"exercises":exercises,"cardio":cardio_data,
+               "safety_note":"计划仅供一般健康成年人参考；如有疾病、伤病、孕期或运动中出现疼痛，请先咨询专业人员。"})
 @router.post("/workouts/sessions")
 def create_session(body:SessionIn,user=Depends(current_user),db:Session=Depends(get_db)):
     x=WorkoutSession(user_id=user.id,**body.model_dump());db.add(x);db.commit();return ok(session_data(db,x))

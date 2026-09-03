@@ -37,3 +37,17 @@ def test_workout_complete_and_dashboard():
     done=client.post(f"/api/workouts/sessions/{session['id']}/complete",headers=h).json()["data"]
     assert done["calories_kcal"] == 220.5
     assert client.get("/api/dashboard/today",headers=h).json()["data"]["workout_duration_min"] == 30
+
+def test_goal_driven_workout_recommendation():
+    h=login("推荐用户")
+    client.put("/api/users/me/profile",headers=h,json={"goal_type":"提升运动水平"})
+    data=client.get("/api/workouts/recommendation?level=中级",headers=h).json()["data"]
+    assert data["goal"]["code"] == "performance"
+    assert data["exercises"][0]["name"] == "深蹲"
+    assert data["exercises"][0]["reps"] == "3-6次"
+    assert data["cardio"]["intensity"] == {"method":"RPE","range":"4-8"}
+    assert data["cardio"]["interval"] == {"work_seconds":30,"rest_seconds":90}
+
+def test_training_goal_catalog():
+    goals=client.get("/api/training-goals").json()["data"]
+    assert {x["name"] for x in goals} == {"塑形","减脂","提升运动水平"}

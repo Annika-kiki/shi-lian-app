@@ -8,7 +8,7 @@ class User(Base):
     __tablename__ = "users"
     id: Mapped[int] = mapped_column(primary_key=True)
     openid: Mapped[str | None] = mapped_column(String(128), unique=True, nullable=True)
-    nickname: Mapped[str] = mapped_column(String(64), default="练食记用户")
+    nickname: Mapped[str] = mapped_column(String(64), default="食练周期用户")
     avatar: Mapped[str | None] = mapped_column(String(512), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 
@@ -113,6 +113,57 @@ class Exercise(Base):
     steps: Mapped[str] = mapped_column(Text, default="")
     cautions: Mapped[str] = mapped_column(Text, default="")
     met: Mapped[float] = mapped_column(default=5.0)
+
+
+class TrainingGoal(Base):
+    """A selectable goal and the high-level principles shown with a plan."""
+    __tablename__ = "training_goals"
+    code: Mapped[str] = mapped_column(String(32), primary_key=True)
+    name: Mapped[str] = mapped_column(String(32), unique=True)
+    description: Mapped[str] = mapped_column(Text, default="")
+    resistance_principle: Mapped[str] = mapped_column(Text, default="")
+    cardio_principle: Mapped[str] = mapped_column(Text, default="")
+    active: Mapped[bool] = mapped_column(Boolean, default=True)
+
+
+class GoalExercisePrescription(Base):
+    """Goal-specific resistance prescription for one exercise."""
+    __tablename__ = "goal_exercise_prescriptions"
+    __table_args__ = (UniqueConstraint("goal_code", "exercise_id", name="uq_goal_exercise"),)
+    id: Mapped[int] = mapped_column(primary_key=True)
+    goal_code: Mapped[str] = mapped_column(ForeignKey("training_goals.code"), index=True)
+    exercise_id: Mapped[int] = mapped_column(ForeignKey("exercises.id"), index=True)
+    priority: Mapped[int] = mapped_column(default=100)
+    movement_pattern: Mapped[str] = mapped_column(String(32))
+    sets_min: Mapped[int]
+    sets_max: Mapped[int]
+    reps_min: Mapped[int | None] = mapped_column(nullable=True)
+    reps_max: Mapped[int | None] = mapped_column(nullable=True)
+    duration_seconds: Mapped[int | None] = mapped_column(nullable=True)
+    rest_seconds: Mapped[int]
+    rir_min: Mapped[int | None] = mapped_column(nullable=True)
+    rir_max: Mapped[int | None] = mapped_column(nullable=True)
+    notes: Mapped[str] = mapped_column(Text, default="")
+
+
+class CardioPrescription(Base):
+    """Cardio dosage by goal and training level."""
+    __tablename__ = "cardio_prescriptions"
+    __table_args__ = (UniqueConstraint("goal_code", "level", name="uq_goal_cardio_level"),)
+    id: Mapped[int] = mapped_column(primary_key=True)
+    goal_code: Mapped[str] = mapped_column(ForeignKey("training_goals.code"), index=True)
+    level: Mapped[str] = mapped_column(String(16))
+    modes: Mapped[str] = mapped_column(String(255))
+    sessions_min: Mapped[int]
+    sessions_max: Mapped[int]
+    minutes_min: Mapped[int]
+    minutes_max: Mapped[int]
+    intensity_method: Mapped[str] = mapped_column(String(16), default="RPE")
+    intensity_min: Mapped[float]
+    intensity_max: Mapped[float]
+    interval_work_seconds: Mapped[int | None] = mapped_column(nullable=True)
+    interval_rest_seconds: Mapped[int | None] = mapped_column(nullable=True)
+    notes: Mapped[str] = mapped_column(Text, default="")
 
 
 class WorkoutSession(Base):
