@@ -28,7 +28,7 @@ Page({
     part: "chest",
     keyword: "",
     equipment: "全部",
-    equipmentTabs: ["全部", "杠铃", "哑铃", "固定器械"],
+    equipmentTabs: ["全部", "杠铃", "哑铃", "固定器械", "徒手", "绳索"],
     exercises: [],
     filteredExercises: [],
     title: "胸部动作"

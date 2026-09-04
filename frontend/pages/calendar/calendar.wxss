@@ -23,10 +23,26 @@
   flex-direction: column;
   background: transparent;
   font-size: 28rpx;
+  color: #a3b0aa;
 }
 
-.marked {
+.started {
+  color: #53665d;
+}
+
+.rest-day {
+  background: rgba(223, 238, 221, 0.36);
+}
+
+.marked,
+.training-day {
   background: #dfeedd;
+}
+
+.day-dot {
+  height: 16rpx;
+  line-height: 16rpx;
+  color: #4f8168;
 }
 
 .selected {
@@ -35,4 +51,35 @@
 
 .summary-line {
   padding-top: 18rpx;
+}
+
+.mini-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 12rpx;
+  min-height: 142rpx;
+}
+
+.mini-summary .item-title {
+  font-size: 28rpx;
+  line-height: 1.35;
+}
+
+.record-row {
+  padding: 22rpx 0;
+  border-top: 1rpx solid #eee7d8;
+}
+
+.record-row:first-of-type {
+  border-top: 0;
+}
+
+.record-title {
+  font-size: 30rpx;
+}
+
+.empty-line {
+  padding: 20rpx 0 4rpx;
+  color: #7b8e84;
+  font-size: 26rpx;
 }

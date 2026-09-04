@@ -161,23 +161,49 @@ const BODY_PART_MAP = {
 }
 
 const EXERCISE_COVERS = {
-  "杠铃卧推": "/assets/exercises/barbell-bench-press.png",
-  "俯卧撑": "/assets/exercises/barbell-bench-press.png",
-  "高位下拉": "/assets/exercises/lat-pulldown.png",
-  "深蹲": "/assets/exercises/goblet-squat.png",
-  "哑铃侧平举": "/assets/exercises/dumbbell-lateral-raise.png",
-  "平板支撑": "/assets/exercises/forearm-plank.png",
-  "死虫式": "/assets/exercises/dead-bug.png"
+  "杠铃卧推": "/images/exercises/barbell-bench-press.png",
+  "哑铃上斜卧推": "/images/exercises/incline-dumbbell-press.png",
+  "上斜哑铃卧推": "/images/exercises/incline-dumbbell-press.png",
+  "跪姿俯卧撑": "/images/exercises/kneeling-push-up.png",
+  "俯卧撑": "/images/exercises/kneeling-push-up.png",
+  "绳索夹胸": "/images/exercises/cable-fly.png",
+  "高位下拉": "/images/exercises/lat-pulldown.png",
+  "坐姿划船": "/images/exercises/seated-cable-row.png",
+  "单臂哑铃划船": "/images/exercises/one-arm-dumbbell-row.png",
+  "哑铃单臂划船": "/images/exercises/one-arm-dumbbell-row.png",
+  "绳索面拉": "/images/exercises/face-pull.png",
+  "高脚杯深蹲": "/images/exercises/goblet-squat.png",
+  "深蹲": "/images/exercises/goblet-squat.png",
+  "罗马尼亚硬拉": "/images/exercises/dumbbell-romanian-deadlift.png",
+  "保加利亚分腿蹲": "/images/exercises/bulgarian-split-squat.png",
+  "臀桥推髋": "/images/exercises/hip-thrust.png",
+  "坐姿哑铃推举": "/images/exercises/seated-dumbbell-press.png",
+  "哑铃推举": "/images/exercises/seated-dumbbell-press.png",
+  "哑铃侧平举": "/images/exercises/dumbbell-lateral-raise.png",
+  "杠铃弯举": "/images/exercises/barbell-curl.png",
+  "锤式弯举": "/images/exercises/hammer-curl.png",
+  "绳索下压": "/images/exercises/triceps-pushdown.png",
+  "坐姿臂屈伸": "/images/exercises/overhead-triceps-extension.png",
+  "平板支撑": "/images/exercises/forearm-plank.png",
+  "死虫式": "/images/exercises/dead-bug.png",
+  "自行车卷腹": "/images/exercises/bicycle-crunch.png"
 }
 
 function getExerciseCover(item) {
-  if (item.thumbnail_url) return item.thumbnail_url
+  if (item.thumbnail_url) {
+    const cover = String(item.thumbnail_url)
+    if (cover.startsWith("/")) {
+      return cover.replace("/assets/exercises/", "/images/exercises/")
+    }
+    return `/images/exercises/${cover}`
+  }
   if (EXERCISE_COVERS[item.name]) return EXERCISE_COVERS[item.name]
-  if (item.body_part === "背部") return "/assets/exercises/seated-cable-row.png"
-  if (item.body_part === "腿部") return "/assets/exercises/dumbbell-romanian-deadlift.png"
-  if (item.body_part === "肩部") return "/assets/exercises/dumbbell-lateral-raise.png"
-  if (item.body_part === "核心") return "/assets/exercises/dead-bug.png"
-  return "/assets/exercises/barbell-bench-press.png"
+  if (item.body_part === "背部") return "/images/exercises/seated-cable-row.png"
+  if (item.body_part === "腿部") return "/images/exercises/dumbbell-romanian-deadlift.png"
+  if (item.body_part === "肩部") return "/images/exercises/dumbbell-lateral-raise.png"
+  if (item.body_part === "核心") return "/images/exercises/dead-bug.png"
+  if (item.body_part === "手臂") return "/images/exercises/barbell-curl.png"
+  return "/images/exercises/barbell-bench-press.png"
 }
 
 function getExercises(part = "chest") {
@@ -190,8 +216,8 @@ function getExercise(id) {
   return request(`/api/exercises/${id}`).then(normalizeExercise)
 }
 
-function getWorkoutRecommendation() {
-  return request("/api/workouts/recommendation")
+function getWorkoutRecommendation(level = "新手") {
+  return request(`/api/workouts/recommendation?level=${encodeURIComponent(level)}`)
 }
 
 function getWorkoutSessions(date) {
@@ -230,6 +256,13 @@ function completeWorkoutSession(sessionId) {
   }))
 }
 
+function createCardioSession(data) {
+  return ensureLogin().then(() => request("/api/workouts/cardio", {
+    method: "POST",
+    data
+  }))
+}
+
 function normalizeExercise(item) {
   const steps = Array.isArray(item.steps)
     ? item.steps
@@ -246,6 +279,7 @@ function normalizeExercise(item) {
     level: item.difficulty || "新手",
     part: item.body_part,
     icon: item.equipment === "杠铃" ? "🏋️" : item.equipment === "哑铃" ? "💪" : "›",
+    coverSrc: getExerciseCover(item),
     detail: {
       part: `${item.body_part || "训练"} · ${item.equipment || "徒手"}`,
       main: item.primary_muscle || item.body_part,
@@ -294,9 +328,11 @@ module.exports = {
   addWorkoutSet,
   updateWorkoutSet,
   completeWorkoutSession,
+  createCardioSession,
   getCalendar,
   getBodyTrend,
   recordWeight,
   normalizeRecipe,
-  normalizeExercise
+  normalizeExercise,
+  getExerciseCover
 }

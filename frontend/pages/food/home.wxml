@@ -8,10 +8,9 @@
     <view class="card card-soft card-pad">
       <view class="muted">今日摄入</view>
       <view class="spacer-24"></view>
-      <view class="item-title">{{totalText}} <text class="muted">/ 1,800 kcal</text></view>
+      <view class="item-title">{{totalText}} <text class="muted">/ {{targetText}} kcal</text></view>
       <view class="spacer-24"></view>
       <view class="bar"><view class="fill" style="width: {{intakePercent}};"></view></view>
-      <view class="muted">今日还可摄入约 {{remain}} kcal</view>
     </view>
 
     <view class="spacer-24"></view>

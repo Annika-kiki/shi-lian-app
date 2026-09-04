@@ -10,3 +10,22 @@
   background: #fffdf8;
   font-size: 30rpx;
 }
+
+.exercise-row {
+  display: grid;
+  grid-template-columns: 140rpx minmax(0, 1fr);
+  gap: 22rpx;
+  align-items: center;
+}
+
+.exercise-thumb {
+  width: 140rpx;
+  height: 140rpx;
+  border-radius: 18rpx;
+  background: #dfeedd;
+  display: block;
+}
+
+.exercise-info {
+  min-width: 0;
+}

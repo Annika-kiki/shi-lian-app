@@ -32,6 +32,7 @@ Page({
   data: {
     meals: [],
     remain: 1800,
+    targetText: "1,800",
     totalText: "0",
     intakePercent: "0%"
   },
@@ -46,10 +47,12 @@ Page({
       getMeals().catch(() => [])
     ]).then(([dashboard, records]) => {
       if (dashboard) {
+        const target = Number(dashboard.daily_calorie_target) || 1800
         this.setData({
           remain: Math.round(dashboard.remaining_calories_kcal),
+          targetText: Math.round(target).toLocaleString(),
           totalText: Math.round(dashboard.intake_calories_kcal).toLocaleString(),
-          intakePercent: `${Math.min(100, (dashboard.intake_calories_kcal / 1800) * 100)}%`,
+          intakePercent: `${Math.min(100, (dashboard.intake_calories_kcal / target) * 100)}%`,
           meals: mapMealItems(records)
         })
         return
@@ -59,6 +62,7 @@ Page({
       this.setData({
         meals: local.items,
         remain: local.remain,
+        targetText: Math.round(local.dailyTarget || 1800).toLocaleString(),
         totalText: local.total.toLocaleString(),
         intakePercent: local.percent
       })

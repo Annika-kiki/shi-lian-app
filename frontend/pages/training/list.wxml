@@ -18,8 +18,9 @@
     <view class="spacer-24"></view>
     <view class="list">
       <block wx:for="{{filteredExercises}}" wx:key="id">
-        <view class="list-item" data-id="{{item.id}}" bindtap="openDetail">
-          <view class="row-between">
+        <view class="list-item exercise-row" data-id="{{item.id}}" bindtap="openDetail">
+          <image class="exercise-thumb" src="{{item.coverSrc}}" mode="aspectFill" />
+          <view class="row-between exercise-info">
             <view>
               <view class="item-title">{{item.title}}</view>
               <view class="item-meta">{{item.muscle}} · {{item.equipment}} · {{item.level}}</view>
