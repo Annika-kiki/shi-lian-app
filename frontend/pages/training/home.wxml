@@ -1,96 +1,70 @@
-<view class="page">
-  <view class="page-body">
-    <view class="header">
-      <view>
-        <text class="header-subtitle">今天练什么？</text>
-        <view class="header-title">训练</view>
+<view class="page training-page">
+  <view class="page-body training-body">
+    <view class="training-header">
+      <view><text class="eyebrow">TODAY'S TRAINING</text><view class="page-title">今天，动起来</view></view>
+      <view class="week-badge"><text class="week-number">{{summary.moves}}</text><text class="week-label">个动作</text></view>
+    </view>
+
+    <view class="hero-card">
+      <view class="hero-topline"><text class="hero-kicker">为你推荐</text><text class="goal-tag">{{plan.goalName}}</text></view>
+      <view class="hero-title">{{summary.focus}}</view>
+      <view class="hero-meta">
+        <view class="meta-block"><text class="meta-value">{{summary.minutes}}</text><text class="meta-label">分钟</text></view><view class="meta-line"></view>
+        <view class="meta-block"><text class="meta-value">{{summary.moves}}</text><text class="meta-label">动作</text></view><view class="meta-line"></view>
+        <view class="meta-block"><text class="meta-value">{{plan.goalName}}</text><text class="meta-label">训练目标</text></view>
       </view>
-      <view class="icon-btn">⌕</view>
+      <view class="hero-action" bindtap="openRecent"><text>开始训练</text><text class="action-arrow">→</text></view>
     </view>
 
-    <view class="card card-soft card-pad">
-      <view class="muted">今日建议</view>
-      <view class="spacer-24"></view>
-      <view class="item-title">{{summary.focus}}</view>
-      <view class="item-meta">{{summary.moves}} 个动作 · 约 {{summary.minutes}} 分钟</view>
-      <view class="spacer-24"></view>
-      <view class="btn" bindtap="openRecent">开始训练</view>
+    <view class="section-head">
+      <view><text class="section-kicker">YOUR PLAN</text><view class="section-title-clean">今日计划</view></view>
+      <text class="section-count">{{plan.exercises.length}} 项</text>
     </view>
-
-    <view class="spacer-24"></view>
-    <view class="row-between">
-      <text class="section-title">定制计划</text>
-      <text class="muted">{{plan.goalName}}</text>
-    </view>
-    <view class="card card-pad plan-card">
-      <view class="item-title">{{plan.title}}</view>
-      <view class="item-meta">{{plan.description}}</view>
-      <view class="plan-rule">{{plan.resistance}}</view>
-    </view>
-
-    <view class="spacer-24"></view>
-    <view class="list">
+    <view class="exercise-list">
       <block wx:for="{{plan.exercises}}" wx:key="id">
-        <view class="list-item exercise-row" data-id="{{item.id}}" bindtap="openPlanExercise">
-          <image class="exercise-thumb" src="{{item.coverSrc}}" mode="aspectFill" />
-          <view class="exercise-copy">
-            <view class="item-title">{{item.name}}</view>
-            <view class="item-meta">{{item.meta}}</view>
-            <view class="item-meta">{{item.dose}}</view>
-            <view class="plan-note">{{item.notes}}</view>
-          </view>
+        <view wx:if="{{index < 3}}" class="exercise-row-new" data-id="{{item.id}}" bindtap="openPlanExercise">
+          <view class="exercise-number">0{{index + 1}}</view>
+          <image class="exercise-image" src="{{item.coverSrc}}" mode="aspectFit" />
+          <view class="exercise-copy"><view class="exercise-name">{{item.name}}</view><view class="exercise-dose">{{item.dose}}</view></view>
+          <text class="row-arrow">›</text>
         </view>
       </block>
     </view>
 
-    <view class="spacer-24"></view>
-    <view class="card card-pad cardio-card" bindtap="openCardio">
-      <view class="row-between">
-        <view class="section-title">有氧安排</view>
-        <view class="cardio-action">记录</view>
-      </view>
-      <view class="item-meta">{{plan.cardio.summary}}</view>
-      <view class="plan-note">{{plan.cardio.notes}}</view>
+    <view class="cardio-strip" bindtap="openCardio">
+      <view class="cardio-mark">有氧</view>
+      <view class="cardio-copy"><view class="cardio-title">{{plan.cardio.mode}}</view><view class="cardio-meta">{{plan.cardio.summary}}</view></view>
+      <view class="cardio-add">＋</view>
     </view>
 
-    <view class="spacer-24"></view>
-    <text class="section-title">按部位查找</text>
-    <view class="grid-3">
-      <block wx:for="{{bodyParts}}" wx:key="part">
-        <view class="card card-pad part-card" data-part="{{item.part}}" bindtap="openList">
-          <view class="part-icon">{{item.icon}}</view>
-          <view class="part-label">{{item.label}}</view>
-        </view>
-      </block>
-    </view>
-
-    <view class="spacer-24"></view>
-    <view class="row-between">
-      <text class="section-title">最近训练</text>
-      <text class="muted" bindtap="openList" data-part="all">全部 ></text>
-    </view>
-    <view class="list-item" bindtap="openRecent">
-      <view class="row-between">
-        <view>
-          <view class="item-title">{{summary.recent.title}}</view>
-          <view class="item-meta">{{summary.recent.detail}}</view>
-        </view>
-        <view class="item-title">{{summary.recentDate}}</view>
+    <view class="section-head body-section-head"><view><text class="section-kicker">EXPLORE</text><view class="section-title-clean">按部位查找</view></view></view>
+    <scroll-view class="part-scroll" scroll-x="true" enhanced="true" show-scrollbar="false">
+      <view class="part-track">
+        <block wx:for="{{bodyParts}}" wx:key="part">
+          <view class="part-tile" data-part="{{item.part}}" bindtap="openList"><text class="part-code">{{item.part}}</text><text class="part-name">{{item.label}}</text></view>
+        </block>
       </view>
+    </scroll-view>
+
+    <view class="section-head recent-head">
+      <view><text class="section-kicker">RECENT</text><view class="section-title-clean">最近训练</view></view>
+      <text class="text-action" bindtap="openList" data-part="all">查看全部</text>
+    </view>
+    <view class="recent-row" bindtap="openRecent">
+      <view class="recent-date">{{summary.recentDate}}</view>
+      <view class="recent-copy"><view class="recent-title">{{summary.recent.title}}</view><view class="recent-meta">{{summary.recent.detail}}</view></view>
+      <text class="row-arrow">›</text>
     </view>
   </view>
 
   <view wx:if="{{showCardioModal}}" class="modal-mask" catchtap="closeCardio">
     <view class="modal-card" catchtap="noop">
-      <view class="row-between">
-        <view class="section-title">记录有氧</view>
-        <view class="icon-btn modal-close" bindtap="closeCardio">×</view>
-      </view>
-      <view class="item-title">{{plan.cardio.mode}}</view>
-      <view class="item-meta">{{plan.cardio.summary}}</view>
-      <textarea class="cardio-input cardio-textarea" value="{{cardioInput}}" bindinput="onCardioInput" maxlength="255" placeholder="例如：蛙泳40分钟，或坡度10速度5.5 10分钟 坡度11速度5.5 20分钟"></textarea>
-      <view class="plan-note">{{cardioEstimateText}}</view>
-      <view class="btn" bindtap="saveCardio">{{savingCardio ? "保存中..." : "保存有氧"}}</view>
+      <view class="modal-handle"></view>
+      <view class="row-between"><view><text class="section-kicker">CARDIO LOG</text><view class="section-title-clean">记录有氧</view></view><view class="modal-close" bindtap="closeCardio">×</view></view>
+      <view class="cardio-preset">{{plan.cardio.summary}}</view>
+      <textarea class="cardio-input" value="{{cardioInput}}" bindinput="onCardioInput" maxlength="255" placeholder="例如：蛙泳 40 分钟"></textarea>
+      <view class="estimate-text">{{cardioEstimateText}}</view>
+      <view class="primary-button" bindtap="saveCardio">{{savingCardio ? "保存中..." : "保存记录"}}</view>
     </view>
   </view>
 

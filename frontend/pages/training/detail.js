@@ -37,6 +37,7 @@ function buildFallbackExercise(id) {
 Page({
   data: {
     exercise: getExerciseById("bench"),
+    favorite: false,
     detail: {
       ...exerciseDetail.bench,
       coverSrc: DEFAULT_COVER
@@ -68,6 +69,12 @@ Page({
     wx.navigateTo({
       url: "/pages/training/record"
     })
+  },
+
+  toggleFavorite() {
+    const favorite = !this.data.favorite
+    this.setData({ favorite })
+    wx.showToast({ title: favorite ? "已收藏" : "已取消收藏", icon: "none" })
   },
 
   onBottomNav(event) {

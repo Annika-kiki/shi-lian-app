@@ -16,6 +16,12 @@ function cloneSets(sets) {
   return sets.map((item) => ({ ...item }))
 }
 
+function formatDuration(totalSeconds) {
+  const minutes = Math.floor(totalSeconds / 60)
+  const seconds = totalSeconds % 60
+  return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`
+}
+
 function buildWorkoutFromExercise(exercise) {
   return {
     name: exercise && exercise.title || recordWorkout.name,
@@ -30,10 +36,21 @@ Page({
     workout: recordWorkout,
     sets: cloneSets(recordWorkout.sets),
     exercise: null,
-    exerciseId: ""
+    exerciseId: "",
+    startedAtMs: 0,
+    elapsedText: "00:00",
+    completedCount: 2,
+    progressPercent: 50,
+    restSeconds: 0,
+    restText: "01:00"
   },
 
   onLoad(query) {
+    this.setData({ startedAtMs: Date.now() })
+    this.sessionTimer = setInterval(() => {
+      const seconds = Math.max(0, Math.floor((Date.now() - this.data.startedAtMs) / 1000))
+      this.setData({ elapsedText: formatDuration(seconds) })
+    }, 1000)
     const stored = wx.getStorageSync("currentWorkoutExercise") || {}
     const exerciseId = String(query.id || stored.id || "")
     if (!exerciseId || exerciseId === "bench") {
@@ -67,7 +84,24 @@ Page({
       })
   },
 
+  onUnload() {
+    clearInterval(this.sessionTimer)
+    clearInterval(this.restTimer)
+  },
+
   goBack() {
+    if (this.data.completedCount < this.data.sets.length) {
+      wx.showModal({
+        title: "结束当前训练？",
+        content: "未完成的训练数据不会保存。",
+        confirmText: "退出",
+        confirmColor: "#b44b32",
+        success: (result) => {
+          if (result.confirm) navigateBackOrRedirect("/pages/training/detail?id=" + (this.data.exerciseId || "bench"))
+        }
+      })
+      return
+    }
     navigateBackOrRedirect("/pages/training/detail?id=" + (this.data.exerciseId || "bench"))
   },
 
@@ -75,7 +109,26 @@ Page({
     const index = event.currentTarget.dataset.index
     const sets = cloneSets(this.data.sets)
     sets[index].done = !sets[index].done
-    this.setData({ sets })
+    this.updateSets(sets)
+    if (sets[index].done) this.startRestTimer(60)
+  },
+
+  onWeightInput(event) {
+    const sets = cloneSets(this.data.sets)
+    sets[event.currentTarget.dataset.index].weight = event.detail.value
+    this.updateSets(sets)
+  },
+
+  onRepsInput(event) {
+    const sets = cloneSets(this.data.sets)
+    sets[event.currentTarget.dataset.index].reps = event.detail.value
+    this.updateSets(sets)
+  },
+
+  updateSets(sets) {
+    const completedCount = sets.filter((item) => item.done).length
+    const progressPercent = sets.length ? Math.round(completedCount / sets.length * 100) : 0
+    this.setData({ sets, completedCount, progressPercent })
   },
 
   addSet() {
@@ -86,7 +139,32 @@ Page({
       reps: 8,
       done: false
     })
-    this.setData({ sets })
+    this.updateSets(sets)
+  },
+
+  startRestTimer(seconds) {
+    clearInterval(this.restTimer)
+    this.setData({ restSeconds: seconds, restText: formatDuration(seconds) })
+    this.restTimer = setInterval(() => {
+      const next = this.data.restSeconds - 1
+      if (next <= 0) {
+        clearInterval(this.restTimer)
+        this.setData({ restSeconds: 0, restText: "01:00" })
+        wx.vibrateShort({ type: "medium" })
+        wx.showToast({ title: "休息结束", icon: "none" })
+        return
+      }
+      this.setData({ restSeconds: next, restText: formatDuration(next) })
+    }, 1000)
+  },
+
+  toggleRestTimer() {
+    if (this.data.restSeconds) {
+      clearInterval(this.restTimer)
+      this.setData({ restSeconds: 0, restText: "01:00" })
+      return
+    }
+    this.startRestTimer(60)
   },
 
   async finishWorkout() {
@@ -103,7 +181,7 @@ Page({
     try {
       const session = await createWorkoutSession({
         title: this.data.workout.name || exercise.title,
-        duration_min: Math.max(20, this.data.sets.length * 5)
+        duration_min: Math.max(1, Math.round((Date.now() - this.data.startedAtMs) / 60000))
       })
 
       for (const item of this.data.sets) {
@@ -121,6 +199,7 @@ Page({
         title: "训练已保存",
         icon: "success"
       })
+      setTimeout(() => wx.redirectTo({ url: "/pages/training/home" }), 500)
     } catch (error) {
       wx.showToast({
         title: "后端未启动，已保留页面数据",

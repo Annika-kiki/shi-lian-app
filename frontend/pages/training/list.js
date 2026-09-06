@@ -72,6 +72,10 @@ Page({
     this.setData({ keyword: event.detail.value }, () => this.updateFiltered())
   },
 
+  clearSearch() {
+    this.setData({ keyword: "" }, () => this.updateFiltered())
+  },
+
   openDetail(event) {
     const id = event.currentTarget.dataset.id
     wx.navigateTo({

@@ -1,6 +1,6 @@
 @import "../../styles/common.wxss";
 
-.page {
+.detail-page {
   height: 100vh;
   display: flex;
   flex-direction: column;
@@ -11,21 +11,24 @@
   flex: 1;
   min-height: 0;
 }
-
-.exercise-cover {
-  overflow: hidden;
-  border-radius: 32rpx;
-  background: #8bb39a;
-}
-
-.cover-image {
-  width: 100%;
-  height: 360rpx;
-  display: block;
-}
-
-.step {
-  padding: 12rpx 0;
-  font-size: 28rpx;
-  color: #425851;
-}
+.detail-body { min-height: 100%; }
+.exercise-cover { height: 520rpx; position: relative; background: #e5e2d8; overflow: hidden; }
+.cover-image { width: 100%; height: 100%; display: block; }
+.floating-nav { position: absolute; top: 34rpx; left: 30rpx; right: 30rpx; display: flex; align-items: center; justify-content: space-between; }
+.float-button { width: 72rpx; height: 72rpx; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: rgba(255,253,247,.92); color: #173b31; font-size: 42rpx; box-shadow: 0 8rpx 24rpx rgba(23,59,49,.1); }
+.detail-content { padding: 36rpx 32rpx 20rpx; }
+.detail-kicker { color: #9a8065; font-size: 19rpx; font-weight: 700; letter-spacing: 3rpx; }
+.detail-title { margin-top: 10rpx; color: #173b31; font-size: 48rpx; font-weight: 800; }
+.detail-tags { margin-top: 22rpx; display: flex; flex-wrap: wrap; gap: 10rpx; }
+.detail-tags text { padding: 9rpx 14rpx; border-radius: 8rpx; background: #e8e3d7; color: #5f6f68; font-size: 21rpx; }
+.content-section { margin-top: 54rpx; border-top: 1rpx solid rgba(23,59,49,.16); }
+.section-heading { padding: 28rpx 0 18rpx; color: #173b31; font-size: 34rpx; font-weight: 800; }
+.step { padding: 20rpx 0; display: flex; align-items: flex-start; gap: 20rpx; border-bottom: 1rpx solid rgba(23,59,49,.1); }
+.step-number { width: 48rpx; height: 48rpx; flex: none; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: #173b31; color: #fff; font-size: 21rpx; font-weight: 700; }
+.step-copy { padding-top: 5rpx; color: #435a51; font-size: 27rpx; line-height: 1.65; }
+.safety-card { margin-top: 34rpx; padding: 26rpx; border-left: 7rpx solid #c96443; background: #ebe1d3; }
+.safety-label { display: block; color: #9a4d36; font-size: 22rpx; font-weight: 800; }
+.safety-copy { display: block; margin-top: 11rpx; color: #5e5148; font-size: 25rpx; line-height: 1.6; }
+.detail-footer-space { height: 160rpx; }
+.sticky-action { position: fixed; left: 0; right: 0; bottom: 0; padding: 18rpx 32rpx calc(18rpx + env(safe-area-inset-bottom)); background: rgba(244,241,232,.96); }
+.start-button { height: 94rpx; padding: 0 30rpx; border-radius: 18rpx; display: flex; align-items: center; justify-content: space-between; background: #173b31; color: #fff; font-size: 30rpx; font-weight: 800; }

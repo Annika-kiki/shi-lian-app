@@ -1,44 +1,37 @@
-<view class="page">
+<view class="page detail-page">
   <scroll-view class="page-scroll" scroll-y="true">
-    <view class="page-body">
-      <view class="header">
-        <view class="icon-btn back-btn" bindtap="goBack">←</view>
-        <text class="header-title">动作详情</text>
-        <view class="icon-btn">♡</view>
-      </view>
-
-      <view class="exercise-cover card">
+    <view class="detail-body">
+      <view class="exercise-cover">
         <image
           class="cover-image"
           src="{{detail.coverSrc}}"
-          mode="aspectFill"
+          mode="aspectFit"
         />
+        <view class="floating-nav">
+          <view class="float-button" bindtap="goBack">‹</view>
+          <view class="float-button" bindtap="toggleFavorite">{{favorite ? '♥' : '♡'}}</view>
+        </view>
       </view>
 
-      <view class="spacer-24"></view>
-      <text class="muted">{{detail.part}}</text>
-      <view class="item-title">{{exercise.title}}</view>
-      <view class="item-meta">主要肌群：{{detail.main}}  辅助：{{detail.assist}}</view>
+      <view class="detail-content">
+        <text class="detail-kicker">EXERCISE GUIDE</text>
+        <view class="detail-title">{{exercise.title}}</view>
+        <view class="detail-tags"><text>{{detail.part}}</text><text>主要 {{detail.main}}</text><text>辅助 {{detail.assist}}</text></view>
 
-      <view class="spacer-24"></view>
-      <view class="card card-pad">
-        <text class="section-title">动作步骤</text>
+      <view class="content-section">
+        <view class="section-heading">动作步骤</view>
         <block wx:for="{{detail.steps}}" wx:key="index">
-          <view class="step">{{index + 1}}. {{item}}</view>
+          <view class="step"><view class="step-number">{{index + 1}}</view><view class="step-copy">{{item}}</view></view>
         </block>
       </view>
 
-      <view class="spacer-24"></view>
-      <view class="card card-pad">
-        <text class="section-title">注意事项</text>
-        <text class="muted">{{detail.notes}}</text>
+      <view class="safety-card">
+        <text class="safety-label">安全提示</text>
+        <text class="safety-copy">{{detail.notes}}</text>
       </view>
-
-      <view class="spacer-24"></view>
-      <view class="btn" bindtap="startRecord">开始记录</view>
-      <view class="footer-space"></view>
+      </view>
+      <view class="detail-footer-space"></view>
     </view>
   </scroll-view>
-
-  <bottom-nav active="/pages/training/home" current="/pages/training/detail" bind:change="onBottomNav" />
+  <view class="sticky-action"><view class="start-button" bindtap="startRecord"><text>开始记录</text><text>→</text></view></view>
 </view>

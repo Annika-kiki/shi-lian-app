@@ -1,46 +1,40 @@
-<view class="page">
-  <view class="page-body">
-    <view class="header">
-      <view class="icon-btn back-btn" bindtap="goBack">←</view>
-      <text class="header-title">训练记录</text>
-      <view class="header-subtitle">历史</view>
+<view class="page record-page">
+  <view class="page-body record-body">
+    <view class="record-header">
+      <view class="record-close" bindtap="goBack">×</view>
+      <view class="record-heading"><text>TRAINING SESSION</text><view>训练中</view></view>
+      <view class="elapsed-time">{{elapsedText}}</view>
     </view>
 
-    <view class="card card-soft card-pad">
-      <view class="muted">正在训练 · {{workout.part}}</view>
-      <view class="item-title">{{workout.name}}</view>
-      <view class="item-meta">已训练 {{workout.startedAt}} · 预计消耗 {{workout.kcal}} kcal</view>
+    <view class="workout-summary">
+      <view class="summary-label">{{workout.part}} · {{workout.startedAt}} 开始</view>
+      <view class="summary-title">{{workout.name}}</view>
+      <view class="progress-line"><view class="progress-fill" style="width: {{progressPercent}}%"></view></view>
+      <view class="summary-foot"><text>已完成 {{completedCount}} / {{sets.length}} 组</text><text>预计 {{workout.kcal}} kcal</text></view>
     </view>
 
-    <view class="spacer-24"></view>
-    <view class="row-between muted">
-      <text>组</text>
-      <text>重量 kg</text>
-      <text>次数</text>
-      <text>完成</text>
+    <view class="table-head">
+      <text>组</text><text>重量 KG</text><text>次数</text><text>完成</text>
     </view>
 
-    <view class="spacer-24"></view>
-    <view class="list">
+    <view class="set-list">
       <block wx:for="{{sets}}" wx:key="group">
-        <view class="row-between set-row">
+        <view class="set-row {{item.done ? 'set-row-done' : ''}}">
           <view class="set-index">{{item.group}}</view>
-          <view class="set-box">{{item.weight}}</view>
-          <view class="set-box">{{item.reps}}</view>
+          <input class="set-input" type="digit" value="{{item.weight}}" data-index="{{index}}" bindinput="onWeightInput" />
+          <input class="set-input" type="number" value="{{item.reps}}" data-index="{{index}}" bindinput="onRepsInput" />
           <view class="set-done {{item.done ? 'done' : ''}}" data-index="{{index}}" bindtap="toggleDone">{{item.done ? '✓' : ''}}</view>
         </view>
       </block>
     </view>
 
-    <view class="spacer-24"></view>
-    <view class="list-item add-row" bindtap="addSet">
-      <view>+ 添加一组</view>
-      <view class="muted">休息 01:08</view>
+    <view class="set-tools">
+      <view class="add-set" bindtap="addSet">＋ 添加一组</view>
+      <view class="rest-timer {{restSeconds ? 'rest-active' : ''}}" bindtap="toggleRestTimer">
+        <text>{{restSeconds ? '休息中' : '休息计时'}}</text><text>{{restText}}</text>
+      </view>
     </view>
-
-    <view class="spacer-24"></view>
-    <view class="btn" bindtap="finishWorkout">完成本次训练</view>
+    <view class="record-footer-space"></view>
   </view>
-
-  <bottom-nav active="/pages/training/home" current="/pages/training/record" bind:change="onBottomNav" />
+  <view class="record-footer"><view class="finish-button" bindtap="finishWorkout"><text>完成本次训练</text><text>{{completedCount}}/{{sets.length}}</text></view></view>
 </view>
