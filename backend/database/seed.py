@@ -1,5 +1,9 @@
 from backend.database.session import Base, engine, SessionLocal
-from backend.models.entities import Exercise, Ingredient, Recipe, RecipeIngredient, RecipeStep
+from backend.database.catalog import (CARDIO_PRESCRIPTIONS, EXERCISES as CATALOG_EXERCISES,
+    GOAL_EXERCISE_PRESCRIPTIONS, TRAINING_GOALS)
+from backend.models.entities import (CardioPrescription, Exercise,
+    GoalExercisePrescription, Ingredient, Recipe, RecipeIngredient, RecipeStep,
+    TrainingGoal)
 
 
 FOODS = [
@@ -371,21 +375,127 @@ def _seed_recipes(db):
         existing.add(recipe_data["name"])
 
 
+IMAGE_FALLBACKS = {
+    "push-up.png": "kneeling-push-up.png",
+    "barbell-back-squat.png": "goblet-squat.png",
+}
+
+PRESCRIPTION_EXERCISE_ALIASES = {
+    "哑铃单臂划船": "单臂哑铃划船",
+    "哑铃推举": "坐姿哑铃推举",
+    "哑铃弯举": "杠铃弯举",
+    "上斜哑铃卧推": "哑铃上斜卧推",
+}
+
+LEGACY_EXERCISE_IMAGES = {
+    "上斜哑铃卧推": "/images/exercises/incline-dumbbell-press.png",
+    "哑铃单臂划船": "/images/exercises/one-arm-dumbbell-row.png",
+    "哑铃推举": "/images/exercises/seated-dumbbell-press.png",
+    "哑铃弯举": "/images/exercises/hammer-curl.png",
+    "窄距俯卧撑": "/images/exercises/kneeling-push-up.png",
+}
+
+
+def _catalog_exercise_data(row):
+    name, body_part, primary, secondary, equipment, difficulty, image, steps, cautions, met = row
+    image_name = IMAGE_FALLBACKS.get(image, image)
+    return {
+        "name": name,
+        "body_part": body_part,
+        "primary_muscle": primary,
+        "secondary_muscle": secondary,
+        "equipment": equipment,
+        "difficulty": difficulty,
+        "thumbnail_url": f"/images/exercises/{image_name}",
+        "steps": steps,
+        "cautions": cautions,
+        "met": met,
+    }
+
+
+def _normalize_exercise_data(exercise_data):
+    data = dict(exercise_data)
+    if data["name"] in LEGACY_EXERCISE_IMAGES:
+        data["thumbnail_url"] = LEGACY_EXERCISE_IMAGES[data["name"]]
+    elif data.get("thumbnail_url"):
+        data["thumbnail_url"] = data["thumbnail_url"].replace("/assets/exercises/", "/images/exercises/")
+    return data
+
+
 def _seed_exercises(db):
-    for exercise_data in EXERCISES:
-        exercise = db.query(Exercise).filter_by(name=exercise_data["name"]).first()
+    existing = {item.name: item for item in db.query(Exercise).all()}
+    for exercise_data in EXERCISES + [_catalog_exercise_data(row) for row in CATALOG_EXERCISES]:
+        exercise_data = _normalize_exercise_data(exercise_data)
+        exercise = existing.get(exercise_data["name"])
         if exercise:
+            for key, value in exercise_data.items():
+                setattr(exercise, key, value)
+        else:
+            exercise = Exercise(**exercise_data)
+            db.add(exercise)
+            existing[exercise_data["name"]] = exercise
+
+
+def _seed_training_recommendations(db):
+    db.flush()
+    exercises = {item.name: item for item in db.query(Exercise).all()}
+    for code, name, description, resistance, cardio in TRAINING_GOALS:
+        goal = db.get(TrainingGoal, code)
+        values = dict(name=name, description=description,
+                      resistance_principle=resistance, cardio_principle=cardio, active=True)
+        if goal:
+            for key, value in values.items(): setattr(goal, key, value)
+        else:
+            db.add(TrainingGoal(code=code, **values))
+    db.flush()
+    expected_pairs = set()
+    for row in GOAL_EXERCISE_PRESCRIPTIONS:
+        (goal_code, exercise_name, priority, pattern, sets_min, sets_max,
+         reps_min, reps_max, duration, rest, rir_min, rir_max, notes) = row
+        exercise = exercises.get(exercise_name) or exercises.get(PRESCRIPTION_EXERCISE_ALIASES.get(exercise_name, ""))
+        if not exercise:
             continue
-        db.add(Exercise(**exercise_data))
+        expected_pairs.add((goal_code, exercise.id))
+        item = db.query(GoalExercisePrescription).filter_by(
+            goal_code=goal_code, exercise_id=exercise.id).first()
+        values = dict(priority=priority, movement_pattern=pattern, sets_min=sets_min,
+                      sets_max=sets_max, reps_min=reps_min, reps_max=reps_max,
+                      duration_seconds=duration, rest_seconds=rest, rir_min=rir_min,
+                      rir_max=rir_max, notes=notes)
+        if item:
+            for key, value in values.items(): setattr(item, key, value)
+        else:
+            db.add(GoalExercisePrescription(goal_code=goal_code,
+                                            exercise_id=exercise.id, **values))
+    goal_codes = {code for code, *_ in TRAINING_GOALS}
+    for item in db.query(GoalExercisePrescription).filter(
+            GoalExercisePrescription.goal_code.in_(goal_codes)).all():
+        if (item.goal_code, item.exercise_id) not in expected_pairs:
+            db.delete(item)
+    for row in CARDIO_PRESCRIPTIONS:
+        (goal_code, level, modes, sessions_min, sessions_max, minutes_min,
+         minutes_max, method, intensity_min, intensity_max, work, rest, notes) = row
+        item = db.query(CardioPrescription).filter_by(goal_code=goal_code, level=level).first()
+        values = dict(modes=modes, sessions_min=sessions_min, sessions_max=sessions_max,
+                      minutes_min=minutes_min, minutes_max=minutes_max,
+                      intensity_method=method, intensity_min=intensity_min,
+                      intensity_max=intensity_max, interval_work_seconds=work,
+                      interval_rest_seconds=rest, notes=notes)
+        if item:
+            for key, value in values.items(): setattr(item, key, value)
+        else:
+            db.add(CardioPrescription(goal_code=goal_code, level=level, **values))
 
 
 def init_db():
+    """Idempotently upgrade catalog data without deleting user records."""
     Base.metadata.create_all(bind=engine)
     db = SessionLocal()
     try:
         _seed_foods(db)
         _seed_recipes(db)
         _seed_exercises(db)
+        _seed_training_recommendations(db)
         db.commit()
     finally:
         db.close()

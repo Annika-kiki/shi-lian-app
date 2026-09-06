@@ -21,3 +21,50 @@
   border-radius: 999rpx;
   background: #4f8168;
 }
+
+.score-card {
+  border-color: #b9cbbb;
+}
+
+.score-number {
+  margin-top: 10rpx;
+  font-size: 72rpx;
+  line-height: 1;
+  font-weight: 800;
+  color: #243a33;
+}
+
+.score-unit {
+  font-size: 28rpx;
+  color: #6d8077;
+  font-weight: 500;
+}
+
+.score-side {
+  display: flex;
+  flex-direction: column;
+  gap: 12rpx;
+  color: #4f8168;
+  font-size: 26rpx;
+  text-align: right;
+}
+
+.tip-box {
+  margin-top: 22rpx;
+  padding: 20rpx;
+  border-radius: 18rpx;
+  background: #edf5eb;
+  color: #53665d;
+  font-size: 26rpx;
+  line-height: 1.55;
+}
+
+.quick-input {
+  height: 88rpx;
+  padding: 0 24rpx;
+  border: 2rpx solid #ddd5c3;
+  border-radius: 20rpx;
+  background: #fffdf8;
+  box-sizing: border-box;
+  font-size: 28rpx;
+}

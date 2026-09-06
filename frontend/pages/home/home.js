@@ -1,6 +1,6 @@
 ﻿const { getUser, calculateNutritionTargets } = require("../../utils/user")
 const { getMealSummary } = require("../../utils/meal")
-const { getTodayDashboard, getMeals } = require("../../utils/api")
+const { getTodayDashboard, getMeals, getTodayInsight, quickLog } = require("../../utils/api")
 
 function mapMealItems(records) {
   const slots = [
@@ -46,6 +46,33 @@ function buildDateText() {
 }
 
 const initialTargets = calculateNutritionTargets(getUser())
+const fallbackInsight = {
+  score: 0,
+  dietScore: 0,
+  workoutScore: 0,
+  advice: ["记录一餐或一次训练后，食练周期会给出今日评分和建议。"],
+  dimensions: [
+    { label: "热量", score: 0, width: "0%" },
+    { label: "蛋白质", score: 0, width: "0%" },
+    { label: "均衡", score: 0, width: "0%" },
+    { label: "训练", score: 0, width: "0%" }
+  ]
+}
+
+function normalizeInsight(insight) {
+  if (!insight) return fallbackInsight
+  return {
+    score: Math.round(insight.score || 0),
+    dietScore: Math.round(insight.diet_score || 0),
+    workoutScore: Math.round(insight.workout_score || 0),
+    advice: insight.advice && insight.advice.length ? insight.advice : fallbackInsight.advice,
+    dimensions: (insight.dimensions || []).map((item) => ({
+      label: item.label,
+      score: Math.round(item.score || 0),
+      width: `${Math.min(100, Math.max(0, item.score || 0))}%`
+    }))
+  }
+}
 
 Page({
   data: {
@@ -63,7 +90,10 @@ Page({
       carbsPercent: "0%",
       fatPercent: "0%"
     },
-    meals: []
+    meals: [],
+    insight: fallbackInsight,
+    quickInput: "",
+    quickSaving: false
   },
 
   onShow() {
@@ -75,8 +105,9 @@ Page({
     const localTargets = calculateNutritionTargets(user)
     Promise.all([
       getTodayDashboard().catch(() => null),
-      getMeals().catch(() => [])
-    ]).then(([dashboard, records]) => {
+      getMeals().catch(() => []),
+      getTodayInsight().catch(() => null)
+    ]).then(([dashboard, records, insight]) => {
       if (dashboard) {
         const dailyTarget = Number(dashboard.daily_calorie_target) ||
           Number(dashboard.intake_calories_kcal || 0) + Number(dashboard.remaining_calories_kcal || 0) ||
@@ -105,7 +136,8 @@ Page({
             carbsPercent: percent(dashboard.nutrition.carb.consumed, dashboard.nutrition.carb.target),
             fatPercent: percent(dashboard.nutrition.fat.consumed, dashboard.nutrition.fat.target)
           },
-          meals: mapMealItems(records)
+          meals: mapMealItems(records),
+          insight: normalizeInsight(insight)
         })
         return
       }
@@ -126,9 +158,32 @@ Page({
           carbsPercent: "0%",
           fatPercent: "0%"
         },
-        meals: local.items
+        meals: local.items,
+        insight: normalizeInsight(insight)
       })
     }).catch(() => {})
+  },
+
+  onQuickInput(event) {
+    this.setData({ quickInput: event.detail.value })
+  },
+
+  saveQuickLog() {
+    const text = String(this.data.quickInput || "").trim()
+    if (!text) {
+      wx.showToast({ title: "先输入一餐或运动", icon: "none" })
+      return
+    }
+    this.setData({ quickSaving: true })
+    quickLog(text).then(() => {
+      wx.showToast({ title: "已记录", icon: "success" })
+      this.setData({ quickInput: "" })
+      this.loadDashboard()
+    }).catch((error) => {
+      wx.showToast({ title: error.message || "记录失败", icon: "none" })
+    }).finally(() => {
+      this.setData({ quickSaving: false })
+    })
   },
 
   goFood() {

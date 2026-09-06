@@ -1,5 +1,5 @@
-﻿const { getMealSummary } = require("../../utils/meal")
-const { getTodayDashboard, getMeals } = require("../../utils/api")
+const { getMealSummary } = require("../../utils/meal")
+const { getTodayDashboard, getMeals, getTodayInsight, quickLog } = require("../../utils/api")
 
 function mapMealItems(records) {
   const slots = [
@@ -28,12 +28,23 @@ function mapMealItems(records) {
   })
 }
 
+function pickAdvice(insight) {
+  return insight && insight.advice && insight.advice.length
+    ? insight.advice[0]
+    : "记录一餐后，食练周期会分析这一天的饮食是否适合你的目标。"
+}
+
 Page({
   data: {
     meals: [],
     remain: 1800,
+    targetText: "1,800",
     totalText: "0",
-    intakePercent: "0%"
+    intakePercent: "0%",
+    dietScore: 0,
+    insightText: "记录一餐后，食练周期会分析这一天的饮食是否适合你的目标。",
+    quickInput: "",
+    quickSaving: false
   },
 
   onShow() {
@@ -43,14 +54,19 @@ Page({
   loadMeals() {
     Promise.all([
       getTodayDashboard().catch(() => null),
-      getMeals().catch(() => [])
-    ]).then(([dashboard, records]) => {
+      getMeals().catch(() => []),
+      getTodayInsight().catch(() => null)
+    ]).then(([dashboard, records, insight]) => {
       if (dashboard) {
+        const target = Number(dashboard.daily_calorie_target) || 1800
         this.setData({
           remain: Math.round(dashboard.remaining_calories_kcal),
+          targetText: Math.round(target).toLocaleString(),
           totalText: Math.round(dashboard.intake_calories_kcal).toLocaleString(),
-          intakePercent: `${Math.min(100, (dashboard.intake_calories_kcal / 1800) * 100)}%`,
-          meals: mapMealItems(records)
+          intakePercent: `${Math.min(100, (dashboard.intake_calories_kcal / target) * 100)}%`,
+          meals: mapMealItems(records),
+          dietScore: Math.round(insight && insight.diet_score || 0),
+          insightText: pickAdvice(insight)
         })
         return
       }
@@ -59,10 +75,35 @@ Page({
       this.setData({
         meals: local.items,
         remain: local.remain,
+        targetText: Math.round(local.dailyTarget || 1800).toLocaleString(),
         totalText: local.total.toLocaleString(),
-        intakePercent: local.percent
+        intakePercent: local.percent,
+        dietScore: Math.round(insight && insight.diet_score || 0),
+        insightText: pickAdvice(insight)
       })
     }).catch(() => {})
+  },
+
+  onQuickInput(event) {
+    this.setData({ quickInput: event.detail.value })
+  },
+
+  saveQuickLog() {
+    const text = String(this.data.quickInput || "").trim()
+    if (!text) {
+      wx.showToast({ title: "先输入饮食或有氧", icon: "none" })
+      return
+    }
+    this.setData({ quickSaving: true })
+    quickLog(text).then(() => {
+      wx.showToast({ title: "已记录", icon: "success" })
+      this.setData({ quickInput: "" })
+      this.loadMeals()
+    }).catch((error) => {
+      wx.showToast({ title: error.message || "记录失败", icon: "none" })
+    }).finally(() => {
+      this.setData({ quickSaving: false })
+    })
   },
 
   goInput() {

@@ -1,6 +1,6 @@
-# 练食记
+# 食练周期
 
-微信小程序「练食记」的 UI 素材与后端 MVP。后端提供饮食记录、食谱、训练、体重和统计接口；本地不依赖付费服务。
+微信小程序「食练周期」的 UI 素材与后端 MVP。后端提供饮食记录、食谱、训练、体重和统计接口；本地不依赖付费服务。
 
 ## 快速启动
 
@@ -37,7 +37,14 @@ pytest backend/tests -q
 | 认证/用户 | `POST /api/auth/mock-login`、`POST /api/auth/wechat-login`、`GET /api/users/me`、`PUT /api/users/me/profile`、`POST/GET /api/users/me/weights` |
 | 首页/统计 | `GET /api/dashboard/today`、`GET /api/stats/calendar`、`GET /api/stats/monthly`、`GET /api/stats/body-trend` |
 | 饮食 | 食材、食谱、规则生成、餐食 CRUD、食谱收藏 |
-| 训练 | 动作、动作收藏、推荐训练、session/set 创建更新和完成 |
+| 训练 | 动作、动作收藏、训练目标、数据驱动的推荐训练、session/set 创建更新和完成 |
+
+训练推荐数据分别存放于 `training_goals`（目标说明）、
+`goal_exercise_prescriptions`（各目标的无氧动作及组次/休息/RIR）和
+`cardio_prescriptions`（各目标、各水平的有氧频率/时长/RPE）。调用
+`GET /api/training-goals` 获取可选目标；用户资料的 `goal_type` 填写“塑形”、
+“减脂”或“提升运动水平”后，调用
+`GET /api/workouts/recommendation?level=新手|中级|高级` 获取完整处方。
 
 完成训练时，具备时长和训练组则以 `MET × 3.5 × 体重 / 200 × 时长` 计算消耗；否则返回 0 并标识为估算。餐食营养均由食材每 100g 数据及实际克数计算。
 
@@ -48,3 +55,16 @@ pytest backend/tests -q
 3. 首页、食材搜索、食谱详情和餐食记录打通饮食闭环。
 4. 动作列表、推荐训练、session/set 与完成接口。
 5. 日历、月统计和身体趋势。
+
+## 小程序联调
+
+用微信开发者工具导入 `frontend` 目录，并先启动后端。开发者工具模拟器默认访问
+`http://127.0.0.1:8000`；真机调试时需把地址改为电脑在同一局域网中的 IP：
+
+```js
+wx.setStorageSync("apiBaseUrl", "http://192.168.x.x:8000")
+```
+
+开发阶段需在微信开发者工具中关闭“校验合法域名”，上线时则应配置 HTTPS 业务域名。
+小程序会在首次请求时调用 `mock-login` 并缓存 `apiUserId`；需要切换测试用户时清除
+这两个缓存项即可。
