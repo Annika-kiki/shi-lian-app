@@ -93,7 +93,7 @@ Page({
     const exercise = this.data.exercise
     if (!exercise) {
       wx.showToast({
-        title: "后端未启动，已保留页面数据",
+        title: "请从动作列表选择有效动作",
         icon: "none"
       })
       return
@@ -123,7 +123,7 @@ Page({
       })
     } catch (error) {
       wx.showToast({
-        title: "后端未启动，已保留页面数据",
+        title: error.message || "训练保存失败，请稍后重试",
         icon: "none"
       })
     } finally {

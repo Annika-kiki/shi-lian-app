@@ -1,5 +1,4 @@
 const { getUser } = require("./utils/user")
-const { ensureLogin } = require("./utils/api")
 
 App({
   globalData: {
@@ -8,7 +7,6 @@ App({
 
   onLaunch() {
     this.globalData.userProfile = getUser()
-    ensureLogin(this.globalData.userProfile).catch(() => {})
   },
 
   setUserProfile(profile) {

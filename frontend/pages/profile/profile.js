@@ -44,21 +44,41 @@ Page({
     this.setData({ targetWeight: event.detail.value })
   },
 
+  goBack() {
+    const pages = getCurrentPages()
+    if (pages.length > 1) {
+      wx.navigateBack({ delta: 1 })
+    } else {
+      wx.redirectTo({ url: "/pages/index/index" })
+    }
+  },
+
   saveAndStart() {
-    const userProfile = saveUser(this.data)
-    const app = getApp()
-    app.setUserProfile(userProfile)
-    wx.showLoading({ title: "保存中" })
-    saveProfile(userProfile).catch(() => {
-      wx.showToast({
-        title: "后端未启动，已使用本地模式",
-        icon: "none"
+    const age = Number(this.data.age)
+    if (!Number.isFinite(age) || age < 14) {
+      wx.showModal({
+        title: "暂不支持",
+        content: "食练周期首版仅面向14周岁以上用户。",
+        showCancel: false
       })
-    }).then(() => {
-      wx.hideLoading()
+      return
+    }
+    const userProfile = { ...this.data, age: String(age) }
+    const app = getApp()
+    wx.showLoading({ title: "保存中" })
+    saveProfile(userProfile).then(() => {
+      const savedProfile = saveUser(userProfile)
+      app.setUserProfile(savedProfile)
       wx.redirectTo({
         url: "/pages/home/home"
       })
+    }).catch((error) => {
+      wx.showToast({
+        title: error.message || "保存失败，请稍后重试",
+        icon: "none"
+      })
+    }).finally(() => {
+      wx.hideLoading()
     })
   }
 })

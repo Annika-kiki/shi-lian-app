@@ -14,7 +14,9 @@
     "pages/report/report",
     "pages/calendar/calendar",
     "pages/body/body",
-    "pages/me/me"
+    "pages/me/me",
+    "pages/privacy/privacy",
+    "pages/terms/terms"
   ],
   "window": {
     "navigationBarTextStyle": "black",

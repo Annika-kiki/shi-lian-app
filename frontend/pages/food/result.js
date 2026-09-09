@@ -18,10 +18,13 @@ function toIngredientObject(item) {
   }
   const name = String(item.name || "").trim()
   if (!name) return null
-  const amountValue = item.amount || item.amount_g || item.grams
+  const amountValue = item.amount_g || item.grams
   return {
+    ...item,
     name,
-    amount: amountValue ? `${amountValue} g` : "适量"
+    id: item.id || item.ingredient_id,
+    amount_g: item.amount_g || item.grams || 0,
+    amount: item.amount || (amountValue ? `${amountValue} g` : "适量")
   }
 }
 
@@ -320,13 +323,9 @@ Page({
         wx.setStorageSync("generatedRecipesRequestKey", this.requestKey)
         this.setData({ recipes: data })
       })
-      .catch(() => {
-        const fallback = buildFallbackRecipes(last)
-        wx.setStorageSync("generatedRecipes", fallback)
-        wx.setStorageSync("generatedRecipesRequestKey", this.requestKey)
-        this.setData({ recipes: fallback })
+      .catch((error) => {
         wx.showToast({
-          title: "后端未启动，已显示本地食谱",
+          title: error.message || "食谱加载失败，请稍后重试",
           icon: "none"
         })
       })
@@ -364,13 +363,9 @@ Page({
         wx.setStorageSync("generatedRecipesRequestKey", request.requestKey)
         this.setData({ recipes: data })
       })
-      .catch(() => {
-        const fallback = buildFallbackRecipes(request)
-        wx.setStorageSync("generatedRecipes", fallback)
-        wx.setStorageSync("generatedRecipesRequestKey", request.requestKey)
-        this.setData({ recipes: fallback })
+      .catch((error) => {
         wx.showToast({
-          title: "后端未启动，已显示本地食谱",
+          title: error.message || "重新生成失败，请稍后重试",
           icon: "none"
         })
       })

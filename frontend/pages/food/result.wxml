@@ -4,7 +4,7 @@
       <view class="header">
         <view class="icon-btn back-btn" bindtap="goBack" catchtap="goBack">←</view>
         <text class="header-title">为你生成多种方案</text>
-        <view class="icon-btn">↻</view>
+        <view class="icon-btn" bindtap="regenerate">↻</view>
       </view>
 
       <text class="muted">{{summaryText}}</text>

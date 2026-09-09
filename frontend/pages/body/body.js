@@ -1,4 +1,3 @@
-const { bodyTrend } = require("../../utils/mock")
 const { getBodyTrend, recordWeight } = require("../../utils/api")
 function navigateBackOrRedirect(fallbackUrl) {
   const pages = getCurrentPages()
@@ -13,10 +12,8 @@ function navigateBackOrRedirect(fallbackUrl) {
 
 
 function buildChart(points) {
-  const values = points.length ? points : bodyTrend.points.map((value, index) => ({
-    weight_kg: value,
-    date: bodyTrend.labels[index]
-  }))
+  const values = points || []
+  if (!values.length) return { labels: [], chartBars: [] }
   const weights = values.map((item) => item.weight_kg)
   const max = Math.max(...weights)
   const min = Math.min(...weights)
@@ -36,30 +33,37 @@ function buildChart(points) {
 
 Page({
   data: {
-    weightText: bodyTrend.currentWeight.toFixed(1),
-    last30DaysText: bodyTrend.last30Days.toFixed(1),
-    goalWeightText: bodyTrend.goalWeight.toFixed(1),
-    distanceText: bodyTrend.distance.toFixed(1),
-    labels: bodyTrend.labels,
+    weightText: "",
+    currentWeightText: "--",
+    last30DaysText: "--",
+    goalWeightText: "--",
+    distanceText: "--",
+    labels: [],
     chartBars: []
   },
 
   onLoad() {
-    const chart = buildChart([])
-    this.setData({
-      labels: chart.labels,
-      chartBars: chart.chartBars
-    })
+    this.loadTrend()
+  },
+
+  loadTrend() {
     getBodyTrend().then((trend) => {
       const remoteChart = buildChart(trend.weights || [])
+      const current = trend.current_weight_kg
+      const target = trend.target_weight_kg
+      const difference = trend.target_difference_kg
       this.setData({
-        weightText: Number(trend.current_weight_kg || bodyTrend.currentWeight).toFixed(1),
-        last30DaysText: Number(trend.period_change_kg || 0).toFixed(1),
-        distanceText: Number(trend.target_difference_kg || bodyTrend.distance).toFixed(1),
+        weightText: current == null ? "" : Number(current).toFixed(1),
+        currentWeightText: current == null ? "--" : Number(current).toFixed(1),
+        last30DaysText: trend.period_change_kg == null ? "--" : `${Number(trend.period_change_kg) > 0 ? "+" : ""}${Number(trend.period_change_kg).toFixed(1)}`,
+        goalWeightText: target == null ? "--" : Number(target).toFixed(1),
+        distanceText: difference == null ? "--" : Number(Math.abs(difference)).toFixed(1),
         labels: remoteChart.labels,
         chartBars: remoteChart.chartBars
       })
-    }).catch(() => {})
+    }).catch((error) => {
+      wx.showToast({ title: error.message || "体重数据加载失败", icon: "none" })
+    })
   },
 
   onWeightInput(event) {
@@ -71,14 +75,20 @@ Page({
   },
 
   recordWeight() {
+    const value = Number(this.data.weightText)
+    if (!Number.isFinite(value) || value <= 0 || value > 500) {
+      wx.showToast({ title: "请输入有效体重", icon: "none" })
+      return
+    }
     recordWeight(this.data.weightText).then(() => {
       wx.showToast({
         title: "已保存体重",
         icon: "success"
       })
-    }).catch(() => {
+      this.loadTrend()
+    }).catch((error) => {
       wx.showToast({
-        title: "后端未启动，已保留页面数据",
+        title: error.message || "体重保存失败，请稍后重试",
         icon: "none"
       })
     })

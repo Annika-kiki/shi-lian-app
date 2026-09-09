@@ -11,3 +11,6 @@ frontend/project.private.config.json
 backend-server*.log
 .codex_tmp_py/
 tmp_video_frames/
+node_modules/
+private.*.key
+*.private.key

@@ -1,7 +1,12 @@
-from datetime import date, datetime
+from datetime import UTC, date, datetime
+import secrets
 from sqlalchemy import Boolean, Date, DateTime, Float, ForeignKey, Integer, String, Text, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column
 from backend.database.session import Base
+
+
+def utc_now() -> datetime:
+    return datetime.now(UTC).replace(tzinfo=None)
 
 
 class User(Base):
@@ -10,7 +15,10 @@ class User(Base):
     openid: Mapped[str | None] = mapped_column(String(128), unique=True, nullable=True)
     nickname: Mapped[str] = mapped_column(String(64), default="食练周期用户")
     avatar: Mapped[str | None] = mapped_column(String(512), nullable=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    session_nonce: Mapped[str] = mapped_column(
+        String(64), default=lambda: secrets.token_urlsafe(32)
+    )
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now)
 
 
 class UserProfile(Base):
@@ -36,7 +44,7 @@ class WeightRecord(Base):
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), index=True)
     record_date: Mapped[date] = mapped_column(Date, index=True)
     weight_kg: Mapped[float]
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now)
 
 
 class Ingredient(Base):
@@ -90,7 +98,7 @@ class MealRecord(Base):
     carb_g: Mapped[float]
     fat_g: Mapped[float]
     note: Mapped[str | None] = mapped_column(String(255), nullable=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now)
 
 
 class FavoriteRecipe(Base):
@@ -175,7 +183,7 @@ class WorkoutSession(Base):
     duration_min: Mapped[int | None] = mapped_column(nullable=True)
     calories_kcal: Mapped[float] = mapped_column(default=0)
     status: Mapped[str] = mapped_column(String(16), default="进行中")
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now)
     completed_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
 
 

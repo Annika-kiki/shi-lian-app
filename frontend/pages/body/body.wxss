@@ -36,3 +36,11 @@
   color: var(--muted);
   font-size: 24rpx;
 }
+
+.chart-empty {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 120rpx;
+  text-align: center;
+}

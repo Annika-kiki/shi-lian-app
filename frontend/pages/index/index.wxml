@@ -17,8 +17,14 @@
 
     <view class="btn" bindtap="goProfile">微信一键登录</view>
     <view class="spacer-24"></view>
-    <view class="btn btn-outline" bindtap="skip">先逛一逛</view>
+    <view class="btn btn-outline" bindtap="skip">暂不填写资料</view>
 
-    <view class="agreement">登录即代表同意《用户协议》和《隐私政策》</view>
+    <view class="agreement" bindtap="toggleAgreement">
+      <checkbox checked="{{agreed}}" color="#4f8168" />
+      <text>我确认已满14周岁，并已阅读并同意</text>
+      <text class="agreement-link" catchtap="viewTerms">《用户协议》</text>
+      <text>和</text>
+      <text class="agreement-link" catchtap="viewPrivacy">《隐私政策》</text>
+    </view>
   </view>
 </view>

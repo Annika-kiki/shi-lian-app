@@ -1,0 +1,47 @@
+name: Verify
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Install backend dependencies
+        run: python -m pip install -r backend/requirements-dev.txt
+      - name: Audit Python dependencies
+        run: |
+          python -m pip install pip-audit==2.10.1
+          python -m pip_audit -r backend/requirements.txt
+      - name: Run repository checks
+        run: sh scripts/verify.sh
+      - name: Build and smoke-test production container image
+        run: |
+          docker build --tag shi-lian-api:verify .
+          docker run --detach --name shi-lian-api-verify \
+            --publish 8001:8001 \
+            --env DATABASE_URL=sqlite:////tmp/shi-lian-smoke.db \
+            shi-lian-api:verify
+          trap 'docker logs shi-lian-api-verify; docker rm --force shi-lian-api-verify' EXIT
+          for attempt in $(seq 1 20); do
+            if curl --fail --silent http://127.0.0.1:8001/health; then
+              exit 0
+            fi
+            sleep 1
+          done
+          exit 1
+      - name: Audit production npm dependencies
+        run: npm audit --omit=dev --audit-level=high

@@ -1,0 +1,52 @@
+name: Upload WeChat development version
+
+on:
+  workflow_dispatch:
+    inputs:
+      release_description:
+        description: Short release description shown in WeChat
+        required: true
+        type: string
+      confirm_appid:
+        description: Type the production AppID to confirm this upload
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: wechat-production-upload
+  cancel-in-progress: false
+
+jobs:
+  upload:
+    if: inputs.confirm_appid == 'wx26dfe00bf5f3258b'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment: wechat-upload
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+      - name: Install pinned upload tooling without lifecycle scripts
+        run: npm ci --ignore-scripts
+      - name: Prepare ephemeral upload key
+        env:
+          MINIPROGRAM_PRIVATE_KEY: ${{ secrets.MINIPROGRAM_PRIVATE_KEY }}
+        run: |
+          test -n "$MINIPROGRAM_PRIVATE_KEY"
+          printf '%s' "$MINIPROGRAM_PRIVATE_KEY" > "$RUNNER_TEMP/miniprogram-private.key"
+          chmod 600 "$RUNNER_TEMP/miniprogram-private.key"
+      - name: Upload development version
+        env:
+          CONFIRM_WECHAT_UPLOAD: "yes"
+          WECHAT_APP_ID: wx26dfe00bf5f3258b
+          MINIPROGRAM_PRIVATE_KEY_PATH: ${{ runner.temp }}/miniprogram-private.key
+          RELEASE_DESCRIPTION: ${{ inputs.release_description }}
+          RELEASE_COMMIT: ${{ github.sha }}
+        run: npm run upload:wechat

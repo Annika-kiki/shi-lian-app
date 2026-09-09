@@ -1,0 +1,12 @@
+{
+  "name": "shi-lian-app",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "verify": "sh scripts/verify.sh",
+    "upload:wechat": "node scripts/upload-miniprogram.js"
+  },
+  "devDependencies": {
+    "miniprogram-ci": "2.1.31"
+  }
+}

@@ -1,7 +1,7 @@
 <view class="page">
   <view class="page-body">
     <view class="header">
-      <view class="icon-btn" bindtap="saveAndStart">←</view>
+      <view class="icon-btn" bindtap="goBack">←</view>
       <text class="header-title">了解你的身体</text>
       <view class="header-subtitle">1/2</view>
     </view>

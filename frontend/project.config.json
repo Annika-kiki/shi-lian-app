@@ -17,7 +17,28 @@
   "compileType": "miniprogram",
   "simulatorPluginLibVersion": {},
   "packOptions": {
-    "ignore": [],
+    "ignore": [
+      {
+        "type": "suffix",
+        "value": ".png"
+      },
+      {
+        "type": "folder",
+        "value": "assets/videos"
+      },
+      {
+        "type": "folder",
+        "value": "images"
+      },
+      {
+        "type": "folder",
+        "value": "bottom-nav"
+      },
+      {
+        "type": "folder",
+        "value": "navigation-bar"
+      }
+    ],
     "include": []
   },
   "appid": "wx26dfe00bf5f3258b",

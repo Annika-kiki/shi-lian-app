@@ -8,7 +8,7 @@
           <text class="header-subtitle">{{summary.date}}</text>
         </view>
       </view>
-      <view class="icon-btn">◐</view>
+      <view class="icon-btn"></view>
     </view>
 
     <view class="card card-soft card-pad overview-card">

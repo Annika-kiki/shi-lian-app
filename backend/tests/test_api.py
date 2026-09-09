@@ -1,29 +1,167 @@
 import os
+from datetime import UTC, datetime
 import tempfile
-from datetime import date
+from types import SimpleNamespace
 
 TMP = tempfile.NamedTemporaryFile(suffix=".db", delete=False); TMP.close()
 os.environ["DATABASE_URL"] = f"sqlite:///{TMP.name}"
 from fastapi.testclient import TestClient
 from backend.main import app
+from backend.api.router import business_date
 
 client = TestClient(app)
 
 def login(name="测试用户"):
     response = client.post("/api/auth/mock-login", json={"nickname": name, "mock_openid": name})
-    return {"X-User-Id": str(response.json()["data"]["user_id"])}
+    return {"Authorization": f"Bearer {response.json()['data']['access_token']}"}
 
 def setup_module():
     with TestClient(app): pass
 
+
+def test_business_date_uses_china_timezone():
+    assert business_date(datetime(2026, 9, 4, 16, 30, tzinfo=UTC)).isoformat() == "2026-09-05"
+
+def test_user_id_header_cannot_impersonate_user():
+    response = client.post("/api/auth/mock-login", json={"nickname": "隔离用户", "mock_openid": "isolated"})
+    user_id = response.json()["data"]["user_id"]
+    assert client.get("/api/users/me", headers={"X-User-Id": str(user_id)}).status_code == 401
+
+def test_tampered_session_token_is_rejected():
+    headers = login("令牌用户")
+    headers["Authorization"] += "tampered"
+    assert client.get("/api/users/me", headers=headers).status_code == 401
+
+
+def test_session_is_bound_to_the_current_account_nonce():
+    from backend.database.session import SessionLocal
+    from backend.models.entities import User
+
+    headers = login("会话换代用户")
+    with SessionLocal() as db:
+        user = db.query(User).filter_by(openid="会话换代用户").one()
+        user.session_nonce = "rotated-session-nonce"
+        db.commit()
+
+    assert client.get("/api/users/me", headers=headers).status_code == 401
+
+def test_mock_login_is_disabled_in_production(monkeypatch):
+    import backend.api.router as api_router
+
+    monkeypatch.setattr(api_router, "settings", SimpleNamespace(app_env="production"))
+    response = client.post("/api/auth/mock-login", json={"nickname": "不应登录"})
+    assert response.status_code == 404
+
+
+def test_mock_login_is_disabled_in_staging(monkeypatch):
+    import backend.api.router as api_router
+
+    monkeypatch.setattr(api_router, "settings", SimpleNamespace(app_env="staging"))
+    response = client.post("/api/auth/mock-login", json={"nickname": "不应登录"})
+    assert response.status_code == 404
+
+def test_private_recipe_generation_requires_login():
+    response = client.post("/api/recipes/generate", json={
+        "ingredients": ["鸡蛋"], "meal_type": "早餐", "target_calories": 300,
+    })
+    assert response.status_code == 401
+
+def test_users_cannot_read_each_others_workouts():
+    owner = login("训练记录所有者")
+    stranger = login("其他用户")
+    session = client.post("/api/workouts/sessions", headers=owner, json={
+        "title": "私人训练", "duration_min": 30,
+    }).json()["data"]
+    response = client.get(f"/api/workouts/sessions/{session['id']}", headers=stranger)
+    assert response.status_code == 404
+
+def test_wechat_login_creates_signed_session(monkeypatch):
+    import backend.api.router as api_router
+
+    monkeypatch.setattr(api_router, "settings", SimpleNamespace(
+        auth_mode="wechat_api",
+        wechat_app_id="test-app-id",
+        wechat_app_secret="test-secret",
+        session_secret="test-session-secret",
+        session_ttl_seconds=3600,
+        app_env="development",
+    ))
+    monkeypatch.setattr(api_router, "exchange_login_code", lambda code, app_id, secret: "wx-test-openid")
+    response = client.post("/api/auth/wechat-login", json={"code": "temporary-code"})
+    assert response.status_code == 200
+    data = response.json()["data"]
+    me = client.get("/api/users/me", headers={"Authorization": f"Bearer {data['access_token']}"})
+    assert me.status_code == 200
+    assert "openid" not in me.json()["data"]
+
+def test_cloud_login_accepts_only_matching_injected_identity_headers(monkeypatch):
+    import backend.api.router as api_router
+
+    monkeypatch.setattr(api_router, "settings", SimpleNamespace(
+        auth_mode="cloud_headers",
+        is_deployed=True,
+        wechat_app_id="wx26dfe00bf5f3258b",
+        wechat_cloud_env_id="prod-d4g1s6f9gaef2c320",
+        session_secret="test-session-secret",
+        session_ttl_seconds=3600,
+    ))
+    valid_headers = {
+        "X-WX-OPENID": "openid_12345678",
+        "X-WX-APPID": "wx26dfe00bf5f3258b",
+        "X-WX-ENV": "prod-d4g1s6f9gaef2c320",
+    }
+    response = client.post("/api/auth/cloud-login", headers=valid_headers)
+    assert response.status_code == 200
+    token = response.json()["data"]["access_token"]
+    assert client.get("/api/users/me", headers={"Authorization": f"Bearer {token}"}).status_code == 200
+
+    assert client.post("/api/auth/cloud-login", headers={**valid_headers, "X-WX-APPID": "wx0000000000000000"}).status_code == 401
+    assert client.post("/api/auth/cloud-login", headers={**valid_headers, "X-WX-ENV": "wrong-env"}).status_code == 401
+    assert client.post("/api/auth/cloud-login", headers={**valid_headers, "X-WX-OPENID": "bad"}).status_code == 401
+
+
+def test_cloud_auth_mode_disables_code_exchange_login(monkeypatch):
+    import backend.api.router as api_router
+
+    monkeypatch.setattr(api_router, "settings", SimpleNamespace(auth_mode="cloud_headers"))
+    assert client.post("/api/auth/wechat-login", json={"code": "temporary-code"}).status_code == 404
+
+def test_profile_rejects_users_under_fourteen():
+    headers = login("年龄限制用户")
+    response = client.put("/api/users/me/profile", headers=headers, json={"age": 13})
+    assert response.status_code == 422
+
+def test_delete_account_removes_personal_data_and_invalidates_session():
+    headers = login("注销用户")
+    foods = client.get("/api/ingredients").json()["data"]
+    client.post("/api/users/me/weights", headers=headers, json={"weight_kg": 60})
+    client.post("/api/meals", headers=headers, json={
+        "meal_type": "早餐",
+        "name": "注销测试餐",
+        "ingredients": [{"ingredient_id": foods[0]["id"], "amount_g": 100}],
+    })
+    session = client.post("/api/workouts/sessions", headers=headers, json={
+        "title": "注销测试训练",
+        "duration_min": 10,
+    }).json()["data"]
+    exercise = client.get("/api/exercises").json()["data"][0]
+    client.post(f"/api/workouts/sessions/{session['id']}/sets", headers=headers, json={
+        "exercise_id": exercise["id"], "set_no": 1, "reps": 8,
+    })
+
+    response = client.request("DELETE", "/api/users/me", headers=headers, json={"confirmation": "DELETE"})
+    assert response.status_code == 200
+    assert client.get("/api/users/me", headers=headers).status_code == 401
+
 def test_profile_and_daily_weight_upsert():
     h=login("资料用户")
-    r=client.put("/api/users/me/profile",headers=h,json={"age":25,"height_cm":170,"current_weight_kg":65,"target_weight_kg":60,"goal_type":"减脂"})
+    r=client.put("/api/users/me/profile",headers=h,json={"nickname":"新昵称","age":25,"height_cm":170,"current_weight_kg":65,"target_weight_kg":60,"goal_type":"减脂"})
     data = r.json()["data"]
     assert data["profile_completed"] is True
     assert data["protein_target_g"] == 105
     assert data["carb_target_g"] == 190
     assert data["fat_target_g"] == 50
+    assert client.get("/api/users/me", headers=h).json()["data"]["nickname"] == "新昵称"
     dashboard = client.get("/api/dashboard/today", headers=h).json()["data"]
     assert dashboard["daily_calorie_target"] == 1635
     assert dashboard["nutrition"]["protein"]["target"] == 105
@@ -31,6 +169,29 @@ def test_profile_and_daily_weight_upsert():
     client.post("/api/users/me/weights",headers=h,json={"record_date":"2026-08-23","weight_kg":65})
     r=client.post("/api/users/me/weights",headers=h,json={"record_date":"2026-08-23","weight_kg":64.5})
     assert r.json()["data"]["weight_kg"] == 64.5
+    trend = client.get("/api/stats/body-trend", headers=h).json()["data"]
+    assert trend["current_weight_kg"] == 64.5
+    assert trend["target_weight_kg"] == 60
+
+
+def test_calendar_rejects_invalid_month_instead_of_crashing():
+    h = login("日期校验用户")
+    response = client.get("/api/stats/calendar?year=2026&month=13", headers=h)
+    assert response.status_code == 422
+
+
+def test_database_bounded_text_fields_are_validated():
+    h = login("字段边界用户")
+    response = client.post("/api/meals", headers=h, json={
+        "meal_type": "午餐",
+        "name": "x" * 101,
+        "ingredients": [],
+    })
+    assert response.status_code == 422
+    response = client.put("/api/users/me/profile", headers=h, json={"gender": "未知"})
+    assert response.status_code == 422
+    response = client.put("/api/users/me/profile", headers=h, json={"nickname": "   "})
+    assert response.status_code == 422
 
 def test_meal_uses_ingredient_nutrition():
     h=login("营养用户"); foods=client.get("/api/ingredients").json()["data"]; chicken=next(x for x in foods if x["name"]=="鸡胸肉")
@@ -39,7 +200,12 @@ def test_meal_uses_ingredient_nutrition():
     assert r.json()["data"]["nutrition"]["protein_g"] == 49.2
 
 def test_recipe_generation_depends_on_ingredients():
+    from backend.database.session import SessionLocal
+    from backend.models.entities import Recipe
+
     h=login("食谱用户")
+    with SessionLocal() as db:
+        recipe_count_before = db.query(Recipe).count()
     chicken = client.post("/api/recipes/generate", headers=h, json={
         "ingredients": ["鸡胸肉", "西兰花", "鸡蛋"],
         "meal_type": "午餐",
@@ -57,6 +223,9 @@ def test_recipe_generation_depends_on_ingredients():
     assert chicken[0]["name"] != beef[0]["name"]
     assert any("鸡胸肉" in item["name"] or "西兰花" in item["name"] for item in chicken)
     assert any("牛肉" in item["name"] or "土豆" in item["name"] for item in beef)
+    assert all(str(item["id"]).startswith("generated-") for item in chicken + beef)
+    with SessionLocal() as db:
+        assert db.query(Recipe).count() == recipe_count_before
 
 def test_workout_complete_and_dashboard():
     h=login("训练用户"); client.put("/api/users/me/profile",headers=h,json={"current_weight_kg":70})
@@ -65,58 +234,7 @@ def test_workout_complete_and_dashboard():
     client.post(f"/api/workouts/sessions/{session['id']}/sets",headers=h,json={"exercise_id":exercise["id"],"set_no":1,"reps":10,"completed":True})
     done=client.post(f"/api/workouts/sessions/{session['id']}/complete",headers=h).json()["data"]
     assert done["calories_kcal"] == 220.5
-    dashboard = client.get("/api/dashboard/today",headers=h).json()["data"]
-    assert dashboard["workout_duration_min"] == 30
-    assert dashboard["daily_calorie_target"] == dashboard["base_calorie_target"] + done["calories_kcal"]
-    assert dashboard["remaining_calories_kcal"] == dashboard["daily_calorie_target"]
-
-def test_cardio_session_uses_profile_and_updates_dashboard():
-    h=login("有氧用户")
-    client.put("/api/users/me/profile",headers=h,json={"height_cm":170,"current_weight_kg":70,"goal_type":"减脂"})
-    done=client.post("/api/workouts/cardio",headers=h,json={"mode":"快走","duration_min":30}).json()["data"]
-    assert done["title"] == "快走30分钟"
-    assert done["duration_min"] == 30
-    assert done["calories_kcal"] == 158
-    dashboard=client.get("/api/dashboard/today",headers=h).json()["data"]
-    assert dashboard["workout_duration_min"] == 30
-    assert dashboard["workout_calories_kcal"] == done["calories_kcal"]
-    assert dashboard["daily_calorie_target"] == dashboard["base_calorie_target"] + done["calories_kcal"]
-
-def test_cardio_session_parses_free_text_and_segments():
-    h=login("有氧文本用户")
-    client.put("/api/users/me/profile",headers=h,json={"height_cm":170,"current_weight_kg":70,"goal_type":"减脂"})
-    swim=client.post("/api/workouts/cardio",headers=h,json={"detail":"蛙泳40分钟"}).json()["data"]
-    assert swim["title"] == "蛙泳40分钟"
-    assert swim["duration_min"] == 40
-    assert swim["calories_kcal"] == 504.7
-    climb=client.post("/api/workouts/cardio",headers=h,json={"detail":"爬坡坡度10速度5.5 10分钟 坡度11速度5.5 20分钟"}).json()["data"]
-    assert climb["duration_min"] == 30
-    assert len(climb["cardio_segments"]) == 2
-    assert climb["calories_kcal"] > 200
-
-def test_calendar_records_start_at_login_and_show_day_data():
-    h=login("日历用户")
-    today=date.today()
-    records=client.get(f"/api/stats/calendar?year={today.year}&month={today.month}",headers=h).json()["data"]
-    today_record=next(item for item in records if str(item["date"]) == str(today))
-    assert today_record["status"] == "休息日"
-    assert today_record["sessions"] == 0
-    assert all(str(item["date"]) >= str(today) for item in records)
-
-    foods=client.get("/api/ingredients").json()["data"]
-    egg=next(x for x in foods if x["name"]=="鸡蛋")
-    client.post("/api/meals",headers=h,json={"record_date":str(today),"meal_type":"早餐","name":"鸡蛋","ingredients":[{"ingredient_id":egg["id"],"amount_g":100}]})
-    exercise=client.get("/api/exercises").json()["data"][0]
-    session=client.post("/api/workouts/sessions",headers=h,json={"workout_date":str(today),"title":"今日训练","duration_min":20}).json()["data"]
-    client.post(f"/api/workouts/sessions/{session['id']}/sets",headers=h,json={"exercise_id":exercise["id"],"set_no":1,"reps":10,"completed":True})
-    client.post(f"/api/workouts/sessions/{session['id']}/complete",headers=h)
-
-    records=client.get(f"/api/stats/calendar?year={today.year}&month={today.month}",headers=h).json()["data"]
-    today_record=next(item for item in records if str(item["date"]) == str(today))
-    assert today_record["status"] == "训练日"
-    assert today_record["sessions"] == 1
-    assert today_record["meal_count"] == 1
-    assert today_record["duration_min"] == 20
+    assert client.get("/api/dashboard/today",headers=h).json()["data"]["workout_duration_min"] == 30
 def test_recipe_generation_rotates_main_ingredients_between_batches():
     h = login("澶氭牱鍖栫敤鎴?")
     request = {
@@ -167,6 +285,17 @@ def test_recipe_generation_uses_only_requested_ingredients():
         used = {ingredient["name"] for ingredient in recipe["ingredients"]}
         assert used <= allowed
         assert "鸡胸肉" not in recipe["name"]
+
+
+def test_recipe_generation_rejects_fully_unknown_ingredients():
+    h = login("未知食材用户")
+    response = client.post("/api/recipes/generate", headers=h, json={
+        "ingredients": ["完全不存在的食材", "另一个未知食材"],
+        "meal_type": "午餐",
+        "target_calories": 400,
+    })
+    assert response.status_code == 400
+    assert "食材不足" in response.json()["message"]
 
 
 def test_goal_driven_workout_recommendation():

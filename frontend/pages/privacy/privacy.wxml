@@ -1,0 +1,22 @@
+<view class="page">
+  <view class="header">
+    <view class="icon-btn" bindtap="goBack">←</view>
+    <view class="header-title">隐私与数据</view>
+    <view class="icon-btn"></view>
+  </view>
+  <view class="section">
+    <view class="title">隐私与数据说明</view>
+    <view class="paragraph">食练周期首版仅面向14周岁以上用户。未满14周岁的用户请勿使用或提交个人信息。</view>
+    <view class="paragraph">为提供饮食与训练记录功能，我们仅处理你的微信账号标识，以及你主动提供的昵称、性别、年龄、身高、体重、饮食和训练记录。首版不申请微信头像和昵称授权。</view>
+    <view class="paragraph">上述信息用于计算一般性的营养目标、呈现趋势和保存记录，不用于医疗诊断、治疗或效果承诺。</view>
+    <view class="paragraph">个人数据在账号存续期间保存。你可以在本页注销账号；注销后个人资料和记录会被删除，备份中的副本最迟在30天保存周期届满后清除。</view>
+    <view class="paragraph">运动或饮食过程中如有疾病、伤病、过敏、孕期或其他特殊情况，请先咨询医生或具备资质的专业人员。</view>
+    <view class="paragraph">运营者：王嘉会。隐私问题联系邮箱：2797825558@qq.com。</view>
+    <view class="paragraph">更新日期：2026年9月5日。本说明自小程序首次正式发布之日起生效。</view>
+  </view>
+
+  <view class="danger-section" wx:if="{{showDelete}}">
+    <view class="danger-title">账号与数据</view>
+    <button class="delete-button" bindtap="deleteAccount">注销账号并删除数据</button>
+  </view>
+</view>

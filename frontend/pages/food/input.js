@@ -175,18 +175,18 @@ Page({
       .then((recipes) => {
         wx.setStorageSync("generatedRecipes", recipes)
         wx.setStorageSync("generatedRecipesRequestKey", request.requestKey)
+        wx.navigateTo({
+          url: "/pages/food/result"
+        })
       })
-      .catch(() => {
+      .catch((error) => {
         wx.showToast({
-          title: "后端未启动，先用本地食谱",
+          title: error.message || "生成失败，请稍后重试",
           icon: "none"
         })
       })
       .finally(() => {
         wx.hideLoading()
-        wx.navigateTo({
-          url: "/pages/food/result"
-        })
       })
   },
 

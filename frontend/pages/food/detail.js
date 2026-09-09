@@ -1,5 +1,5 @@
 ﻿const { getRecipe, getMeals, createMealFromRecipe } = require("../../utils/api")
-const { saveMeal: saveMealRecord, MEAL_SLOTS } = require("../../utils/meal")
+const { MEAL_SLOTS } = require("../../utils/meal")
 function navigateBackOrRedirect(fallbackUrl) {
   const pages = getCurrentPages()
   if (pages.length > 1) {
@@ -55,16 +55,19 @@ Page({
       })
   },
 
+  goBack() {
+    navigateBackOrRedirect("/pages/food/result")
+  },
+
   saveMeal() {
     if (!this.data.recipe) return
 
     wx.showLoading({ title: "保存中" })
+    let selectedSlot
     getMeals()
-      .catch(() => [])
       .then((records) => {
-        const slot = pickMealSlot(records)
-        saveMealRecord(this.data.recipe, slot.key)
-        return createMealFromRecipe(this.data.recipe, slot.label)
+        selectedSlot = pickMealSlot(records)
+        return createMealFromRecipe(this.data.recipe, selectedSlot.label)
       })
       .then(() => {
         wx.showToast({
@@ -78,9 +81,9 @@ Page({
           }
         })
       })
-      .catch(() => {
+      .catch((error) => {
         wx.showToast({
-          title: "后端未启动，已保留本地数据",
+          title: error.message || "保存失败，请稍后重试",
           icon: "none"
         })
       })
