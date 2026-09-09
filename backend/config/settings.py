@@ -1,16 +1,33 @@
 from dataclasses import dataclass
 import os
 import re
-from urllib.parse import urlparse
+from urllib.parse import quote_plus, urlparse
 from dotenv import load_dotenv
 
 load_dotenv()
 
 
+def database_url_from_env() -> str:
+    explicit_url = os.getenv("DATABASE_URL", "").strip()
+    if explicit_url:
+        return explicit_url
+    address = os.getenv("MYSQL_ADDRESS", "").strip()
+    username = os.getenv("MYSQL_USERNAME", "").strip()
+    password = os.getenv("MYSQL_PASSWORD", "")
+    database = os.getenv("MYSQL_DATABASE", "tcb").strip()
+    host, separator, port = address.rpartition(":")
+    if address and username and password and database and separator and host and port.isdigit():
+        return (
+            f"mysql+pymysql://{quote_plus(username)}:{quote_plus(password)}@"
+            f"{host}:{port}/{quote_plus(database)}?charset=utf8mb4"
+        )
+    return "sqlite:///./shi_lian.db"
+
+
 @dataclass(frozen=True)
 class Settings:
     app_env: str = os.getenv("APP_ENV", "development").lower()
-    database_url: str = os.getenv("DATABASE_URL", "sqlite:///./shi_lian.db")
+    database_url: str = database_url_from_env()
     cors_origins: str = os.getenv("CORS_ORIGINS", "*")
     allowed_hosts: str = os.getenv("ALLOWED_HOSTS", "*")
     log_level: str = os.getenv("LOG_LEVEL", "INFO")

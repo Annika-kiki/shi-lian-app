@@ -2,7 +2,27 @@ from dataclasses import replace
 
 import pytest
 
-from backend.config.settings import settings, validate_production_settings
+from backend.config.settings import database_url_from_env, settings, validate_production_settings
+
+
+def test_cloud_mysql_environment_builds_encoded_sqlalchemy_url(monkeypatch):
+    monkeypatch.delenv("DATABASE_URL", raising=False)
+    monkeypatch.setenv("MYSQL_ADDRESS", "10.17.102.105:3306")
+    monkeypatch.setenv("MYSQL_USERNAME", "shi_lian_app")
+    monkeypatch.setenv("MYSQL_PASSWORD", "special@pass:/word")
+    monkeypatch.setenv("MYSQL_DATABASE", "shi_lian")
+    assert database_url_from_env() == (
+        "mysql+pymysql://shi_lian_app:special%40pass%3A%2Fword@"
+        "10.17.102.105:3306/shi_lian?charset=utf8mb4"
+    )
+
+
+def test_incomplete_cloud_mysql_environment_fails_closed_to_local_database(monkeypatch):
+    monkeypatch.delenv("DATABASE_URL", raising=False)
+    monkeypatch.setenv("MYSQL_ADDRESS", "10.17.102.105:3306")
+    monkeypatch.setenv("MYSQL_USERNAME", "shi_lian_app")
+    monkeypatch.delenv("MYSQL_PASSWORD", raising=False)
+    assert database_url_from_env() == "sqlite:///./shi_lian.db"
 
 
 def test_development_defaults_are_allowed():
