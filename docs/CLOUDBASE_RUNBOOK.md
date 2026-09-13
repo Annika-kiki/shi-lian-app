@@ -18,7 +18,8 @@
 | 监听端口 | `8001` |
 | 健康检查 | `GET /health`，期望 HTTP 200 |
 | 日志 | 标准输出，不采集请求体、令牌或密钥 |
-| 初始流量 | staging 验证完成前为 0% |
+| 发布模式 | 手工灰度；禁止选择自动全量切换 |
+| 初始流量 | staging 验证完成前不切换现有流量；仅通过版本定向方式验证新版本 |
 | 扩缩容 | 首版选择低成本模式，最小实例数 0；最大实例数和费用告警按开通页报价确认 |
 
 监听端口必须同时与 Dockerfile 的 `EXPOSE 8001`、Uvicorn 启动端口和健康检查一致。官方文档指出端口不一致会导致就绪检查失败。
@@ -47,13 +48,13 @@ staging 和 production 分别配置，禁止复制数据库连接串或 `SESSION
 1. 负责人确认报价、协议和资源开通。
 2. 创建独立 staging 环境、数据库和密钥配置。
 3. 优先使用模板已注入的 MySQL 内网地址验证连接；只有无法连通时才配置“对接 VPC”。“公网出口”是容器主动访问互联网的出口，不是小程序访问入口，本项目不需要，保持关闭。外网数据库直连只允许临时调试且用后立即关闭。
-4. 用本仓库 FastAPI 镜像替换示例服务，确认健康检查通过后关闭公网访问，仅保留小程序 `wx.cloud.callContainer` 调用。公网访问未关闭时不得启用 `cloud_headers` 登录。
-5. 使用独立迁移账号执行 `sh scripts/migrate_staging.sh`；脚本拒绝 production、非 `shi_lian_staging` 数据库和非 `shi_lian_migrator` 账号。运行时应用账号只授予业务表必要权限，不使用 `root`。
-6. 构建版本但不分配正式流量，确认 `/health` 为 200。
+4. 从经负责人确认推送的固定 Git 提交构建仓库根目录 `Dockerfile`，发布模式选择“手工灰度”。创建失败时保留旧版本，不切换现有流量。
+5. 通过版本定向方式检查 FastAPI `/health`、启动日志和数据库连通性；确认健康后关闭公网访问，仅保留小程序 `wx.cloud.callContainer` 调用。公网访问未关闭时不得启用 `cloud_headers` 登录。
+6. 使用独立迁移账号执行 `sh scripts/migrate_staging.sh`；脚本拒绝 production、非 `shi_lian_staging` 数据库和非 `shi_lian_migrator` 账号。运行时应用账号只授予业务表必要权限，不使用 `root`。
 7. 配置小程序体验版，使用两个真实微信账号验证云身份隔离、注销和核心业务回归。
 8. 执行一次加密逻辑备份和隔离恢复演练。
 
-平台配置依据：[容器端口](https://docs.cloudbase.net/run/deploy/configuring/environment/containers)、[小程序调用云托管](https://docs.cloudbase.net/run/develop/access/mini)、[MySQL 集成](https://docs.cloudbase.net/run/develop/resource-integration/mysql)。
+平台配置依据：[部署方式](https://docs.cloudbase.net/run/deploy/deploy/introduce)、[手工灰度](https://docs.cloudbase.net/run/deploy/deploy/gray-release)、[容器端口](https://docs.cloudbase.net/run/deploy/configuring/environment/containers)、[小程序调用云托管](https://docs.cloudbase.net/run/develop/access/mini)、[服务公网开关](https://docs.cloudbase.net/run/deploy/service-setting)、[MySQL 集成](https://docs.cloudbase.net/run/develop/resource-integration/mysql)。
 
 注意区分两个开关：服务设置中的“公网访问”是入站域名，完成健康检查后应关闭；版本配置中的“公网出口”是容器出站能力，本项目不需要。`wx.cloud.callContainer` 不依赖公网访问。
 
