@@ -48,7 +48,7 @@ staging 和 production 分别配置，禁止复制数据库连接串或 `SESSION
 2. 创建独立 staging 环境、数据库和密钥配置。
 3. 优先使用模板已注入的 MySQL 内网地址验证连接；只有无法连通时才配置“对接 VPC”。“公网出口”是容器主动访问互联网的出口，不是小程序访问入口，本项目不需要，保持关闭。外网数据库直连只允许临时调试且用后立即关闭。
 4. 用本仓库 FastAPI 镜像替换示例服务，确认健康检查通过后关闭公网访问，仅保留小程序 `wx.cloud.callContainer` 调用。公网访问未关闭时不得启用 `cloud_headers` 登录。
-5. 使用独立迁移账号执行 `alembic upgrade head` 和 `python -m backend.database.seed`，运行时应用账号只授予业务表必要权限，不使用 `root`。
+5. 使用独立迁移账号执行 `sh scripts/migrate_staging.sh`；脚本拒绝 production、非 `shi_lian_staging` 数据库和非 `shi_lian_migrator` 账号。运行时应用账号只授予业务表必要权限，不使用 `root`。
 6. 构建版本但不分配正式流量，确认 `/health` 为 200。
 7. 配置小程序体验版，使用两个真实微信账号验证云身份隔离、注销和核心业务回归。
 8. 执行一次加密逻辑备份和隔离恢复演练。
