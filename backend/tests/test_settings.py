@@ -54,7 +54,7 @@ def test_production_accepts_complete_configuration():
     safe = replace(
         settings,
         app_env="production",
-        database_url="mysql+pymysql://app:password@db.internal/app?charset=utf8mb4",
+        database_url="mysql+pymysql://app:password@db.internal/shi_lian_production?charset=utf8mb4",
         cors_origins="https://api.example.com",
         allowed_hosts="api.example.com",
         wechat_app_id="wx26dfe00bf5f3258b",
@@ -69,7 +69,7 @@ def test_production_accepts_cloud_header_auth_without_app_secret():
         settings,
         app_env="production",
         auth_mode="cloud_headers",
-        database_url="mysql+pymysql://app:password@db.internal/app?charset=utf8mb4",
+        database_url="mysql+pymysql://app:password@db.internal/shi_lian_production?charset=utf8mb4",
         cors_origins="https://api.example.com",
         allowed_hosts="api.example.com",
         wechat_app_id="wx26dfe00bf5f3258b",
@@ -78,6 +78,30 @@ def test_production_accepts_cloud_header_auth_without_app_secret():
         session_secret="a-unique-session-secret-with-32-plus-characters",
     )
     validate_production_settings(safe)
+
+
+@pytest.mark.parametrize(
+    ("app_env", "database_url"),
+    [
+        ("staging", "mysql+pymysql://root:password@db.internal/shi_lian_staging?charset=utf8mb4"),
+        ("staging", "mysql+pymysql://app:password@db.internal/flask_demo?charset=utf8mb4"),
+        ("production", "mysql+pymysql://app:password@db.internal/shi_lian_staging?charset=utf8mb4"),
+    ],
+)
+def test_deployed_configuration_rejects_root_or_wrong_database(app_env, database_url):
+    safe = replace(
+        settings,
+        app_env=app_env,
+        auth_mode="cloud_headers",
+        database_url=database_url,
+        cors_origins="https://api.example.com",
+        allowed_hosts="api.example.com",
+        wechat_app_id="wx26dfe00bf5f3258b",
+        wechat_cloud_env_id="prod-d4g1s6f9gaef2c320",
+        session_secret="a-unique-session-secret-with-32-plus-characters",
+    )
+    with pytest.raises(RuntimeError, match="Unsafe deployed configuration"):
+        validate_production_settings(safe)
 
 
 @pytest.mark.parametrize("app_env", ["prodution", "", "test"])
@@ -126,7 +150,7 @@ def test_deployed_configuration_rejects_malformed_values(field, invalid_value):
     safe = replace(
         settings,
         app_env="production",
-        database_url="mysql+pymysql://app:password@db.internal/app?charset=utf8mb4",
+        database_url="mysql+pymysql://app:password@db.internal/shi_lian_production?charset=utf8mb4",
         cors_origins="https://api.example.com",
         allowed_hosts="api.example.com",
         wechat_app_id="wx26dfe00bf5f3258b",

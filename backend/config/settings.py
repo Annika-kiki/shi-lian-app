@@ -97,6 +97,14 @@ def validate_production_settings(value: Settings = settings) -> None:
         errors.append("WECHAT_CLOUD_ENV_ID is required for AUTH_MODE=cloud_headers")
     if not value.database_url.startswith("mysql+pymysql://"):
         errors.append("deployed DATABASE_URL must use mysql+pymysql")
+    else:
+        database = urlparse(value.database_url)
+        database_name = database.path.lstrip("/")
+        expected_database = f"shi_lian_{value.app_env}"
+        if (database.username or "").lower() == "root":
+            errors.append("deployed database account must not be root")
+        if database_name != expected_database:
+            errors.append(f"{value.app_env} must use database {expected_database}")
 
     cors_origins = _csv_values(value.cors_origins)
     if not cors_origins or any(
