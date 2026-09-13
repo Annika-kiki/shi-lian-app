@@ -48,6 +48,13 @@ def main() -> int:
             if value in content:
                 failures.append(f"{relative}: release UI contains fixed demo value {value}")
 
+    api_source = (FRONTEND / "utils/api.js").read_text(encoding="utf-8-sig")
+    for asset in re.findall(r'["\'](/assets/[^"\']+)["\']', api_source):
+        if not (FRONTEND / asset.lstrip("/")).is_file():
+            failures.append(f"frontend/utils/api.js: referenced release asset is missing: {asset}")
+    if "/images/exercises/" in api_source:
+        failures.append("frontend/utils/api.js: exercise cover points to package-excluded images directory")
+
     if failures:
         print("Frontend contract checks failed:", file=sys.stderr)
         for failure in failures:

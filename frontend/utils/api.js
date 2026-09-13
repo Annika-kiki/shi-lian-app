@@ -215,49 +215,30 @@ const BODY_PART_MAP = {
 }
 
 const EXERCISE_COVERS = {
-  "杠铃卧推": "/images/exercises/barbell-bench-press.png",
-  "哑铃上斜卧推": "/images/exercises/incline-dumbbell-press.png",
-  "上斜哑铃卧推": "/images/exercises/incline-dumbbell-press.png",
-  "跪姿俯卧撑": "/images/exercises/kneeling-push-up.png",
-  "俯卧撑": "/images/exercises/kneeling-push-up.png",
-  "绳索夹胸": "/images/exercises/cable-fly.png",
-  "高位下拉": "/images/exercises/lat-pulldown.png",
-  "坐姿划船": "/images/exercises/seated-cable-row.png",
-  "单臂哑铃划船": "/images/exercises/one-arm-dumbbell-row.png",
-  "哑铃单臂划船": "/images/exercises/one-arm-dumbbell-row.png",
-  "绳索面拉": "/images/exercises/face-pull.png",
-  "高脚杯深蹲": "/images/exercises/goblet-squat.png",
-  "深蹲": "/images/exercises/goblet-squat.png",
-  "罗马尼亚硬拉": "/images/exercises/dumbbell-romanian-deadlift.png",
-  "保加利亚分腿蹲": "/images/exercises/bulgarian-split-squat.png",
-  "臀桥推髋": "/images/exercises/hip-thrust.png",
-  "坐姿哑铃推举": "/images/exercises/seated-dumbbell-press.png",
-  "哑铃推举": "/images/exercises/seated-dumbbell-press.png",
-  "哑铃侧平举": "/images/exercises/dumbbell-lateral-raise.png",
-  "杠铃弯举": "/images/exercises/barbell-curl.png",
-  "锤式弯举": "/images/exercises/hammer-curl.png",
-  "绳索下压": "/images/exercises/triceps-pushdown.png",
-  "坐姿臂屈伸": "/images/exercises/overhead-triceps-extension.png",
-  "平板支撑": "/images/exercises/forearm-plank.png",
-  "死虫式": "/images/exercises/dead-bug.png",
-  "自行车卷腹": "/images/exercises/bicycle-crunch.png"
+  "杠铃卧推": "/assets/exercises/barbell-bench-press.jpg",
+  "哑铃上斜卧推": "/assets/exercises/incline-dumbbell-press.jpg",
+  "上斜哑铃卧推": "/assets/exercises/incline-dumbbell-press.jpg",
+  "高位下拉": "/assets/exercises/lat-pulldown.jpg",
+  "坐姿划船": "/assets/exercises/seated-cable-row.jpg",
+  "高脚杯深蹲": "/assets/exercises/goblet-squat.jpg",
+  "罗马尼亚硬拉": "/assets/exercises/dumbbell-romanian-deadlift.jpg",
+  "哑铃侧平举": "/assets/exercises/dumbbell-lateral-raise.jpg",
+  "平板支撑": "/assets/exercises/forearm-plank.jpg",
+  "死虫式": "/assets/exercises/dead-bug.jpg"
+}
+
+const EXERCISE_FALLBACK_COVERS = {
+  "背部": "/assets/exercises/seated-cable-row.jpg",
+  "腿部": "/assets/exercises/dumbbell-romanian-deadlift.jpg",
+  "肩部": "/assets/exercises/dumbbell-lateral-raise.jpg",
+  "核心": "/assets/exercises/dead-bug.jpg",
+  "手臂": "/assets/exercises/barbell-bench-press.jpg",
+  "胸部": "/assets/exercises/barbell-bench-press.jpg"
 }
 
 function getExerciseCover(item) {
-  if (item.thumbnail_url) {
-    const cover = String(item.thumbnail_url)
-    if (cover.startsWith("/")) {
-      return cover.replace("/assets/exercises/", "/images/exercises/")
-    }
-    return `/images/exercises/${cover}`
-  }
   if (EXERCISE_COVERS[item.name]) return EXERCISE_COVERS[item.name]
-  if (item.body_part === "背部") return "/images/exercises/seated-cable-row.png"
-  if (item.body_part === "腿部") return "/images/exercises/dumbbell-romanian-deadlift.png"
-  if (item.body_part === "肩部") return "/images/exercises/dumbbell-lateral-raise.png"
-  if (item.body_part === "核心") return "/images/exercises/dead-bug.png"
-  if (item.body_part === "手臂") return "/images/exercises/barbell-curl.png"
-  return "/images/exercises/barbell-bench-press.png"
+  return EXERCISE_FALLBACK_COVERS[item.body_part] || EXERCISE_FALLBACK_COVERS["胸部"]
 }
 
 function getExercises(part = "chest") {
