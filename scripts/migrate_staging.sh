@@ -15,8 +15,8 @@ test "$MYSQL_DATABASE" = "shi_lian_staging" || {
   echo "This migration entrypoint only permits MYSQL_DATABASE=shi_lian_staging" >&2
   exit 2
 }
-test "$MYSQL_USERNAME" = "shi_lian_migrator" || {
-  echo "Use the dedicated shi_lian_migrator account" >&2
+test "$MYSQL_USERNAME" = "sl_migrator" || {
+  echo "Use the dedicated sl_migrator account" >&2
   exit 2
 }
 

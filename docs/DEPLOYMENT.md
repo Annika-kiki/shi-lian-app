@@ -14,7 +14,7 @@ Docker 镜像只安装 `backend/requirements.txt` 中的生产依赖；本地和
 
 1. CI 执行 `sh scripts/verify.sh`。
 2. 构建固定 Python 版本的不可变部署制品。
-3. 在 staging 迁移任务中临时注入 `shi_lian_migrator` 凭据并执行 `sh scripts/migrate_staging.sh`；业务服务只注入 `shi_lian_app` 凭据。两者均不得使用 root。
+3. 在 staging 迁移任务中临时注入 `sl_migrator` 凭据并执行 `sh scripts/migrate_staging.sh`；业务服务只注入 `shi_lian_app` 凭据。两者均不得使用 root。
 4. 在业务服务注入 `AUTH_MODE=cloud_headers`、AppID、云环境 ID 和独立会话密钥；不创建 AppSecret。
 5. 完成健康检查、登录、权限隔离、注销和核心业务回归。
 6. 负责人验收后，将同一制品提升至 production。
