@@ -9,7 +9,7 @@
 | 登录与身份隔离 | 本地实现完成 | 签名会话、云托管 AppID/环境/OpenID 校验、伪造/过期/注销/双用户自动测试 | 关闭公网访问 + staging 双微信账号联调 |
 | 隐私合规 | 草案和功能完成 | 明示同意、14+确认、最小收集、注销删除、运营者和邮箱、30天备份声明 | 负责人接受最终文本；后台隐私信息类型逐项复核 |
 | 环境隔离 | 配置完成 | development/staging/production 门禁，体验版固定云环境，正式版保持未配置 | 独立 production 环境 |
-| 数据库 | 云实例已创建，业务库待创建 | MySQL 5.7 离线 DDL、Alembic 空库升级和模型差异检查；云端 MySQL 仅开放内网，root 已轮换 | `shi_lian_staging`、非 root 账号、云端迁移、备份和恢复演练 |
+| 数据库 | staging 业务库已创建 | MySQL 5.7 离线 DDL、Alembic 空库升级和模型差异检查；云端 `shi_lian_staging` 为 `utf8mb4/utf8mb4_unicode_ci`，仅开放内网，root 已轮换 | 非 root 账号、云端迁移、备份和恢复演练 |
 | 后端部署 | 云环境已初始化，业务制品尚未部署 | 非 root Dockerfile、健康检查、固定依赖、CI 镜像构建与冒烟配置；云托管环境和示例服务创建成功 | 用 FastAPI 镜像覆盖示例并取得云端健康检查结果 |
 | 依赖安全 | 生产依赖通过 | `pip-audit` 无已知漏洞；生产 npm 依赖为零 | 每次发布前重新查询 |
 | 上传安全 | 配置完成 | 手动工作流、受保护 Environment、固定提交、干净工作树、密钥权限门禁 | GitHub Required reviewer 和 Environment secret 实际配置 |
@@ -22,7 +22,7 @@
 
 ## 最短剩余路径
 
-1. 创建 `shi_lian_staging` 和两个非 root 账号，执行受保护的迁移与种子任务。
+1. 创建两个非 root 账号，执行受保护的迁移与种子任务。
 2. 部署 FastAPI staging 版本，关闭公网访问，完成真实登录和双账号隔离测试。
 3. 完成加密备份与 staging 恢复演练。
 4. 上传体验版，由负责人在 iPhone 和 Android 真机验收。

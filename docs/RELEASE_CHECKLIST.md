@@ -45,6 +45,7 @@
 - [x] 微信云托管首个环境及 Flask 示例服务已初始化；该环境暂作为 staging 候选，不承载正式用户
 - [x] 体验版接入 `wx.cloud.callContainer`，后端按 AppID、云环境 ID 和微信注入 OpenID 校验身份，不再要求创建 AppSecret
 - [x] 增加部署数据库隔离门禁：staging/production 必须使用各自数据库，且服务拒绝以 root 启动
+- [x] 创建独立 staging 业务库 `shi_lian_staging`，字符集为 `utf8mb4`、排序规则为 `utf8mb4_unicode_ci`
 
 ## Codex 可处理
 
@@ -83,7 +84,7 @@
 ## 当前阻塞
 
 - [x] 微信后台截图已核验：个人主体、两个服务类目均已通过、小程序已备案、用户隐私保护指引已更新
-- [ ] CloudBase MySQL 已由模板初始化，但尚未创建最小权限应用账号、执行本项目迁移或验证备份
+- [ ] CloudBase MySQL 和独立 staging 业务库已创建，但尚未创建最小权限账号、执行本项目迁移或验证备份
 - [x] 初始 MySQL root 密码曾出现在配置截图中；负责人已确认完成重置，仓库和后续截图不保存该密码
 - [ ] 创建最小权限业务账号并从服务环境变量移除 root 凭据；业务版本不得使用 root
 - [ ] CloudBase 个人版数据库缺少内置回档能力，正式上线前必须确定并验证独立恢复路径
