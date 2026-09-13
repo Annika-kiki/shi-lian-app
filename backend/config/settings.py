@@ -107,7 +107,7 @@ def validate_production_settings(value: Settings = settings) -> None:
             errors.append(f"{value.app_env} must use database {expected_database}")
 
     cors_origins = _csv_values(value.cors_origins)
-    if not cors_origins or any(
+    if (value.auth_mode != "cloud_headers" and not cors_origins) or any(
         origin == "*"
         or (parsed := urlparse(origin)).scheme != "https"
         or not parsed.netloc
@@ -117,7 +117,7 @@ def validate_production_settings(value: Settings = settings) -> None:
         or parsed.fragment
         for origin in cors_origins
     ):
-        errors.append("deployed CORS_ORIGINS must contain only HTTPS origins without paths")
+        errors.append("deployed CORS_ORIGINS must be empty for private cloud calls or contain only HTTPS origins without paths")
 
     allowed_hosts = _csv_values(value.allowed_hosts)
     if not allowed_hosts or any(

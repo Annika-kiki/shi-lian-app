@@ -30,7 +30,7 @@ staging 和 production 分别配置，禁止复制数据库连接串或 `SESSION
 
 - `APP_ENV=staging` 或 `production`
 - `MYSQL_ADDRESS`、`MYSQL_USERNAME`、`MYSQL_PASSWORD`、`MYSQL_DATABASE`（staging 固定为 `shi_lian_staging`，production 固定为独立的 `shi_lian_production`；禁止使用 `root`）
-- `CORS_ORIGINS=https://实际服务域名`
+- `CORS_ORIGINS=`（小程序私有链路不使用浏览器 CORS，保持空值；禁止填写 `*`）
 - `ALLOWED_HOSTS=实际服务主机名`（不含协议和路径）
 - `WECHAT_APP_ID=wx26dfe00bf5f3258b`
 - `AUTH_MODE=cloud_headers`

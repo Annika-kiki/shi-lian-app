@@ -80,6 +80,22 @@ def test_production_accepts_cloud_header_auth_without_app_secret():
     validate_production_settings(safe)
 
 
+def test_cloud_header_auth_accepts_no_browser_cors_origins():
+    safe = replace(
+        settings,
+        app_env="staging",
+        auth_mode="cloud_headers",
+        database_url="mysql+pymysql://shi_lian_app:password@db.internal/shi_lian_staging?charset=utf8mb4",
+        cors_origins="",
+        allowed_hosts="service.internal",
+        wechat_app_id="wx26dfe00bf5f3258b",
+        wechat_app_secret="",
+        wechat_cloud_env_id="prod-d4g1s6f9gaef2c320",
+        session_secret="a-unique-session-secret-with-32-plus-characters",
+    )
+    validate_production_settings(safe)
+
+
 @pytest.mark.parametrize(
     ("app_env", "database_url"),
     [
