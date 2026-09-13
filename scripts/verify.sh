@@ -6,7 +6,7 @@ cd "$repo_root"
 
 python3 -m compileall -q backend ai/demo
 python3 -m pytest
-temp_db=$(mktemp -t shi-lian-migration)
+temp_db=$(mktemp "${TMPDIR:-/tmp}/shi-lian-migration.XXXXXX")
 trap 'rm -f "$temp_db"' EXIT
 DATABASE_URL="sqlite:///$temp_db" alembic upgrade head
 DATABASE_URL="sqlite:///$temp_db" alembic check
