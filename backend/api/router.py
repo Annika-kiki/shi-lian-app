@@ -245,6 +245,75 @@ def unfav_exercise(exercise_id:int,user=Depends(current_user),db:Session=Depends
 GOAL_ALIASES = {"塑形":"shaping", "保持健康":"shaping", "增肌":"shaping",
                 "减脂":"fat_loss", "提升运动水平":"performance"}
 
+CARDIO_MET = {
+    "快走": 4.3, "坡度走": 5.3, "爬坡": 6.5, "椭圆机": 5.0,
+    "骑行": 6.0, "慢跑": 7.0, "跑步": 8.0, "划船机": 7.0,
+    "风阻单车": 7.5, "跳绳": 10.0, "游泳": 8.0,
+    "蛙泳": 10.3, "自由泳": 8.3,
+}
+
+CARDIO_MODE_ALIASES = [
+    ("蛙泳", "蛙泳"), ("自由泳", "自由泳"), ("游泳", "游泳"),
+    ("爬坡", "爬坡"), ("坡度", "爬坡"), ("快走", "快走"),
+    ("椭圆", "椭圆机"), ("骑行", "骑行"), ("单车", "骑行"),
+    ("慢跑", "慢跑"), ("跑步", "跑步"), ("划船", "划船机"),
+    ("跳绳", "跳绳"),
+]
+
+
+def detect_cardio_mode(text: str, fallback: str | None = None) -> str:
+    for keyword, mode in CARDIO_MODE_ALIASES:
+        if keyword in text:
+            return mode
+    return (fallback or "快走").strip() or "快走"
+
+
+def parse_cardio_segments(detail: str | None, mode: str | None, duration_min: int | None):
+    text = (detail or "").strip()
+    fallback_mode = detect_cardio_mode(text, mode)
+    incline_pattern = re.compile(
+        r"(?:爬坡|坡度走)?\s*坡度\s*(\d+(?:\.\d+)?)\s*(?:速度|时速)\s*"
+        r"(\d+(?:\.\d+)?)\s*(?:公里/小时|km/h|kmh)?\s*(\d+(?:\.\d+)?)\s*分钟"
+    )
+    segments = []
+    for match in incline_pattern.finditer(text):
+        incline, speed, minutes = float(match.group(1)), float(match.group(2)), round(float(match.group(3)))
+        segments.append({"mode": "爬坡", "duration_min": minutes,
+                         "incline_percent": incline, "speed_kmh": speed,
+                         "label": f"坡度{incline:g}速度{speed:g} {minutes}分钟"})
+    if segments:
+        return segments
+    mode_names = "蛙泳|自由泳|游泳|快走|坡度走|爬坡|椭圆机|椭圆|骑行|慢跑|跑步|划船机|划船|风阻单车|跳绳"
+    for match in re.finditer(rf"({mode_names})\s*(\d+(?:\.\d+)?)\s*分钟", text):
+        cardio_mode, minutes = detect_cardio_mode(match.group(1), mode), round(float(match.group(2)))
+        segments.append({"mode": cardio_mode, "duration_min": minutes,
+                         "label": f"{cardio_mode}{minutes}分钟"})
+    if segments:
+        return segments
+    if duration_min:
+        return [{"mode": fallback_mode, "duration_min": duration_min,
+                 "label": f"{fallback_mode}{duration_min}分钟"}]
+    duration_match = re.search(r"(\d+(?:\.\d+)?)\s*分钟", text)
+    if duration_match:
+        minutes = round(float(duration_match.group(1)))
+        return [{"mode": fallback_mode, "duration_min": minutes,
+                 "label": f"{fallback_mode}{minutes}分钟"}]
+    raise HTTPException(422, "请输入有氧方式和时间，例如：蛙泳40分钟，或：坡度10速度5.5 10分钟")
+
+
+def cardio_segment_met(segment) -> float:
+    speed, incline = segment.get("speed_kmh"), segment.get("incline_percent")
+    if speed is not None and incline is not None:
+        meters_per_min = speed * 1000 / 60
+        return max(3.0, (0.1 * meters_per_min + 1.8 * meters_per_min * (incline / 100) + 3.5) / 3.5)
+    return CARDIO_MET.get(segment["mode"], 5.0)
+
+
+def estimate_cardio_calories(profile, segment) -> float:
+    weight, height = profile.current_weight_kg or 60, profile.height_cm or 165
+    height_factor = min(1.1, max(0.95, height / 170))
+    return round(cardio_segment_met(segment) * 3.5 * weight / 200 * segment["duration_min"] * height_factor, 1)
+
 @router.get("/training-goals")
 def training_goals(db:Session=Depends(get_db)):
     goals=db.query(TrainingGoal).filter_by(active=True).order_by(TrainingGoal.code).all()
@@ -292,6 +361,17 @@ def recommendation(level:str=Query("新手",pattern="^(新手|中级|高级)$"),
 @router.post("/workouts/sessions")
 def create_session(body:SessionIn,user=Depends(current_user),db:Session=Depends(get_db)):
     x=WorkoutSession(user_id=user.id,**body.model_dump());db.add(x);db.commit();return ok(session_data(db,x))
+@router.post("/workouts/cardio")
+def create_cardio_session(body:CardioSessionIn,user=Depends(current_user),db:Session=Depends(get_db)):
+    profile=profile_for_user(db,user)
+    segments=parse_cardio_segments(body.detail,body.mode,body.duration_min)
+    duration=sum(segment["duration_min"] for segment in segments)
+    calories=round(sum(estimate_cardio_calories(profile,segment) for segment in segments),1)
+    title=segments[0]["label"] if len(segments)==1 else " + ".join(segment["label"] for segment in segments)
+    x=WorkoutSession(user_id=user.id,workout_date=body.workout_date,title=title,
+                     duration_min=duration,calories_kcal=calories,
+                     status="已完成",completed_at=utc_now())
+    db.add(x);db.commit();return ok({**session_data(db,x),"cardio_segments":segments})
 @router.get("/workouts/sessions")
 def sessions(date_:date|None=Query(None,alias="date"),user=Depends(current_user),db:Session=Depends(get_db)):
     q=db.query(WorkoutSession).filter_by(user_id=user.id)

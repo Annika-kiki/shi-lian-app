@@ -1,17 +1,12 @@
-const DEFAULT_API_BASE = "http://127.0.0.1:8001"
 const { getUser, calculateNutritionTargets } = require("./user")
-
-function getApiBase() {
-  const cached = wx.getStorageSync("apiBaseUrl")
-  if (cached && cached !== "http://127.0.0.1:8000") {
-    return cached
-  }
-  return DEFAULT_API_BASE
-}
+const { getEnvVersion, getTransportConfig } = require("../config/env")
+let loginPromise = null
+let cloudInitPromise = null
+const PRIVACY_AGREEMENT_VERSION = "2026-09-05"
 
 function request(path, options = {}) {
-  const userId = wx.getStorageSync("userId")
-  if (!userId && !path.startsWith("/api/auth/") && path !== "/health") {
+  const accessToken = wx.getStorageSync("accessToken")
+  if (!accessToken && !path.startsWith("/api/auth/") && path !== "/health") {
     return ensureLogin(getUser()).then(() => request(path, options))
   }
   const headers = {
@@ -19,45 +14,79 @@ function request(path, options = {}) {
     ...(options.header || {})
   }
 
-  if (userId) {
-    headers["X-User-Id"] = String(userId)
-  }
+  if (accessToken) headers.Authorization = `Bearer ${accessToken}`
 
   return new Promise((resolve, reject) => {
+    let transport
+    try { transport = getTransportConfig() } catch (error) { reject(error); return }
+    const handleSuccess = (res) => {
+      const body = res.data || {}
+      if (res.statusCode >= 200 && res.statusCode < 300 && body.code === 0) {
+        resolve(body.data)
+        return
+      }
+      const error = new Error(body.message || `请求失败 ${res.statusCode}`)
+      error.statusCode = res.statusCode
+      reject(error)
+    }
+    if (transport.type === "cloud") {
+      if (!wx.cloud || typeof wx.cloud.callContainer !== "function") {
+        reject(new Error("当前微信版本不支持云托管调用，请升级微信后重试"))
+        return
+      }
+      if (!cloudInitPromise) {
+        try { cloudInitPromise = Promise.resolve(wx.cloud.init({ traceUser: false })) }
+        catch (error) { cloudInitPromise = Promise.reject(error) }
+      }
+      cloudInitPromise.then(() => wx.cloud.callContainer({
+        config: { env: transport.env }, path,
+        header: { ...headers, "X-WX-SERVICE": transport.service },
+        method: options.method || "GET", data: options.data || {}
+      })).then(handleSuccess, reject)
+      return
+    }
     wx.request({
-      url: `${getApiBase()}${path}`,
+      url: `${transport.base}${path}`,
       method: options.method || "GET",
       data: options.data || {},
       header: headers,
-      success: (res) => {
-        const body = res.data || {}
-        if (res.statusCode >= 200 && res.statusCode < 300 && body.code === 0) {
-          resolve(body.data)
-          return
-        }
-        reject(new Error(body.message || `请求失败 ${res.statusCode}`))
-      },
+      success: handleSuccess,
       fail: reject
     })
+  }).catch((error) => {
+    const canRetry = error.statusCode === 401 && options.authRetry !== false && !path.startsWith("/api/auth/")
+    if (!canRetry) throw error
+    wx.removeStorageSync("accessToken")
+    return ensureLogin(getUser()).then(() => request(path, { ...options, authRetry: false }))
   })
 }
 
 function ensureLogin(user = {}) {
-  const cachedUserId = wx.getStorageSync("userId")
-  if (cachedUserId) return Promise.resolve(cachedUserId)
+  const cachedToken = wx.getStorageSync("accessToken")
+  if (cachedToken) return Promise.resolve(cachedToken)
+  if (loginPromise) return loginPromise
+  if (wx.getStorageSync("privacyAgreedVersion") !== PRIVACY_AGREEMENT_VERSION) {
+    return Promise.reject(new Error("请先阅读并同意用户协议和隐私政策"))
+  }
+  wx.removeStorageSync("userId")
 
   const nickname = user.name || user.nickName || "练食记用户"
-  return request("/api/auth/mock-login", {
+  const loginWithWechat = () => new Promise((resolve, reject) => wx.login({
+    success: (result) => result.code ? resolve(result.code) : reject(new Error("微信登录未返回有效凭证")),
+    fail: reject
+  })).then((code) => request("/api/auth/wechat-login", { method: "POST", data: { code } }))
+  const loginForDevelopment = () => request("/api/auth/mock-login", {
     method: "POST",
-    data: {
-      nickname,
-      avatar: user.avatar || user.avatarUrl || "",
-      mock_openid: `mock_${nickname}`
-    }
-  }).then((data) => {
-    wx.setStorageSync("userId", data.user_id)
-    return data.user_id
+    data: { nickname, avatar: user.avatar || user.avatarUrl || "", mock_openid: `mock_${nickname}` }
   })
+  const loginRequest = getEnvVersion() === "develop"
+    ? loginWithWechat().catch((error) => error.statusCode === 501 ? loginForDevelopment() : Promise.reject(error))
+    : request("/api/auth/cloud-login", { method: "POST" })
+  loginPromise = loginRequest.then((data) => {
+    wx.setStorageSync("accessToken", data.access_token)
+    return data.access_token
+  }).finally(() => { loginPromise = null })
+  return loginPromise
 }
 
 function toNumber(value, fallback = 0) {
@@ -65,11 +94,25 @@ function toNumber(value, fallback = 0) {
   return Number.isFinite(number) ? number : fallback
 }
 
+function ingredientAmount(item) {
+  if (item.amount_g || item.grams) return Number(item.amount_g || item.grams)
+  const match = String(item.amount || "").match(/[\d.]+/)
+  return Number(match ? match[0] : 0)
+}
+
+function localDateString(now = new Date()) {
+  const year = now.getFullYear()
+  const month = String(now.getMonth() + 1).padStart(2, "0")
+  const day = String(now.getDate()).padStart(2, "0")
+  return `${year}-${month}-${day}`
+}
+
 function saveProfile(user) {
   const targets = calculateNutritionTargets(user)
   return ensureLogin(user).then(() => request("/api/users/me/profile", {
     method: "PUT",
     data: {
+      nickname: String(user.name || "").trim() || "食练周期用户",
       gender: user.gender,
       age: toNumber(user.age, 21),
       height_cm: toNumber(user.height, 165),
@@ -102,12 +145,19 @@ function getMeals(date) {
 }
 
 function createMealFromRecipe(recipe, mealType = "午餐") {
+  const recipeId = Number(recipe.id)
+  const isPersistedRecipe = Number.isInteger(recipeId) && recipeId > 0
+  const ingredients = (recipe.ingredients || []).map((item) => ({
+    ingredient_id: Number(item.id),
+    amount_g: ingredientAmount(item)
+  })).filter((item) => item.ingredient_id > 0 && item.amount_g > 0)
   return ensureLogin().then(() => request("/api/meals", {
     method: "POST",
     data: {
       meal_type: mealType,
       name: recipe.name,
-      recipe_id: Number(recipe.id)
+      recipe_id: isPersistedRecipe ? recipeId : null,
+      ingredients: isPersistedRecipe ? [] : ingredients
     }
   }))
 }
@@ -319,12 +369,28 @@ function recordWeight(weight) {
     method: "POST",
     data: {
       weight_kg: toNumber(weight),
-      record_date: new Date().toISOString().slice(0, 10)
+      record_date: localDateString()
     }
   }))
 }
 
+function deleteAccount() {
+  return ensureLogin().then(() => request("/api/users/me", {
+    method: "DELETE",
+    data: { confirmation: "DELETE" }
+  })).then((result) => {
+    const personalKeys = [
+      "accessToken", "userId", "apiUserId", "apiMockOpenid", "userProfile", "profileForm",
+      "mealRecords", "generatedRecipes", "generatedRecipesRequestKey", "lastRecipeRequest",
+      "currentWorkoutExercise", "privacyAgreedVersion"
+    ]
+    personalKeys.forEach((key) => wx.removeStorageSync(key))
+    return result
+  })
+}
+
 module.exports = {
+  PRIVACY_AGREEMENT_VERSION,
   ensureLogin,
   saveProfile,
   getMe,
@@ -350,6 +416,7 @@ module.exports = {
   getBodyTrend,
   getReportSummary,
   recordWeight,
+  deleteAccount,
   normalizeRecipe,
   normalizeExercise,
   getExerciseCover
