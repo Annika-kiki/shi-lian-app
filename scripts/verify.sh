@@ -10,6 +10,8 @@ temp_db=$(mktemp "${TMPDIR:-/tmp}/shi-lian-migration.XXXXXX.db")
 trap 'rm -f "$temp_db"' EXIT
 DATABASE_URL="sqlite:///$temp_db" alembic upgrade head
 DATABASE_URL="sqlite:///$temp_db" alembic check
+APP_ENV=development DATABASE_URL="mysql+pymysql://dummy:dummy@127.0.0.1:3306/shi_lian_staging?charset=utf8mb4" \
+  python3 -m alembic upgrade head --sql >/dev/null
 PYTHONPATH=ai/demo python3 -m unittest discover -s ai/demo/tests -v
 
 find frontend -name '*.json' -type f -exec python3 -m json.tool '{}' /dev/null ';'
