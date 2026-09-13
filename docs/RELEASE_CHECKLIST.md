@@ -46,6 +46,8 @@
 - [x] 体验版接入 `wx.cloud.callContainer`，后端按 AppID、云环境 ID 和微信注入 OpenID 校验身份，不再要求创建 AppSecret
 - [x] 增加部署数据库隔离门禁：staging/production 必须使用各自数据库，且服务拒绝以 root 启动
 - [x] 创建独立 staging 业务库 `shi_lian_staging`，字符集为 `utf8mb4`、排序规则为 `utf8mb4_unicode_ci`
+- [x] 以上线准备分支整合 GitHub 最新 `main` 产品代码，并推送 `codex/release-readiness`
+- [x] 修复发布包排除 PNG 后动作详情仍引用被排除资源的问题，并增加静态资源自动门禁
 
 ## Codex 可处理
 
@@ -79,7 +81,8 @@
 - [ ] 确认任何付费云资源、域名或证书采购
 - [ ] 创建或下载微信/CI 密钥
 - [ ] 真机验收体验版
-- [ ] 确认远程推送、代码上传、提交审核和正式发布
+- [x] 授权并完成上线准备分支远程推送
+- [ ] 确认微信代码上传、提交审核和正式发布
 
 ## 当前阻塞
 
