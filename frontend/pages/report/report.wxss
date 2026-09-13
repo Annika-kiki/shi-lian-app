@@ -1,0 +1,86 @@
+@import "../../styles/common.wxss";
+
+.page-scroll {
+  height: 100vh;
+}
+
+.report-score {
+  margin-top: 18rpx;
+  font-size: 82rpx;
+  line-height: 1;
+  font-weight: 800;
+  color: var(--ink);
+}
+
+.score-unit {
+  font-size: 30rpx;
+  color: var(--muted);
+  font-weight: 500;
+}
+
+.mini-card {
+  min-height: 142rpx;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 12rpx;
+}
+
+.mini-card .item-title {
+  font-size: 30rpx;
+  line-height: 1.35;
+}
+
+.trend-row,
+.distribution-row {
+  display: grid;
+  grid-template-columns: 86rpx 1fr 84rpx;
+  align-items: center;
+  gap: 18rpx;
+  padding: 18rpx 0;
+  color: var(--ink-soft);
+  font-size: 26rpx;
+}
+
+.trend-bar {
+  height: 14rpx;
+  border-radius: 999rpx;
+  background: var(--surface-variant);
+  overflow: hidden;
+}
+
+.trend-fill,
+.distribution-fill {
+  height: 100%;
+  border-radius: 999rpx;
+  background: var(--green);
+}
+
+.distribution-fill {
+  background: #d78b55;
+}
+
+.meal-row {
+  padding: 22rpx 0;
+  border-top: 1rpx solid var(--line);
+}
+
+.meal-row:first-of-type {
+  border-top: 0;
+}
+
+.suggestion {
+  margin-top: 18rpx;
+  padding: 20rpx;
+  border-radius: 18rpx;
+  background: var(--mint);
+  color: var(--ink-soft);
+  font-size: 26rpx;
+  line-height: 1.55;
+}
+
+.empty-line {
+  padding: 20rpx 0 4rpx;
+  color: var(--muted);
+  font-size: 26rpx;
+}

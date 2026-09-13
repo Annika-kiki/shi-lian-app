@@ -4,9 +4,28 @@
   width: 100%;
   height: 100rpx;
   border-radius: 24rpx;
-  border: 2rpx solid #d8cfbe;
+  border: 2rpx solid var(--line);
   padding: 0 28rpx;
   box-sizing: border-box;
-  background: #fffdf8;
+  background: var(--surface-low);
   font-size: 30rpx;
+}
+
+.exercise-row {
+  display: grid;
+  grid-template-columns: 140rpx minmax(0, 1fr);
+  gap: 22rpx;
+  align-items: center;
+}
+
+.exercise-thumb {
+  width: 140rpx;
+  height: 140rpx;
+  border-radius: 18rpx;
+  background: var(--mint);
+  display: block;
+}
+
+.exercise-info {
+  min-width: 0;
 }

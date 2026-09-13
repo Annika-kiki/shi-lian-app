@@ -1,5 +1,5 @@
 .weui-navigation-bar {
-  --weui-FG-0:rgba(0,0,0,.9);
+  --weui-FG-0: var(--ink);
   --height: 44px;
   --left: 16px;
 }
@@ -43,7 +43,7 @@
 }
 
 .weui-navigation-bar__btn_goback_wrapper.weui-active {
-  opacity: 0.5;
+  opacity: 0.56;
 }
 
 .weui-navigation-bar__btn_goback {

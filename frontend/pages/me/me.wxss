@@ -10,7 +10,7 @@
   width: 120rpx;
   height: 120rpx;
   border-radius: 32rpx;
-  background: #d8ead8;
+  background: var(--green-soft);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -23,7 +23,7 @@
 
 .profile-arrow {
   font-size: 56rpx;
-  color: #243a33;
+  color: var(--green-dark);
 }
 
 .menu {

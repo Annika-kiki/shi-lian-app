@@ -9,7 +9,7 @@
 
 .week-row {
   margin-bottom: 18rpx;
-  color: #7b8e84;
+  color: var(--muted);
   font-size: 26rpx;
   text-align: center;
 }
@@ -23,16 +23,63 @@
   flex-direction: column;
   background: transparent;
   font-size: 28rpx;
+  color: var(--muted);
 }
 
-.marked {
-  background: #dfeedd;
+.started {
+  color: var(--ink-soft);
+}
+
+.rest-day {
+  background: rgba(201, 234, 199, 0.7);
+}
+
+.marked,
+.training-day {
+  background: var(--green-soft);
+}
+
+.day-dot {
+  height: 16rpx;
+  line-height: 16rpx;
+  color: var(--green);
 }
 
 .selected {
-  border: 4rpx solid #4f8168;
+  border: 4rpx solid var(--green);
 }
 
 .summary-line {
   padding-top: 18rpx;
+}
+
+.mini-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 12rpx;
+  min-height: 142rpx;
+}
+
+.mini-summary .item-title {
+  font-size: 28rpx;
+  line-height: 1.35;
+}
+
+.record-row {
+  padding: 22rpx 0;
+  border-top: 1rpx solid var(--line);
+}
+
+.record-row:first-of-type {
+  border-top: 0;
+}
+
+.record-title {
+  font-size: 30rpx;
+}
+
+.empty-line {
+  padding: 20rpx 0 4rpx;
+  color: var(--muted);
+  font-size: 26rpx;
 }

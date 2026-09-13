@@ -1,5 +1,96 @@
 @import "../../styles/common.wxss";
 
+.brand-lockup {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+}
+
+.brand-logo {
+  width: 62rpx;
+  height: 62rpx;
+  border-radius: 22rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--green);
+  color: #fff;
+  font-size: 42rpx;
+  font-weight: 800;
+  transform: rotate(-8deg);
+}
+
+.brand-name {
+  font-size: 32rpx;
+  line-height: 1.2;
+  font-weight: 800;
+  color: var(--ink);
+}
+
+.overview-card {
+  padding-bottom: 24rpx;
+}
+
+.overview-grid {
+  display: grid;
+  grid-template-columns: 220rpx minmax(0, 1fr);
+  gap: 20rpx;
+  align-items: center;
+  margin-top: 22rpx;
+}
+
+.calorie-ring {
+  width: 224rpx;
+  height: 224rpx;
+  border: 24rpx solid var(--green);
+  border-right-color: var(--mint-strong);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  transform: rotate(-35deg);
+}
+
+.ring-center {
+  text-align: center;
+  transform: rotate(35deg);
+}
+
+.ring-value {
+  font-size: 38rpx;
+  font-weight: 800;
+  color: var(--ink);
+}
+
+.ring-label {
+  margin-top: 2rpx;
+  color: var(--muted);
+  font-size: 22rpx;
+}
+
+.overview-copy {
+  min-width: 0;
+}
+
+.overview-copy .section-title {
+  margin-bottom: 12rpx;
+}
+
+.overview-copy .item-title {
+  font-size: 34rpx;
+}
+
+.overview-line {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 30rpx;
+  padding-top: 18rpx;
+  border-top: 2rpx solid rgba(47, 125, 61, 0.16);
+  color: var(--muted);
+  font-size: 24rpx;
+}
+
 .macro {
   display: flex;
   justify-content: space-between;
@@ -11,7 +102,7 @@
 .bar {
   height: 16rpx;
   border-radius: 999rpx;
-  background: #e2ddd0;
+  background: var(--surface-variant);
   overflow: hidden;
   margin-bottom: 18rpx;
 }
@@ -19,5 +110,52 @@
 .fill {
   height: 100%;
   border-radius: 999rpx;
-  background: #4f8168;
+  background: var(--green);
+}
+
+.score-card {
+  border-color: var(--mint-strong);
+}
+
+.score-number {
+  margin-top: 10rpx;
+  font-size: 72rpx;
+  line-height: 1;
+  font-weight: 800;
+  color: var(--ink);
+}
+
+.score-unit {
+  font-size: 28rpx;
+  color: var(--muted);
+  font-weight: 500;
+}
+
+.score-side {
+  display: flex;
+  flex-direction: column;
+  gap: 12rpx;
+  color: var(--green-dark);
+  font-size: 26rpx;
+  text-align: right;
+}
+
+.tip-box {
+  margin-top: 22rpx;
+  padding: 20rpx;
+  border-radius: 18rpx;
+  background: var(--mint);
+  color: var(--ink-soft);
+  font-size: 26rpx;
+  line-height: 1.55;
+}
+
+.quick-input {
+  height: 88rpx;
+  padding: 0 24rpx;
+  border: 2rpx solid var(--line);
+  border-radius: 20rpx;
+  background: var(--surface);
+  box-sizing: border-box;
+  font-size: 28rpx;
 }

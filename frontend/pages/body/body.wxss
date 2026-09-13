@@ -11,7 +11,7 @@
   position: absolute;
   bottom: 54rpx;
   width: 14rpx;
-  background: #4f8168;
+  background: var(--green);
   border-radius: 999rpx;
   transform: translateX(-50%);
 }
@@ -23,7 +23,7 @@
   width: 32rpx;
   height: 32rpx;
   border-radius: 50%;
-  background: #4f8168;
+  background: var(--green);
 }
 
 .chart-axis {
@@ -33,6 +33,6 @@
   bottom: 0;
   display: flex;
   justify-content: space-between;
-  color: #6d8077;
+  color: var(--muted);
   font-size: 24rpx;
 }

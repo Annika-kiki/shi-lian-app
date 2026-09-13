@@ -15,7 +15,7 @@
 .exercise-cover {
   overflow: hidden;
   border-radius: 32rpx;
-  background: #8bb39a;
+  background: var(--green-soft);
 }
 
 .cover-image {
@@ -27,5 +27,5 @@
 .step {
   padding: 12rpx 0;
   font-size: 28rpx;
-  color: #425851;
+  color: var(--ink-soft);
 }

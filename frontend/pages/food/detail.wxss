@@ -17,18 +17,26 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(180deg, #4f8168 0%, #9ab99f 100%);
+  background: var(--green-soft);
+  border-color: var(--mint-strong);
 }
 
 .hero-mark {
-  font-size: 96rpx;
+  width: 140rpx;
+  height: 140rpx;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--green);
+  font-size: 72rpx;
 }
 
 .ingredient,
 .step {
   font-size: 28rpx;
   padding: 18rpx 0;
-  border-bottom: 2rpx solid #eee6d8;
+  border-bottom: 2rpx solid var(--line);
 }
 
 .step:last-child,

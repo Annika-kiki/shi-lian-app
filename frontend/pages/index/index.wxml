@@ -1,13 +1,18 @@
 <view class="page">
   <view class="page-body">
     <view class="brand">
-      <view class="logo">🍃</view>
+      <view class="logo"><text class="logo-leaf">⌣</text></view>
       <text class="brand-title">食练周期</text>
       <text class="brand-subtitle">记录每一次训练，吃好每一餐</text>
     </view>
 
     <view class="hero card">
-      <view class="runner">🏃</view>
+      <view class="hero-orbit">
+        <view class="hero-dot dot-one"></view>
+        <view class="hero-dot dot-two"></view>
+        <view class="hero-figure">✦</view>
+      </view>
+      <view class="hero-copy">今天也要好好照顾自己</view>
     </view>
 
     <view class="btn" bindtap="goProfile">微信一键登录</view>

@@ -11,7 +11,7 @@
   width: 82rpx;
   height: 82rpx;
   border-radius: 50%;
-  background: #e1eee0;
+  background: var(--green-soft);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -22,21 +22,22 @@
 .set-box {
   flex: 1;
   height: 82rpx;
-  border: 2rpx solid #ddd5c3;
+  border: 2rpx solid var(--line);
   border-radius: 24rpx;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #fffdf8;
+  background: var(--surface);
   font-size: 32rpx;
 }
 
 .set-done {
-  background: #dfeedd;
+  background: var(--green-soft);
 }
 
 .done {
-  background: #d6e9d9;
+  background: var(--green);
+  color: #fff;
 }
 
 .add-row {
