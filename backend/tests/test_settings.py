@@ -92,6 +92,20 @@ def test_rejects_unknown_auth_mode():
 
 
 @pytest.mark.parametrize(
+    ("field", "invalid_value", "message"),
+    [
+        ("db_pool_size", 0, "DB_POOL_SIZE"),
+        ("db_max_overflow", -1, "DB_MAX_OVERFLOW"),
+        ("db_pool_timeout_seconds", 0, "DB_POOL_TIMEOUT_SECONDS"),
+        ("db_pool_recycle_seconds", 10, "DB_POOL_RECYCLE_SECONDS"),
+    ],
+)
+def test_rejects_unsafe_database_pool_limits(field, invalid_value, message):
+    with pytest.raises(RuntimeError, match=message):
+        validate_production_settings(replace(settings, **{field: invalid_value}))
+
+
+@pytest.mark.parametrize(
     ("field", "invalid_value"),
     [
         ("database_url", ""),

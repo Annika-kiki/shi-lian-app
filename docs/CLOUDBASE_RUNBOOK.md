@@ -38,6 +38,9 @@ staging 和 production 分别配置，禁止复制数据库连接串或 `SESSION
 - `SESSION_SECRET`（每个环境独立，至少32字符）
 - `SESSION_TTL_SECONDS=604800`
 - `SENSITIVE_RATE_LIMIT_PER_MINUTE=30`
+- `DB_POOL_SIZE=2`、`DB_MAX_OVERFLOW=3`、`DB_POOL_TIMEOUT_SECONDS=10`、`DB_POOL_RECYCLE_SECONDS=300`
+
+测试阶段把服务最大实例数设为 1，因此数据库连接上限为每实例最多 5 条。提高最大实例数前，必须按数据库连接容量重新核算 `实例数 × (DB_POOL_SIZE + DB_MAX_OVERFLOW)`。
 
 ## 首次 staging 顺序
 

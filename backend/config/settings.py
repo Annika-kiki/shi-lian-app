@@ -38,6 +38,10 @@ class Settings:
     session_secret: str = os.getenv("SESSION_SECRET", "development-only-change-me")
     session_ttl_seconds: int = int(os.getenv("SESSION_TTL_SECONDS", "604800"))
     sensitive_rate_limit_per_minute: int = int(os.getenv("SENSITIVE_RATE_LIMIT_PER_MINUTE", "30"))
+    db_pool_size: int = int(os.getenv("DB_POOL_SIZE", "2"))
+    db_max_overflow: int = int(os.getenv("DB_MAX_OVERFLOW", "3"))
+    db_pool_timeout_seconds: int = int(os.getenv("DB_POOL_TIMEOUT_SECONDS", "10"))
+    db_pool_recycle_seconds: int = int(os.getenv("DB_POOL_RECYCLE_SECONDS", "300"))
 
     @property
     def is_production(self) -> bool:
@@ -72,6 +76,14 @@ def validate_production_settings(value: Settings = settings) -> None:
         raise RuntimeError("SESSION_TTL_SECONDS must be between 300 and 2592000")
     if not 1 <= value.sensitive_rate_limit_per_minute <= 600:
         raise RuntimeError("SENSITIVE_RATE_LIMIT_PER_MINUTE must be between 1 and 600")
+    if not 1 <= value.db_pool_size <= 20:
+        raise RuntimeError("DB_POOL_SIZE must be between 1 and 20")
+    if not 0 <= value.db_max_overflow <= 20:
+        raise RuntimeError("DB_MAX_OVERFLOW must be between 0 and 20")
+    if not 1 <= value.db_pool_timeout_seconds <= 120:
+        raise RuntimeError("DB_POOL_TIMEOUT_SECONDS must be between 1 and 120")
+    if not 30 <= value.db_pool_recycle_seconds <= 3600:
+        raise RuntimeError("DB_POOL_RECYCLE_SECONDS must be between 30 and 3600")
     if not value.is_deployed:
         return
     errors = []
