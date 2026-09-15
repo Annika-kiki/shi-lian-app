@@ -1,9 +1,9 @@
 <view class="page">
   <view class="page-body">
     <view class="header">
-      <view class="icon-btn">‹</view>
-      <text class="header-title">2026 年 8 月</text>
-      <view class="icon-btn">›</view>
+      <view class="icon-btn" bindtap="prevMonth">‹</view>
+      <text class="header-title">{{monthLabel}}</text>
+      <view class="icon-btn" bindtap="nextMonth">›</view>
     </view>
 
     <view class="week-row">
@@ -12,9 +12,9 @@
 
     <view class="calendar-grid">
       <block wx:for="{{cells}}" wx:key="index">
-        <view class="day {{item.marked ? 'marked' : ''}} {{item.selected ? 'selected' : ''}}" data-day="{{item.day}}" bindtap="selectDay">
+        <view class="day {{item.started ? 'started' : ''}} {{item.training ? 'training-day' : ''}} {{item.resting ? 'rest-day' : ''}} {{item.marked ? 'marked' : ''}} {{item.selected ? 'selected' : ''}}" data-date="{{item.date}}" bindtap="selectDay">
           <text wx:if="{{item.day}}">{{item.day}}</text>
-          <text wx:if="{{item.marked}}">•</text>
+          <text wx:if="{{item.marked}}" class="day-dot">•</text>
         </view>
       </block>
     </view>
@@ -24,6 +24,48 @@
       <view class="muted">{{selectedDay}}</view>
       <view class="item-title">{{selectedTitle}}</view>
       <view class="item-meta">{{selectedNote}}</view>
+    </view>
+
+    <view class="spacer-24"></view>
+    <view class="grid-2">
+      <view class="card card-pad mini-summary">
+        <text class="muted">当天训练</text>
+        <text class="item-title">{{dailySummary.workoutText}}</text>
+      </view>
+      <view class="card card-pad mini-summary">
+        <text class="muted">当天饮食</text>
+        <text class="item-title">{{dailySummary.mealText}}</text>
+      </view>
+    </view>
+
+    <view class="spacer-24"></view>
+    <view class="card card-pad">
+      <view class="row-between">
+        <text class="section-title">训练记录</text>
+        <text class="muted">{{dailyWorkouts.length}} 条</text>
+      </view>
+      <view wx:if="{{!dailyWorkouts.length}}" class="empty-line">没有训练记录</view>
+      <view wx:for="{{dailyWorkouts}}" wx:key="id" class="record-row">
+        <view>
+          <view class="item-title record-title">{{item.title}}</view>
+          <view class="item-meta">{{item.detail}}</view>
+        </view>
+      </view>
+    </view>
+
+    <view class="spacer-24"></view>
+    <view class="card card-pad">
+      <view class="row-between">
+        <text class="section-title">饮食记录</text>
+        <text class="muted">{{dailyMeals.length}} 条</text>
+      </view>
+      <view wx:if="{{!dailyMeals.length}}" class="empty-line">没有饮食记录</view>
+      <view wx:for="{{dailyMeals}}" wx:key="id" class="record-row">
+        <view>
+          <view class="item-title record-title">{{item.title}}</view>
+          <view class="item-meta">{{item.detail}}</view>
+        </view>
+      </view>
     </view>
 
     <view class="spacer-24"></view>
@@ -39,14 +81,6 @@
       <view class="row-between summary-line">
         <text>训练最多</text>
         <text class="item-title">{{overview.top}}</text>
-      </view>
-    </view>
-
-    <view class="spacer-24"></view>
-    <view class="list-item" wx:for="{{history}}" wx:key="day" bindtap="openDetail">
-      <view class="row-between">
-        <view class="item-title">{{item.day}}  {{item.name}}</view>
-        <view class="item-title">{{item.duration}} ></view>
       </view>
     </view>
   </view>

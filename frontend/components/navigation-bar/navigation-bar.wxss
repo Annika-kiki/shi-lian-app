@@ -1,7 +1,8 @@
 .weui-navigation-bar {
-  --weui-FG-0:rgba(0,0,0,.9);
+  --weui-FG-0: var(--ink);
   --height: 44px;
   --left: 16px;
+  background: var(--canvas);
 }
 .weui-navigation-bar .android {
   --height: 48px;
@@ -25,6 +26,7 @@
   padding-top: env(safe-area-inset-top);
   width: 100%;
   box-sizing: border-box;
+  background: var(--canvas);
 }
 
 .weui-navigation-bar__left {
@@ -43,7 +45,7 @@
 }
 
 .weui-navigation-bar__btn_goback_wrapper.weui-active {
-  opacity: 0.5;
+  opacity: 0.56;
 }
 
 .weui-navigation-bar__btn_goback {
@@ -65,7 +67,7 @@
   flex-direction: row;
   align-items: center;
   justify-content: center;
-  font-weight: bold;
+  font-weight: 700;
   flex: 1;
   height: 100%;
 }

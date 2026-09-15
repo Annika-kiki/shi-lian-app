@@ -23,8 +23,8 @@
     <view class="spacer-24"></view>
     <text class="section-title">性别</text>
     <view class="btn-row">
-      <view class="card card-pad gender {{gender === '女' ? 'pill-active' : ''}}" data-value="女" bindtap="setGender">♀ 女</view>
-      <view class="card card-pad gender {{gender === '男' ? 'pill-active' : ''}}" data-value="男" bindtap="setGender">♂ 男</view>
+      <view class="card card-pad gender {{gender === '女' ? 'pill-active' : ''}}" data-value="女" bindtap="setGender">女</view>
+      <view class="card card-pad gender {{gender === '男' ? 'pill-active' : ''}}" data-value="男" bindtap="setGender">男</view>
     </view>
 
     <view class="spacer-24"></view>

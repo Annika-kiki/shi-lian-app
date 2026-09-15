@@ -1,11 +1,11 @@
 const { calculateNutritionTargets } = require("./user")
 
 const navItems = [
-  { label: "首页", icon: "⌂", route: "/pages/home/home" },
-  { label: "饮食", icon: "◔", route: "/pages/food/home" },
-  { label: "训练", icon: "◆", route: "/pages/training/home" },
-  { label: "记录", icon: "▦", route: "/pages/calendar/calendar" },
-  { label: "我的", icon: "☺", route: "/pages/me/me" }
+  { label: "首页", icon: "家", route: "/pages/home/home" },
+  { label: "饮食", icon: "食", route: "/pages/food/home" },
+  { label: "训练", icon: "练", route: "/pages/training/home" },
+  { label: "报告", icon: "报", route: "/pages/report/report" },
+  { label: "我的", icon: "我", route: "/pages/me/me" }
 ]
 
 const profile = {
@@ -32,9 +32,9 @@ const homeSummary = {
 }
 
 const meals = [
-  { label: "早餐", icon: "🍳", kcal: 380, detail: "燕麦牛奶 · 水煮蛋 · 香蕉" },
-  { label: "午餐", icon: "🍱", kcal: 620, detail: "杂粮饭 · 鸡胸肉 · 西兰花" },
-  { label: "晚餐", icon: "🌙", kcal: "尚未记录", detail: "建议补充蛋白与蔬菜" }
+  { label: "早餐", kcal: 380, detail: "燕麦牛奶 · 水煮蛋 · 香蕉" },
+  { label: "午餐", kcal: 620, detail: "杂粮饭 · 鸡胸肉 · 西兰花" },
+  { label: "晚餐", kcal: "尚未记录", detail: "建议补充蛋白与蔬菜" }
 ]
 
 const recipePlans = [
@@ -136,7 +136,7 @@ const bodyParts = [
   { label: "胸", icon: "◉", part: "chest" },
   { label: "背", icon: "◇", part: "back" },
   { label: "肩", icon: "△", part: "shoulder" },
-  { label: "手臂", icon: "⚡", part: "arm" },
+  { label: "手臂", icon: "臂", part: "arm" },
   { label: "腿臀", icon: "∧", part: "leg" },
   { label: "核心", icon: "◎", part: "core" }
 ]
@@ -149,25 +149,208 @@ const exercises = [
     equipment: "杠铃",
     level: "中级",
     part: "chest",
-    icon: "🏋️"
+    icon: "杠",
+    coverSrc: "/images/exercises/barbell-bench-press.png"
   },
   {
     id: "incline",
-    title: "上斜哑铃卧推",
+    title: "哑铃上斜卧推",
     muscle: "上胸",
     equipment: "哑铃",
     level: "中级",
     part: "chest",
-    icon: "💪"
+    icon: "哑",
+    coverSrc: "/images/exercises/incline-dumbbell-press.png"
   },
   {
-    id: "machine",
-    title: "坐姿推胸",
+    id: "kneeling-push-up",
+    title: "跪姿俯卧撑",
     muscle: "胸大肌",
-    equipment: "固定器械",
+    equipment: "徒手",
     level: "新手",
     part: "chest",
-    icon: "🎯"
+    icon: "›",
+    coverSrc: "/images/exercises/kneeling-push-up.png"
+  },
+  {
+    id: "cable-fly",
+    title: "绳索夹胸",
+    muscle: "胸大肌",
+    equipment: "绳索",
+    level: "中级",
+    part: "chest",
+    icon: "›",
+    coverSrc: "/images/exercises/cable-fly.png"
+  },
+  {
+    id: "lat-pulldown",
+    title: "高位下拉",
+    muscle: "背阔肌",
+    equipment: "固定器械",
+    level: "新手",
+    part: "back",
+    icon: "›",
+    coverSrc: "/images/exercises/lat-pulldown.png"
+  },
+  {
+    id: "seated-row",
+    title: "坐姿划船",
+    muscle: "背阔肌",
+    equipment: "固定器械",
+    level: "新手",
+    part: "back",
+    icon: "›",
+    coverSrc: "/images/exercises/seated-cable-row.png"
+  },
+  {
+    id: "one-arm-row",
+    title: "单臂哑铃划船",
+    muscle: "背阔肌",
+    equipment: "哑铃",
+    level: "中级",
+    part: "back",
+    icon: "哑",
+    coverSrc: "/images/exercises/one-arm-dumbbell-row.png"
+  },
+  {
+    id: "face-pull",
+    title: "绳索面拉",
+    muscle: "三角肌后束",
+    equipment: "绳索",
+    level: "新手",
+    part: "back",
+    icon: "›",
+    coverSrc: "/images/exercises/face-pull.png"
+  },
+  {
+    id: "goblet-squat",
+    title: "高脚杯深蹲",
+    muscle: "股四头肌",
+    equipment: "哑铃",
+    level: "新手",
+    part: "leg",
+    icon: "哑",
+    coverSrc: "/images/exercises/goblet-squat.png"
+  },
+  {
+    id: "rdl",
+    title: "罗马尼亚硬拉",
+    muscle: "腘绳肌",
+    equipment: "哑铃",
+    level: "中级",
+    part: "leg",
+    icon: "哑",
+    coverSrc: "/images/exercises/dumbbell-romanian-deadlift.png"
+  },
+  {
+    id: "split-squat",
+    title: "保加利亚分腿蹲",
+    muscle: "股四头肌",
+    equipment: "哑铃",
+    level: "中级",
+    part: "leg",
+    icon: "哑",
+    coverSrc: "/images/exercises/bulgarian-split-squat.png"
+  },
+  {
+    id: "hip-thrust",
+    title: "臀桥推髋",
+    muscle: "臀大肌",
+    equipment: "杠铃",
+    level: "中级",
+    part: "leg",
+    icon: "杠",
+    coverSrc: "/images/exercises/hip-thrust.png"
+  },
+  {
+    id: "seated-press",
+    title: "坐姿哑铃推举",
+    muscle: "三角肌",
+    equipment: "哑铃",
+    level: "中级",
+    part: "shoulder",
+    icon: "哑",
+    coverSrc: "/images/exercises/seated-dumbbell-press.png"
+  },
+  {
+    id: "lateral-raise",
+    title: "哑铃侧平举",
+    muscle: "三角肌中束",
+    equipment: "哑铃",
+    level: "新手",
+    part: "shoulder",
+    icon: "哑",
+    coverSrc: "/images/exercises/dumbbell-lateral-raise.png"
+  },
+  {
+    id: "barbell-curl",
+    title: "杠铃弯举",
+    muscle: "肱二头肌",
+    equipment: "杠铃",
+    level: "新手",
+    part: "arm",
+    icon: "杠",
+    coverSrc: "/images/exercises/barbell-curl.png"
+  },
+  {
+    id: "hammer-curl",
+    title: "锤式弯举",
+    muscle: "肱肌",
+    equipment: "哑铃",
+    level: "新手",
+    part: "arm",
+    icon: "哑",
+    coverSrc: "/images/exercises/hammer-curl.png"
+  },
+  {
+    id: "triceps-pushdown",
+    title: "绳索下压",
+    muscle: "肱三头肌",
+    equipment: "绳索",
+    level: "新手",
+    part: "arm",
+    icon: "›",
+    coverSrc: "/images/exercises/triceps-pushdown.png"
+  },
+  {
+    id: "overhead-triceps",
+    title: "坐姿臂屈伸",
+    muscle: "肱三头肌",
+    equipment: "哑铃",
+    level: "中级",
+    part: "arm",
+    icon: "哑",
+    coverSrc: "/images/exercises/overhead-triceps-extension.png"
+  },
+  {
+    id: "plank",
+    title: "平板支撑",
+    muscle: "腹横肌",
+    equipment: "徒手",
+    level: "新手",
+    part: "core",
+    icon: "›",
+    coverSrc: "/images/exercises/forearm-plank.png"
+  },
+  {
+    id: "dead-bug",
+    title: "死虫式",
+    muscle: "腹横肌",
+    equipment: "徒手",
+    level: "新手",
+    part: "core",
+    icon: "›",
+    coverSrc: "/images/exercises/dead-bug.png"
+  },
+  {
+    id: "bicycle-crunch",
+    title: "自行车卷腹",
+    muscle: "腹斜肌",
+    equipment: "徒手",
+    level: "中级",
+    part: "core",
+    icon: "›",
+    coverSrc: "/images/exercises/bicycle-crunch.png"
   }
 ]
 
@@ -225,7 +408,7 @@ const bodyTrend = {
 }
 
 const me = {
-  avatar: "🌿",
+  avatar: "练",
   name: profile.name,
   goal: profile.goal,
   height: `${profile.height} cm`,

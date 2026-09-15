@@ -1,14 +1,57 @@
 @import "../../styles/common.wxss";
 
 .bar {
-  height: 16rpx;
+  height: 18rpx;
   border-radius: 999rpx;
-  background: #e2ddd0;
+  background: var(--surface-variant);
   overflow: hidden;
 }
 
 .fill {
   height: 100%;
   border-radius: 999rpx;
-  background: #4f8168;
+  background: var(--green);
+}
+
+.analysis-card {
+  border-color: var(--mint-strong);
+  box-shadow: 0 8rpx 22rpx rgba(56, 142, 60, 0.08);
+}
+
+.analysis-mark {
+  min-width: 72rpx;
+  height: 56rpx;
+  padding: 0 20rpx;
+  border-radius: 999rpx;
+  background: var(--green-soft);
+  color: var(--green-dark);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 25rpx;
+  font-weight: 700;
+}
+
+.quick-input {
+  height: 92rpx;
+  padding: 0 28rpx;
+  border: 2rpx solid var(--line);
+  border-radius: 24rpx;
+  background: var(--surface);
+  box-sizing: border-box;
+  font-size: 28rpx;
+}
+
+.analysis-card {
+  background: var(--mint);
+}
+
+.analysis-card .item-title {
+  color: var(--green-dark);
+  font-size: 46rpx;
+}
+
+.analysis-mark {
+  background: var(--green);
+  color: #fff;
 }

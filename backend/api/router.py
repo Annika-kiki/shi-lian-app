@@ -1,3 +1,4 @@
+import re
 from datetime import date, datetime, timedelta
 from calendar import monthrange
 from fastapi import APIRouter, Depends, Header, HTTPException, Query
@@ -53,7 +54,7 @@ def profile_dict(p):
     apply_profile_targets(p)
     return {k: getattr(p, k) for k in ("gender","age","height_cm","current_weight_kg","target_weight_kg","goal_type","daily_calorie_target","protein_target_g","carb_target_g","fat_target_g","profile_completed")}
 
-class LoginIn(BaseModel): nickname: str = Field(default="练食记用户", max_length=64); avatar: str | None = None; mock_openid: str | None = None
+class LoginIn(BaseModel): nickname: str = Field(default="食练周期用户", max_length=64); avatar: str | None = None; mock_openid: str | None = None
 class ProfileIn(BaseModel):
     gender: str | None = None; age: int | None = Field(None, ge=1, le=120); height_cm: float | None = Field(None, ge=50, le=260); current_weight_kg: float | None = Field(None, gt=0, le=500); target_weight_kg: float | None = Field(None, gt=0, le=500); goal_type: str = "保持健康"; daily_calorie_target: float | None = Field(None, gt=0); protein_target_g: float | None = Field(None, ge=0); carb_target_g: float | None = Field(None, ge=0); fat_target_g: float | None = Field(None, ge=0)
 class WeightIn(BaseModel): record_date: date = Field(default_factory=date.today); weight_kg: float = Field(gt=0, le=500)
@@ -61,6 +62,8 @@ class RecipeGenerateIn(BaseModel): ingredients: list[str] = Field(min_length=1);
 class MealIngredientIn(BaseModel): ingredient_id: int; amount_g: float = Field(gt=0, le=3000)
 class MealIn(BaseModel): record_date: date = Field(default_factory=date.today); meal_type: str; name: str | None = None; recipe_id: int | None = None; ingredients: list[MealIngredientIn] = Field(default_factory=list); note: str | None = None
 class SessionIn(BaseModel): workout_date: date = Field(default_factory=date.today); title: str = Field(min_length=1,max_length=100); duration_min: int | None = Field(None, ge=0, le=1440)
+class CardioSessionIn(BaseModel): workout_date: date = Field(default_factory=date.today); mode: str | None = Field(default=None, max_length=50); duration_min: int | None = Field(None, ge=1, le=360); detail: str | None = Field(None, max_length=255)
+class QuickLogIn(BaseModel): text: str = Field(min_length=1,max_length=255); record_date: date = Field(default_factory=date.today)
 class SessionUpdateIn(BaseModel): title: str | None = None; duration_min: int | None = Field(None, ge=0, le=1440); workout_date: date | None = None
 class SetIn(BaseModel): exercise_id: int; set_no: int = Field(ge=1); weight_kg: float | None = Field(None, ge=0); reps: int | None = Field(None, ge=0); completed: bool = False
 class SetUpdateIn(BaseModel): weight_kg: float | None = Field(None, ge=0); reps: int | None = Field(None, ge=0); completed: bool | None = None
@@ -79,7 +82,7 @@ def wechat_login():
     raise HTTPException(501, "微信 code 换取服务接口已预留，MVP 请使用 mock-login")
 @router.get("/users/me")
 def me(user=Depends(current_user), db: Session=Depends(get_db)):
-    p=db.get(UserProfile,user.id); return ok({"id":user.id,"openid":user.openid,"nickname":user.nickname,"avatar":user.avatar,"profile":profile_dict(p)})
+    p=db.get(UserProfile,user.id); created_date=(user.created_at+timedelta(hours=8)).date() if user.created_at else date.today(); return ok({"id":user.id,"openid":user.openid,"nickname":user.nickname,"avatar":user.avatar,"created_at":user.created_at,"created_date":created_date,"profile":profile_dict(p)})
 @router.put("/users/me/profile")
 def update_profile(body: ProfileIn, user=Depends(current_user), db: Session=Depends(get_db)):
     p=db.get(UserProfile,user.id)
@@ -171,14 +174,170 @@ def unfav_exercise(exercise_id:int,user=Depends(current_user),db:Session=Depends
     x=db.query(FavoriteExercise).filter_by(user_id=user.id,exercise_id=exercise_id).first()
     if x: db.delete(x);db.commit()
     return ok()
+GOAL_ALIASES = {"塑形":"shaping", "保持健康":"shaping", "增肌":"shaping",
+                "减脂":"fat_loss", "提升运动水平":"performance"}
+CARDIO_MET = {
+    "快走": 4.3,
+    "坡度走": 5.3,
+    "爬坡": 6.5,
+    "椭圆机": 5.0,
+    "骑行": 6.0,
+    "慢跑": 7.0,
+    "跑步": 8.0,
+    "划船机": 7.0,
+    "风阻单车": 7.5,
+    "跳绳": 10.0,
+    "游泳": 8.0,
+    "蛙泳": 10.3,
+    "自由泳": 8.3,
+}
+
+CARDIO_MODE_ALIASES = [
+    ("蛙泳", "蛙泳"),
+    ("自由泳", "自由泳"),
+    ("游泳", "游泳"),
+    ("爬坡", "爬坡"),
+    ("坡度", "爬坡"),
+    ("快走", "快走"),
+    ("椭圆", "椭圆机"),
+    ("骑行", "骑行"),
+    ("单车", "骑行"),
+    ("慢跑", "慢跑"),
+    ("跑步", "跑步"),
+    ("划船", "划船机"),
+    ("跳绳", "跳绳"),
+]
+
+def detect_cardio_mode(text: str, fallback: str | None = None) -> str:
+    for keyword, mode in CARDIO_MODE_ALIASES:
+        if keyword in text:
+            return mode
+    return (fallback or "快走").strip() or "快走"
+
+def format_cardio_number(value: float) -> str:
+    return f"{value:g}"
+
+def parse_cardio_segments(detail: str | None, mode: str | None, duration_min: int | None):
+    text=(detail or "").strip()
+    fallback_mode=detect_cardio_mode(text,mode)
+    incline_pattern=re.compile(r"(?:爬坡|坡度走)?\s*坡度\s*(\d+(?:\.\d+)?)\s*(?:速度|时速)\s*(\d+(?:\.\d+)?)\s*(?:公里/小时|km/h|kmh)?\s*(\d+(?:\.\d+)?)\s*分钟")
+    segments=[]
+    for match in incline_pattern.finditer(text):
+        incline=float(match.group(1)); speed=float(match.group(2)); minutes=round(float(match.group(3)))
+        segments.append({
+            "mode":"爬坡",
+            "duration_min":minutes,
+            "incline_percent":incline,
+            "speed_kmh":speed,
+            "label":f"坡度{format_cardio_number(incline)}速度{format_cardio_number(speed)} {minutes}分钟"
+        })
+    if segments:
+        return segments
+
+    mode_names="蛙泳|自由泳|游泳|快走|坡度走|爬坡|椭圆机|椭圆|骑行|慢跑|跑步|划船机|划船|风阻单车|跳绳"
+    normal_pattern=re.compile(rf"({mode_names})\s*(\d+(?:\.\d+)?)\s*分钟")
+    for match in normal_pattern.finditer(text):
+        raw_mode=match.group(1)
+        cardio_mode=detect_cardio_mode(raw_mode,mode)
+        minutes=round(float(match.group(2)))
+        segments.append({"mode":cardio_mode,"duration_min":minutes,"label":f"{cardio_mode}{minutes}分钟"})
+    if segments:
+        return segments
+
+    if duration_min:
+        return [{"mode":fallback_mode,"duration_min":duration_min,"label":f"{fallback_mode}{duration_min}分钟"}]
+
+    duration_match=re.search(r"(\d+(?:\.\d+)?)\s*分钟",text)
+    if duration_match:
+        minutes=round(float(duration_match.group(1)))
+        return [{"mode":fallback_mode,"duration_min":minutes,"label":f"{fallback_mode}{minutes}分钟"}]
+
+    raise HTTPException(422,"请输入有氧方式和时间，例如：蛙泳40分钟，或：坡度10速度5.5 10分钟")
+
+def cardio_segment_met(segment) -> float:
+    speed=segment.get("speed_kmh")
+    incline=segment.get("incline_percent")
+    if speed is not None and incline is not None:
+        meters_per_min=speed*1000/60
+        vo2=0.1*meters_per_min+1.8*meters_per_min*(incline/100)+3.5
+        return max(3.0, vo2/3.5)
+    return CARDIO_MET.get(segment["mode"], 5.0)
+
+def estimate_cardio_calories(profile, mode: str, duration_min: int, speed_kmh: float | None = None, incline_percent: float | None = None) -> float:
+    weight = profile.current_weight_kg or 60
+    height = profile.height_cm or 165
+    met = cardio_segment_met({"mode":mode,"speed_kmh":speed_kmh,"incline_percent":incline_percent})
+    height_factor = min(1.1, max(0.95, height / 170))
+    return round(met * 3.5 * weight / 200 * duration_min * height_factor, 1)
+
+@router.get("/training-goals")
+def training_goals(db:Session=Depends(get_db)):
+    goals=db.query(TrainingGoal).filter_by(active=True).order_by(TrainingGoal.code).all()
+    return ok([{"code":x.code,"name":x.name,"description":x.description,
+                "resistance_principle":x.resistance_principle,
+                "cardio_principle":x.cardio_principle} for x in goals])
+
 @router.get("/workouts/recommendation")
-def recommendation(user=Depends(current_user),db:Session=Depends(get_db)):
-    p=db.get(UserProfile,user.id); target="胸部" if p.goal_type in ("增肌","减脂") else "腿部"
-    xs=db.query(Exercise).filter_by(body_part=target).all()
-    return ok({"title":f"{target} + 核心训练","estimated_duration_min":40,"goal_type":p.goal_type,"exercises":[{"exercise_id":x.id,"name":x.name,"sets":3,"reps":"8-12"} for x in xs]})
+def recommendation(level:str=Query("新手",pattern="^(新手|中级|高级)$"),
+                   user=Depends(current_user),db:Session=Depends(get_db)):
+    profile=db.get(UserProfile,user.id)
+    if not profile:
+        profile=UserProfile(user_id=user.id); db.add(profile); db.flush()
+    goal_code=GOAL_ALIASES.get(profile.goal_type, "shaping")
+    goal=db.get(TrainingGoal,goal_code)
+    display_goal_name = "增肌" if profile.goal_type == "增肌" else goal.name
+    display_description = "提高肌肉量和训练容量，优先安排复合动作与中高次数抗阻训练。" if profile.goal_type == "增肌" else goal.description
+    rows=(db.query(GoalExercisePrescription,Exercise)
+          .join(Exercise,GoalExercisePrescription.exercise_id==Exercise.id)
+          .filter(GoalExercisePrescription.goal_code==goal_code)
+          .order_by(GoalExercisePrescription.priority).all())
+    cardio=db.query(CardioPrescription).filter_by(goal_code=goal_code,level=level).first()
+    exercises=[]
+    for prescription, exercise_item in rows:
+        reps=(f"{prescription.reps_min}-{prescription.reps_max}次"
+              if prescription.reps_min is not None else f"{prescription.duration_seconds}秒")
+        exercises.append({"exercise_id":exercise_item.id,"name":exercise_item.name,
+                          "body_part":exercise_item.body_part,
+                          "primary_muscle":exercise_item.primary_muscle,
+                          "equipment":exercise_item.equipment,
+                          "difficulty":exercise_item.difficulty,
+                          "thumbnail_url":exercise_item.thumbnail_url,
+                          "movement_pattern":prescription.movement_pattern,
+                          "sets":f"{prescription.sets_min}-{prescription.sets_max}组",
+                          "reps":reps,"rest_seconds":prescription.rest_seconds,
+                          "rir":f"{prescription.rir_min}-{prescription.rir_max}",
+                          "notes":prescription.notes})
+    cardio_data=None if not cardio else {
+        "modes":cardio.modes.split(","),
+        "sessions_per_week":f"{cardio.sessions_min}-{cardio.sessions_max}次",
+        "minutes_per_session":f"{cardio.minutes_min}-{cardio.minutes_max}分钟",
+        "intensity":{"method":cardio.intensity_method,
+                     "range":f"{cardio.intensity_min:g}-{cardio.intensity_max:g}"},
+        "interval":None if cardio.interval_work_seconds is None else {
+            "work_seconds":cardio.interval_work_seconds,
+            "rest_seconds":cardio.interval_rest_seconds},
+        "notes":cardio.notes}
+    return ok({"title":f"{display_goal_name}推荐训练","estimated_duration_min":50,
+               "goal":{"code":goal.code,"name":display_goal_name,"description":display_description},
+               "level":level,"principles":{"resistance":goal.resistance_principle,
+               "cardio":goal.cardio_principle},"exercises":exercises,"cardio":cardio_data,
+               "safety_note":"计划仅供一般健康成年人参考；如有疾病、伤病、孕期或运动中出现疼痛，请先咨询专业人员。"})
 @router.post("/workouts/sessions")
 def create_session(body:SessionIn,user=Depends(current_user),db:Session=Depends(get_db)):
     x=WorkoutSession(user_id=user.id,**body.model_dump());db.add(x);db.commit();return ok(session_data(db,x))
+@router.post("/workouts/cardio")
+def create_cardio_session(body:CardioSessionIn,user=Depends(current_user),db:Session=Depends(get_db)):
+    profile=db.get(UserProfile,user.id)
+    if not profile:
+        profile=UserProfile(user_id=user.id); db.add(profile); db.flush()
+    segments=parse_cardio_segments(body.detail,body.mode,body.duration_min)
+    duration=sum(segment["duration_min"] for segment in segments)
+    calories=round(sum(estimate_cardio_calories(profile,segment["mode"],segment["duration_min"],segment.get("speed_kmh"),segment.get("incline_percent")) for segment in segments),1)
+    title=segments[0]["label"] if len(segments)==1 else " + ".join(segment["label"] for segment in segments)
+    x=WorkoutSession(user_id=user.id,workout_date=body.workout_date,title=title,
+                     duration_min=duration,calories_kcal=calories,
+                     status="已完成",completed_at=datetime.utcnow())
+    db.add(x);db.commit();return ok({**session_data(db,x),"cardio_segments":segments})
 @router.get("/workouts/sessions")
 def sessions(date_:date|None=Query(None,alias="date"),user=Depends(current_user),db:Session=Depends(get_db)):
     q=db.query(WorkoutSession).filter_by(user_id=user.id)
@@ -218,6 +377,181 @@ def complete(session_id:int,user=Depends(current_user),db:Session=Depends(get_db
     else: x.calories_kcal=0; estimated=True
     x.status="已完成";x.completed_at=datetime.utcnow();db.commit();return ok({**session_data(db,x),"calorie_estimated":estimated})
 
+def clamp(value, low=0, high=100):
+    return max(low, min(high, value))
+
+def target_score(value, target, tolerance=0.12):
+    if not target:
+        return 0
+    ratio=value/target
+    if 1-tolerance <= ratio <= 1+tolerance:
+        return 100
+    return round(clamp(100-abs(1-ratio)*120))
+
+def protein_score(value, target):
+    if not target:
+        return 0
+    return round(clamp(value/target*100))
+
+def profile_for_user(db,user):
+    p=db.get(UserProfile,user.id)
+    if not p:
+        p=UserProfile(user_id=user.id); db.add(p); db.flush()
+    apply_profile_targets(p)
+    return p
+
+def day_totals(db,user,day):
+    meals=db.query(MealRecord).filter_by(user_id=user.id,record_date=day).all()
+    workouts=db.query(WorkoutSession).filter_by(user_id=user.id,workout_date=day,status="已完成").all()
+    nutrients={k:round(sum(getattr(m,k) for m in meals),1) for k in ("calories_kcal","protein_g","carb_g","fat_g")}
+    duration=sum(w.duration_min or 0 for w in workouts)
+    burned=round(sum(w.calories_kcal or 0 for w in workouts),1)
+    return meals,workouts,nutrients,duration,burned
+
+def score_for_day(db,user,day):
+    p=profile_for_user(db,user)
+    meals,workouts,nutrients,duration,burned=day_totals(db,user,day)
+    daily_budget=round((p.daily_calorie_target or 1800)+burned,1)
+    calorie=target_score(nutrients["calories_kcal"],daily_budget,0.15) if meals else 0
+    protein=protein_score(nutrients["protein_g"],p.protein_target_g) if meals else 0
+    carb=target_score(nutrients["carb_g"],p.carb_target_g,0.2) if meals else 0
+    fat=target_score(nutrients["fat_g"],p.fat_target_g,0.25) if meals else 0
+    balance=round((protein+carb+fat)/3) if meals else 0
+    workout=round(clamp((duration/45)*70+(burned/300)*30)) if workouts else 0
+    diet=round(calorie*0.35+protein*0.35+balance*0.3) if meals else 0
+    total=round(diet*0.65+workout*0.35)
+    return {
+        "date":day,
+        "score":total,
+        "diet_score":diet,
+        "workout_score":workout,
+        "calorie_score":calorie,
+        "protein_score":protein,
+        "balance_score":balance,
+        "daily_calorie_target":daily_budget,
+        "intake_calories_kcal":nutrients["calories_kcal"],
+        "workout_calories_kcal":burned,
+        "workout_duration_min":duration,
+        "nutrition":{
+            "protein":{"consumed":nutrients["protein_g"],"target":p.protein_target_g},
+            "carb":{"consumed":nutrients["carb_g"],"target":p.carb_target_g},
+            "fat":{"consumed":nutrients["fat_g"],"target":p.fat_target_g},
+        },
+        "meal_count":len(meals),
+        "workout_count":len(workouts),
+    }
+
+def build_today_advice(score):
+    advice=[]
+    if score["meal_count"] == 0:
+        advice.append("今天还没有饮食记录，先记录一餐，系统才能判断营养是否达标。")
+    elif score["intake_calories_kcal"] < score["daily_calorie_target"]*0.65:
+        advice.append("今天摄入偏低，下一餐可以补充一份主食和优质蛋白。")
+    elif score["intake_calories_kcal"] > score["daily_calorie_target"]*1.1:
+        advice.append("今天热量已经偏高，后续优先选择清淡蔬菜和低脂蛋白。")
+    else:
+        advice.append("今天热量在目标附近，继续保持稳定记录。")
+    protein=score["nutrition"]["protein"]
+    if protein["consumed"] < protein["target"]*0.75:
+        advice.append(f"蛋白质还差约 {round(protein['target']-protein['consumed'])} g，可以优先安排鸡蛋、虾仁、豆腐或瘦肉。")
+    if score["workout_count"] == 0:
+        advice.append("今天还没有训练记录，哪怕 20-30 分钟快走也能让当天评分更完整。")
+    elif score["workout_duration_min"] < 30:
+        advice.append("训练时长偏短，如果体力允许，可以补 10-15 分钟低强度有氧。")
+    else:
+        advice.append("今天已经完成训练，晚餐注意补充蛋白质并保证睡眠恢复。")
+    return advice[:3]
+
+def meal_type_from_text(text):
+    for label in ("早餐","午餐","晚餐","加餐"):
+        if label in text:
+            return label
+    return "加餐"
+
+def default_amount_for_ingredient(item):
+    if item.calories_kcal > 180 and item.carb_g > item.protein_g:
+        return 110
+    if item.protein_g >= 10:
+        return 120
+    if item.fat_g >= 20:
+        return 8
+    return 160
+
+def parse_quick_meal_ingredients(db,text):
+    rows=[]
+    seen=set()
+    ingredients=db.query(Ingredient).all()
+    for item in sorted(ingredients,key=lambda x:len(x.name),reverse=True):
+        aliases=[x.strip() for x in (item.aliases or "").split(",") if x.strip()]
+        names=[item.name]+aliases
+        if any(name and name in text for name in names):
+            if item.id in seen:
+                continue
+            seen.add(item.id)
+            amount_match=re.search(rf"{re.escape(item.name)}\s*(\d+(?:\.\d+)?)\s*(?:g|克)",text)
+            amount=float(amount_match.group(1)) if amount_match else default_amount_for_ingredient(item)
+            rows.append((item,amount))
+    return rows
+
+@router.get("/insights/today")
+def today_insight(user=Depends(current_user),db:Session=Depends(get_db)):
+    score=score_for_day(db,user,date.today())
+    return ok({**score,"advice":build_today_advice(score),
+               "dimensions":[
+                   {"label":"热量","score":score["calorie_score"]},
+                   {"label":"蛋白质","score":score["protein_score"]},
+                   {"label":"营养均衡","score":score["balance_score"]},
+                   {"label":"训练","score":score["workout_score"]},
+               ]})
+
+@router.post("/quick-log")
+def quick_log(body:QuickLogIn,user=Depends(current_user),db:Session=Depends(get_db)):
+    text=body.text.strip()
+    if "分钟" in text or any(keyword in text for keyword,_ in CARDIO_MODE_ALIASES):
+        payload=CardioSessionIn(workout_date=body.record_date,detail=text)
+        return create_cardio_session(payload,user,db)
+    rows=parse_quick_meal_ingredients(db,text)
+    if not rows:
+        raise HTTPException(422,"没有识别到食材。可以输入：午餐 鸡蛋100g 燕麦80g，或：蛙泳40分钟")
+    n=nutrition_for_ingredients(rows)
+    name=text.replace(meal_type_from_text(text),"").strip() or "快速记录餐"
+    m=MealRecord(user_id=user.id,record_date=body.record_date,meal_type=meal_type_from_text(text),name=name[:100],note=text,**n)
+    db.add(m);db.commit();return ok({"type":"meal","record":{"id":m.id,"name":m.name,"meal_type":m.meal_type,"nutrition":n,**n}})
+
+@router.get("/reports/summary")
+def report_summary(days:int=Query(7,ge=7,le=31),user=Depends(current_user),db:Session=Depends(get_db)):
+    today=date.today(); start=today-timedelta(days=days-1)
+    scores=[score_for_day(db,user,start+timedelta(days=i)) for i in range(days)]
+    meals=db.query(MealRecord).filter(MealRecord.user_id==user.id,MealRecord.record_date.between(start,today)).all()
+    workouts=db.query(WorkoutSession).filter(WorkoutSession.user_id==user.id,WorkoutSession.workout_date.between(start,today),WorkoutSession.status=="已完成").all()
+    distribution={"优秀":0,"良好":0,"一般":0,"较差":0}
+    for item in scores:
+        bucket="优秀" if item["score"]>=80 else "良好" if item["score"]>=60 else "一般" if item["score"]>=30 else "较差"
+        distribution[bucket]+=1
+    meal_groups={}
+    for meal in meals:
+        meal_groups.setdefault(meal.meal_type,[]).append(meal)
+    meal_scores=[]
+    for label,items in meal_groups.items():
+        avg_cal=sum(x.calories_kcal for x in items)/len(items)
+        avg_protein=sum(x.protein_g for x in items)/len(items)
+        meal_scores.append({"label":label,"count":len(items),"avg_calories":round(avg_cal),"avg_protein":round(avg_protein,1),
+                            "score":round(clamp(avg_protein*3+min(avg_cal,600)/8))})
+    average=round(sum(x["score"] for x in scores)/len(scores)) if scores else 0
+    suggestions=build_today_advice(scores[-1]) if scores else []
+    if len(workouts)<3:
+        suggestions.append("本周训练次数偏少，可以先安排 2-3 次抗阻训练加 1-2 次有氧。")
+    if len(meals)<days*2:
+        suggestions.append("饮食记录还不够完整，建议每天至少记录午餐和晚餐。")
+    return ok({"range":{"start":start,"end":today,"days":days},"average_score":average,
+               "trend":[{"date":x["date"],"score":x["score"],"diet_score":x["diet_score"],"workout_score":x["workout_score"]} for x in scores],
+               "distribution":distribution,
+               "meal_scores":meal_scores,
+               "summary":{"meal_count":len(meals),"workout_count":len(workouts),
+                          "workout_minutes":sum(x.duration_min or 0 for x in workouts),
+                          "workout_calories":round(sum(x.calories_kcal or 0 for x in workouts),1)},
+               "suggestions":suggestions[:4]})
+
 @router.get("/dashboard/today")
 def dashboard(user=Depends(current_user),db:Session=Depends(get_db)):
     today=date.today(); p=db.get(UserProfile,user.id); meals=db.query(MealRecord).filter_by(user_id=user.id,record_date=today).all(); ws=db.query(WorkoutSession).filter_by(user_id=user.id,workout_date=today,status="已完成").all()
@@ -225,14 +559,27 @@ def dashboard(user=Depends(current_user),db:Session=Depends(get_db)):
         p=UserProfile(user_id=user.id); db.add(p)
     apply_profile_targets(p)
     nutrients={k:round(sum(getattr(m,k) for m in meals),1) for k in ("calories_kcal","protein_g","carb_g","fat_g")}; duration=sum(w.duration_min or 0 for w in ws); burned=round(sum(w.calories_kcal for w in ws),1)
+    daily_budget=round(p.daily_calorie_target+burned,1)
     active_dates={d for (d,) in db.query(MealRecord.record_date).filter_by(user_id=user.id).distinct()} | {d for (d,) in db.query(WorkoutSession.workout_date).filter_by(user_id=user.id).distinct()}
     streak=0; cursor=today
     while cursor in active_dates: streak+=1;cursor-=timedelta(days=1)
-    return ok({"date":today,"daily_calorie_target":p.daily_calorie_target,"intake_calories_kcal":nutrients["calories_kcal"],"remaining_calories_kcal":round(p.daily_calorie_target-nutrients["calories_kcal"],1),"nutrition":{"protein":{"consumed":nutrients["protein_g"],"target":p.protein_target_g},"carb":{"consumed":nutrients["carb_g"],"target":p.carb_target_g},"fat":{"consumed":nutrients["fat_g"],"target":p.fat_target_g}},"workout_duration_min":duration,"workout_calories_kcal":burned,"streak_days":streak})
+    return ok({"date":today,"base_calorie_target":p.daily_calorie_target,"daily_calorie_target":daily_budget,"intake_calories_kcal":nutrients["calories_kcal"],"remaining_calories_kcal":round(daily_budget-nutrients["calories_kcal"],1),"nutrition":{"protein":{"consumed":nutrients["protein_g"],"target":p.protein_target_g},"carb":{"consumed":nutrients["carb_g"],"target":p.carb_target_g},"fat":{"consumed":nutrients["fat_g"],"target":p.fat_target_g}},"workout_duration_min":duration,"workout_calories_kcal":burned,"streak_days":streak})
 @router.get("/stats/calendar")
 def calendar(year:int,month:int,user=Depends(current_user),db:Session=Depends(get_db)):
-    start=date(year,month,1); end=date(year,month,monthrange(year,month)[1]); xs=db.query(WorkoutSession).filter(WorkoutSession.user_id==user.id,WorkoutSession.workout_date.between(start,end)).all(); out={}
-    for x in xs: out.setdefault(str(x.workout_date),{"date":x.workout_date,"sessions":0,"duration_min":0,"calories_kcal":0});out[str(x.workout_date)]["sessions"]+=1;out[str(x.workout_date)]["duration_min"]+=x.duration_min or 0;out[str(x.workout_date)]["calories_kcal"]+=x.calories_kcal
+    start=date(year,month,1); end=date(year,month,monthrange(year,month)[1]); today=date.today(); login_date=(user.created_at+timedelta(hours=8)).date() if user.created_at else today
+    visible_start=max(start,login_date); visible_end=min(end,today)
+    if visible_start>visible_end: return ok([])
+    xs=db.query(WorkoutSession).filter(WorkoutSession.user_id==user.id,WorkoutSession.workout_date.between(visible_start,visible_end),WorkoutSession.status=="已完成").all()
+    meals=db.query(MealRecord).filter(MealRecord.user_id==user.id,MealRecord.record_date.between(visible_start,visible_end)).all()
+    out={}
+    cursor=visible_start
+    while cursor<=visible_end:
+        out[str(cursor)]={"date":cursor,"sessions":0,"duration_min":0,"calories_kcal":0,"meal_count":0,"intake_calories_kcal":0,"status":"休息日"}
+        cursor+=timedelta(days=1)
+    for x in xs:
+        item=out[str(x.workout_date)]; item["sessions"]+=1; item["duration_min"]+=x.duration_min or 0; item["calories_kcal"]=round(item["calories_kcal"]+(x.calories_kcal or 0),1); item["status"]="训练日"
+    for m in meals:
+        item=out[str(m.record_date)]; item["meal_count"]+=1; item["intake_calories_kcal"]=round(item["intake_calories_kcal"]+(m.calories_kcal or 0),1)
     return ok(list(out.values()))
 @router.get("/stats/monthly")
 def monthly(year:int,month:int,user=Depends(current_user),db:Session=Depends(get_db)):

@@ -13,22 +13,35 @@
 }
 
 .hero {
-  height: 300rpx;
+  height: 320rpx;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(180deg, #4f8168 0%, #9ab99f 100%);
+  background: var(--mint);
+  border-color: var(--mint-strong);
+  box-shadow: none;
 }
 
 .hero-mark {
-  font-size: 96rpx;
+  width: 156rpx;
+  height: 156rpx;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--green);
+  color: #fff;
+  font-size: 54rpx;
+  font-weight: 800;
+  box-shadow: 0 16rpx 28rpx rgba(56, 142, 60, 0.2);
 }
 
 .ingredient,
 .step {
   font-size: 28rpx;
   padding: 18rpx 0;
-  border-bottom: 2rpx solid #eee6d8;
+  border-bottom: 2rpx solid var(--line);
+  line-height: 1.45;
 }
 
 .step:last-child,

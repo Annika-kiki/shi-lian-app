@@ -1,15 +1,17 @@
 .bar {
   position: fixed;
-  left: 0;
-  right: 0;
-  bottom: 0;
+  left: 18rpx;
+  right: 18rpx;
+  bottom: 18rpx;
   display: grid;
   grid-template-columns: repeat(5, 1fr);
-  background: #f7f2e8;
-  border-top: 2rpx solid #ddd5c3;
-  padding: 12rpx 18rpx calc(12rpx + env(safe-area-inset-bottom));
+  background: rgba(255, 255, 255, 0.96);
+  border: 2rpx solid var(--line);
+  border-radius: 30rpx;
+  padding: 12rpx 12rpx calc(12rpx + env(safe-area-inset-bottom));
   box-sizing: border-box;
   z-index: 20;
+  box-shadow: 0 12rpx 34rpx var(--shadow-strong);
 }
 
 .item {
@@ -17,21 +19,38 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 4rpx;
-  color: #82958c;
-  font-size: 24rpx;
+  gap: 5rpx;
+  color: var(--muted);
+  font-size: 22rpx;
+  min-height: 78rpx;
+  border-radius: 22rpx;
 }
 
 .item.active {
-  color: #4f8168;
+  color: var(--green-dark);
+}
+
+.icon-wrap {
+  width: 50rpx;
+  height: 42rpx;
+  border-radius: 18rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.item.active .icon-wrap {
+  background: var(--mint-strong);
+  color: var(--green-dark);
 }
 
 .icon {
-  font-size: 30rpx;
+  font-size: 26rpx;
+  font-weight: 800;
   line-height: 1;
 }
 
 .label {
-  font-size: 24rpx;
+  font-size: 22rpx;
   line-height: 1.2;
 }

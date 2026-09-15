@@ -4,11 +4,11 @@
       <view class="header">
         <view class="icon-btn back-btn" bindtap="goBack">←</view>
         <text class="header-title">食谱详情</text>
-        <view class="icon-btn">♡</view>
+        <view class="icon-btn">收藏</view>
       </view>
 
       <view class="hero card">
-        <view class="hero-mark">🍅</view>
+        <view class="hero-mark">食</view>
       </view>
 
       <view class="spacer-24"></view>

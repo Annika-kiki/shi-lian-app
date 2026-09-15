@@ -1,26 +1,66 @@
 <view class="page">
   <view class="page-body">
     <view class="header">
-      <view>
-        <text class="header-subtitle">{{summary.date}}</text>
-        <view class="header-title">{{summary.greeting}} 👋</view>
+      <view class="brand-lockup">
+        <view class="brand-logo"><text>食</text></view>
+        <view>
+          <view class="brand-name">食练周期</view>
+          <text class="header-subtitle">{{summary.date}}</text>
+        </view>
       </view>
-      <view class="icon-btn">◐</view>
+      <view class="icon-btn">日</view>
     </view>
 
-    <view class="card card-soft card-pad">
-      <view class="muted">今日概览</view>
-      <view class="spacer-24"></view>
-      <view class="row-between">
-        <view>
-          <view class="item-title">{{summary.kcalText}}</view>
-          <view class="muted">已摄入 kcal</view>
+    <view class="card card-soft card-pad overview-card">
+      <view class="muted">{{summary.greeting}}</view>
+      <view class="overview-grid">
+        <view class="calorie-ring">
+          <view class="ring-center">
+            <view class="ring-value">{{summary.kcalText}}</view>
+            <view class="ring-label">kcal</view>
+          </view>
         </view>
-        <view>
-          <view class="item-title">{{summary.workout}} min</view>
-          <view class="muted">训练时长</view>
+        <view class="overview-copy">
+          <view class="section-title">今日摄入</view>
+          <view class="item-title">{{summary.remainText}} kcal</view>
+          <view class="item-meta">今日还可摄入</view>
+          <view class="overview-line">
+            <text>训练时长</text>
+            <text>{{summary.workout}} min</text>
+          </view>
         </view>
       </view>
+    </view>
+
+    <view class="spacer-24"></view>
+    <view class="card card-pad score-card">
+      <view class="row-between">
+        <view>
+          <view class="muted">今日综合评分</view>
+          <view class="score-number">{{insight.score}}<text class="score-unit"> / 100</text></view>
+        </view>
+        <view class="score-side">
+          <view>饮食 {{insight.dietScore}}</view>
+          <view>训练 {{insight.workoutScore}}</view>
+        </view>
+      </view>
+      <view class="spacer-24"></view>
+      <block wx:for="{{insight.dimensions}}" wx:key="label">
+        <view class="macro">
+          <text>{{item.label}}</text>
+          <text>{{item.score}}</text>
+        </view>
+        <view class="bar"><view class="fill" style="width: {{item.width}};"></view></view>
+      </block>
+      <view class="tip-box">{{insight.advice[0]}}</view>
+    </view>
+
+    <view class="spacer-24"></view>
+    <view class="card card-pad">
+      <view class="section-title">快速记录</view>
+      <input class="quick-input" value="{{quickInput}}" bindinput="onQuickInput" confirm-type="done" bindconfirm="saveQuickLog" placeholder="例如：午餐鸡蛋燕麦，或蛙泳40分钟" />
+      <view class="spacer-24"></view>
+      <view class="btn btn-outline" bindtap="saveQuickLog">{{quickSaving ? "保存中..." : "记录"}}</view>
     </view>
 
     <view class="spacer-24"></view>
@@ -59,7 +99,7 @@
         <view class="list-item" data-index="{{index}}" bindtap="goMealDetail">
           <view class="row-between">
             <view>
-              <view class="item-title">{{item.icon}} {{item.label}}</view>
+              <view class="item-title">{{item.label}}</view>
               <view class="item-meta">{{item.detail}}</view>
             </view>
             <view class="item-title">{{item.kcal}}</view>

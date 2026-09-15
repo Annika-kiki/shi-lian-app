@@ -1,6 +1,6 @@
 const DEFAULT_USER = {
   name: "用户",
-  avatar: "🍃",
+  avatar: "练",
   goal: "减脂",
   gender: "女",
   age: "21",
@@ -54,11 +54,20 @@ function readStoredUser() {
   }
 }
 
+function normalizeAvatar(value) {
+  const avatar = String(value || "").trim()
+  return avatar === "\uD83C\uDF43" || avatar === "\uD83C\uDF3F" ? "练" : avatar
+}
+
 function normalizeUser(user = {}) {
-  return {
+  const normalized = {
     ...DEFAULT_USER,
     ...readStoredUser(),
     ...user
+  }
+  return {
+    ...normalized,
+    avatar: normalizeAvatar(normalized.avatar)
   }
 }
 

@@ -4,6 +4,9 @@
   text-align: center;
   font-size: 32rpx;
   font-weight: 700;
+  color: var(--ink-soft);
+  border: 2rpx solid var(--line);
+  box-shadow: none;
 }
 
 .input-box {
@@ -12,8 +15,16 @@
   display: flex;
   align-items: center;
   box-sizing: border-box;
-  background: #fffdf8;
-  color: #243a33;
+  background: var(--surface);
+  color: var(--ink);
+  border: 2rpx solid var(--line);
+  box-shadow: inset 0 0 0 2rpx rgba(56, 142, 60, 0.025);
+}
+
+.gender.pill-active {
+  border-color: var(--green);
+  color: #fff;
+  box-shadow: 0 8rpx 18rpx rgba(56, 142, 60, 0.16);
 }
 
 .input-like {

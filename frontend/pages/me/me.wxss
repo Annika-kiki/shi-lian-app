@@ -3,18 +3,24 @@
 .profile-card {
   display: flex;
   align-items: center;
-  gap: 24rpx;
+  gap: 26rpx;
+  border: 0;
+  background: var(--mint);
+  box-shadow: none;
 }
 
 .avatar {
-  width: 120rpx;
-  height: 120rpx;
-  border-radius: 32rpx;
-  background: #d8ead8;
+  width: 124rpx;
+  height: 124rpx;
+  border-radius: 38rpx;
+  background: var(--green);
+  color: #fff;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 56rpx;
+  font-size: 48rpx;
+  font-weight: 800;
+  box-shadow: 0 12rpx 24rpx rgba(56, 142, 60, 0.2);
 }
 
 .profile-main {
@@ -22,8 +28,8 @@
 }
 
 .profile-arrow {
-  font-size: 56rpx;
-  color: #243a33;
+  font-size: 52rpx;
+  color: var(--green-dark);
 }
 
 .menu {
@@ -31,4 +37,5 @@
   justify-content: space-between;
   align-items: center;
   font-size: 30rpx;
+  min-height: 84rpx;
 }

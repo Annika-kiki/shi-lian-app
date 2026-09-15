@@ -11,6 +11,7 @@
     "pages/training/list",
     "pages/training/detail",
     "pages/training/record",
+    "pages/report/report",
     "pages/calendar/calendar",
     "pages/body/body",
     "pages/me/me"

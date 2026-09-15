@@ -14,13 +14,14 @@
 
 .input-box {
   width: 100%;
-  height: 94rpx;
-  border: 2rpx solid #d8cfbe;
-  border-radius: 24rpx;
-  padding: 0 28rpx;
+  height: 98rpx;
+  border: 2rpx solid var(--line);
+  border-radius: 26rpx;
+  padding: 0 30rpx;
   box-sizing: border-box;
   font-size: 30rpx;
-  background: #fffdf8;
+  background: var(--surface);
+  box-shadow: inset 0 0 0 2rpx rgba(56, 142, 60, 0.025);
 }
 
 .chip {
@@ -29,5 +30,11 @@
 
 .chip-x {
   font-size: 24rpx;
-  color: #6d8077;
+  color: var(--muted);
+}
+
+.chip {
+  background: var(--green-soft);
+  color: var(--green-dark);
+  min-height: 60rpx;
 }

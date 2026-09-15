@@ -1,54 +1,109 @@
 @import "../../styles/common.wxss";
 
 .page-body {
-  padding-top: 140rpx;
+  padding-top: 86rpx;
 }
 
 .brand {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 16rpx;
-  margin-bottom: 42rpx;
+  gap: 18rpx;
+  margin-bottom: 48rpx;
 }
 
 .logo {
-  width: 200rpx;
-  height: 200rpx;
-  border-radius: 52rpx;
-  background: #4f8168;
+  width: 144rpx;
+  height: 144rpx;
+  border-radius: 48rpx;
+  background: var(--green);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 72rpx;
+  color: #fff;
+  font-size: 64rpx;
+  box-shadow: 0 18rpx 34rpx rgba(47, 125, 61, 0.2);
+}
+
+.logo-leaf {
+  transform: rotate(-8deg);
 }
 
 .brand-title {
-  font-size: 54rpx;
+  font-size: 52rpx;
   font-weight: 800;
 }
 
 .brand-subtitle {
-  color: #6d8077;
+  color: var(--muted);
   font-size: 28rpx;
 }
 
 .hero {
-  height: 420rpx;
-  margin-bottom: 28rpx;
+  height: 400rpx;
+  margin-bottom: 32rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: var(--mint);
+  border-color: var(--mint-strong);
+  box-shadow: 0 8rpx 26rpx rgba(56, 142, 60, 0.07);
+}
+
+.hero-orbit {
+  width: 240rpx;
+  height: 240rpx;
+  border: 4rpx solid var(--green);
+  border-radius: 50%;
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(180deg, #a9c3ae 0%, #dcead9 100%);
+  background: var(--surface);
 }
 
-.runner {
-  font-size: 104rpx;
+.hero-figure {
+  width: 132rpx;
+  height: 132rpx;
+  border-radius: 44rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--green);
+  color: #fff;
+  font-size: 58rpx;
+}
+
+.hero-dot {
+  position: absolute;
+  width: 24rpx;
+  height: 24rpx;
+  border-radius: 50%;
+  background: #f7c84b;
+}
+
+.dot-one {
+  top: 28rpx;
+  right: 28rpx;
+}
+
+.dot-two {
+  bottom: 28rpx;
+  left: 28rpx;
+  background: #ff8a3d;
+}
+
+.hero-copy {
+  margin-top: 28rpx;
+  color: var(--ink);
+  font-size: 28rpx;
+  font-weight: 700;
 }
 
 .agreement {
   text-align: center;
-  color: #7b8e84;
+  color: var(--muted);
   font-size: 24rpx;
   margin-top: 28rpx;
 }
