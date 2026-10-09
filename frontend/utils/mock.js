@@ -90,7 +90,7 @@ const bodyParts = [
   { label: "背", icon: "◇", part: "back" },
   { label: "肩", icon: "△", part: "shoulder" },
   { label: "手臂", icon: "≋", part: "arm" },
-  { label: "腿臀", icon: "∧", part: "leg" },
+  { label: "臀腿", icon: "∧", part: "leg" },
   { label: "核心", icon: "◎", part: "core" }
 ]
 

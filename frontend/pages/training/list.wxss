@@ -10,3 +10,6 @@
   background: #fffdf8;
   font-size: 30rpx;
 }
+
+.exercise-main { display: flex; align-items: center; gap: 20rpx; }
+.exercise-thumb { width: 128rpx; height: 88rpx; border-radius: 16rpx; flex-shrink: 0; background: #f3eee3; }

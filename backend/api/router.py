@@ -111,6 +111,7 @@ def unfav_recipe(recipe_id:int,user=Depends(current_user),db:Session=Depends(get
 @router.get("/exercises")
 def exercises(body_part:str="",equipment:str="",difficulty:str="",q:str="",db:Session=Depends(get_db)):
     query=db.query(Exercise)
+    if body_part in ("腿部", "腿臀"): body_part = "臀腿"
     if body_part: query=query.filter(Exercise.body_part==body_part)
     if equipment: query=query.filter(Exercise.equipment==equipment)
     if difficulty: query=query.filter(Exercise.difficulty==difficulty)

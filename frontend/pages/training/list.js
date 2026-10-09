@@ -1,32 +1,29 @@
-const { getExerciseList } = require("../../utils/mock")
+const { PARTS, localList, mergeCatalog } = require("../../utils/exercises")
+const { request } = require("../../utils/api")
+const { navigationBehavior } = require("../../utils/navigation")
 
 Page({
+  behaviors: [navigationBehavior],
   data: {
     part: "chest",
     keyword: "",
     equipment: "全部",
-    equipmentTabs: ["全部", "杠铃", "哑铃", "固定器械"],
+    equipmentTabs: ["全部", "杠铃", "哑铃", "固定器械", "绳索", "徒手"],
     exercises: [],
     filteredExercises: [],
     title: "胸部动作"
   },
 
-  onLoad(query) {
-    const part = query.part || "chest"
-    const exercises = getExerciseList(part)
-    this.setData({
-      part,
-      exercises,
-      filteredExercises: exercises,
-      title: {
-        chest: "胸部动作",
-        back: "背部动作",
-        shoulder: "肩部动作",
-        arm: "手臂动作",
-        leg: "腿臀动作",
-        core: "核心动作"
-      }[part] || "动作列表"
-    })
+  async onLoad(query) {
+    const part = PARTS[query.part] ? query.part : "chest"
+    const exercises = localList(part)
+    this.setData({ part, exercises, filteredExercises: exercises, title: `${PARTS[part]}动作` })
+    try {
+      const items = await request("/api/exercises")
+      this.setData({ exercises: mergeCatalog(items, part) }, () => this.updateFiltered())
+    } catch (error) {
+      // The bundled catalog and illustrations remain available offline.
+    }
   },
 
   setEquipment(event) {
@@ -49,7 +46,7 @@ Page({
     const { exercises, equipment, keyword } = this.data
     const filteredExercises = exercises.filter((item) => {
       const equipmentMatch = equipment === "全部" || equipment === "all" || item.equipment.includes(equipment)
-      const keywordMatch = !keyword || item.title.includes(keyword) || item.muscle.includes(keyword)
+      const keywordMatch = !keyword || item.title.includes(keyword) || item.muscle.includes(keyword) || item.equipment.includes(keyword)
       return equipmentMatch && keywordMatch
     })
     this.setData({ filteredExercises })

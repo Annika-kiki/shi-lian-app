@@ -51,3 +51,30 @@ def test_goal_driven_workout_recommendation():
 def test_training_goal_catalog():
     goals=client.get("/api/training-goals").json()["data"]
     assert {x["name"] for x in goals} == {"塑形","减脂","提升运动水平"}
+
+
+def test_exercise_catalog_covers_six_groups_and_old_leg_filter():
+    from collections import Counter
+    items = client.get("/api/exercises").json()["data"]
+    counts = Counter(item["body_part"] for item in items)
+    assert set(counts) == {"胸部", "背部", "肩部", "手臂", "臀腿", "核心"}
+    assert all(count >= 4 for count in counts.values())
+    legs = client.get("/api/exercises", params={"body_part": "臀腿"}).json()["data"]
+    assert len(legs) >= 4
+    assert client.get("/api/exercises", params={"body_part": "腿部"}).json()["data"] == legs
+
+
+def test_exercise_seed_preserves_ids_and_updates_media():
+    from backend.database.seed import init_db
+    before = {item["name"]: item["id"] for item in client.get("/api/exercises").json()["data"]}
+    init_db()
+    items = client.get("/api/exercises").json()["data"]
+    assert {item["name"]: item["id"] for item in items} == before
+    for item in items:
+        assert item["video_url"] is None
+        if item["thumbnail_url"] is None:
+            continue  # Remaining nine illustrations are explicitly pending.
+        assert item["thumbnail_url"].startswith("/assets/exercises/")
+        response = client.get(item["thumbnail_url"])
+        assert response.status_code == 200
+        assert response.headers["content-type"].startswith("image/")

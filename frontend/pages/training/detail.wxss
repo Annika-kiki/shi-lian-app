@@ -12,17 +12,17 @@
   min-height: 0;
 }
 
-.video-card {
-  overflow: hidden;
-  border-radius: 32rpx;
-}
-
-.video {
-  width: 100%;
-  height: 360rpx;
-  display: block;
-  background: #8bb39a;
-}
+.motion-card { overflow: hidden; border-radius: 32rpx; background: #fff; }
+.motion-heading { padding: 24rpx; display: flex; justify-content: space-between; align-items: center; }
+.motion-heading .muted { font-size: 22rpx; }
+.motion-swiper { height: 650rpx; background: #fff; }
+.motion-frame { position: relative; width: 100%; height: 620rpx; overflow: hidden; }
+.motion-image { position: absolute; top: 0; left: 0; width: 200%; height: 100%; display: block; background: #fff; }
+.motion-image-second { left: -100%; }
+.motion-legend { display: flex; align-items: center; padding: 20rpx 24rpx 8rpx; color: #425851; font-size: 25rpx; }
+.muscle-dot { width: 18rpx; height: 18rpx; border-radius: 50%; background: #d9675b; margin-right: 12rpx; }
+.motion-hint { padding: 8rpx 24rpx 24rpx; color: #7a8d84; font-size: 23rpx; line-height: 1.6; }
+.empty-media { padding: 60rpx 24rpx; text-align: center; color: #7a8d84; }
 
 .step {
   padding: 12rpx 0;

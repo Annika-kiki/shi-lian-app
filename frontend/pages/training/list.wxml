@@ -1,12 +1,12 @@
 <view class="page">
   <view class="page-body">
     <view class="header">
-      <view class="icon-btn" bindtap="onBottomNav" data-route="/pages/training/home">←</view>
+      <view class="icon-btn" bindtap="goBack">←</view>
       <text class="header-title">{{title}}</text>
       <view class="icon-btn">筛</view>
     </view>
 
-    <input class="search-box" placeholder="搜索动作或器械" bindinput="onSearch" />
+    <input class="search-box" placeholder="搜索动作、肌群或器械" bindinput="onSearch" />
 
     <view class="spacer-24"></view>
     <view class="pill-row">
@@ -16,13 +16,18 @@
     </view>
 
     <view class="spacer-24"></view>
+    <text class="muted">共 {{filteredExercises.length}} 个动作 · 每个动作含过程图解</text>
+    <view wx:if="{{!filteredExercises.length}}" class="card card-pad muted">没有匹配的动作，试试其他关键词或器械</view>
     <view class="list">
       <block wx:for="{{filteredExercises}}" wx:key="id">
-        <view class="list-item" data-id="{{item.id}}" bindtap="openDetail">
+        <view class="list-item" data-id="{{item.slug}}" bindtap="openDetail">
           <view class="row-between">
-            <view>
-              <view class="item-title">{{item.title}}</view>
-              <view class="item-meta">{{item.muscle}} · {{item.equipment}} · {{item.level}}</view>
+            <view class="exercise-main">
+              <image wx:if="{{item.imageSrc}}" class="exercise-thumb" src="{{item.imageSrc}}" mode="aspectFill" />
+              <view>
+                <view class="item-title">{{item.title}}</view>
+                <view class="item-meta">{{item.muscle}} · {{item.equipment}} · {{item.level}}</view>
+              </view>
             </view>
             <view class="item-title">{{item.icon}} ></view>
           </view>

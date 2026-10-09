@@ -2,18 +2,29 @@
   <scroll-view class="page-scroll" scroll-y="true">
     <view class="page-body">
       <view class="header">
-        <view class="icon-btn" bindtap="onBottomNav" data-route="/pages/training/home">←</view>
+        <view class="icon-btn" bindtap="goBack">←</view>
         <text class="header-title">动作详情</text>
-        <view class="icon-btn">♡</view>
+        <view class="icon-btn" bindtap="toggleFavorite">{{favorite ? '♥' : '♡'}}</view>
       </view>
 
-      <view class="video-card card">
-        <video
-          class="video"
-          src="{{detail.videoSrc}}"
-          controls
-          object-fit="cover"
-        ></video>
+      <view wx:if="{{loading}}" class="card card-pad muted">正在加载动作…</view>
+      <view wx:if="{{error}}" class="card card-pad muted">{{error}}</view>
+      <block wx:if="{{exercise}}">
+      <view class="motion-card card">
+        <view class="motion-heading">
+          <text class="section-title">动作过程图解</text>
+          <text class="muted">左右滑动 · 点击放大</text>
+        </view>
+        <swiper wx:if="{{detail.imageSrc && !imageError}}" class="motion-swiper" indicator-dots="true" indicator-active-color="#3c7660">
+          <swiper-item wx:for="{{stages}}" wx:key="*this">
+            <view class="motion-frame" bindtap="previewImage">
+              <image class="motion-image {{item === 1 ? 'motion-image-second' : ''}}" src="{{detail.imageSrc}}" mode="scaleToFill" binderror="onImageError" />
+            </view>
+          </swiper-item>
+        </swiper>
+        <view wx:else class="empty-media">图解暂不可用，请参考下方动作步骤</view>
+        <view class="motion-legend"><view class="muscle-dot"></view><text>红色标记：{{detail.main}}</text></view>
+        <view class="motion-hint">按图 1 → 图 2 完成动作，控制还原；支撑类动作保持自然呼吸。</view>
       </view>
 
       <view class="spacer-24"></view>
@@ -37,6 +48,7 @@
 
       <view class="spacer-24"></view>
       <view class="btn" bindtap="startRecord">开始记录</view>
+      </block>
       <view class="footer-space"></view>
     </view>
   </scroll-view>

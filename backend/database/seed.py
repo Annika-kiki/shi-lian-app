@@ -1,3 +1,4 @@
+from pathlib import Path
 from backend.database.session import Base, engine, SessionLocal
 from backend.database.catalog import (CARDIO_PRESCRIPTIONS, EXERCISES,
     GOAL_EXERCISE_PRESCRIPTIONS, INGREDIENTS, RECIPES, TRAINING_GOALS)
@@ -35,7 +36,7 @@ def init_db():
             exercise = db.query(Exercise).filter_by(name=name).first()
             values = dict(body_part=part, primary_muscle=primary, secondary_muscle=secondary,
                           equipment=equipment, difficulty=difficulty,
-                          thumbnail_url=f"/images/exercises/{image}", steps=steps, cautions=caution, met=met)
+                          thumbnail_url=(f"/assets/exercises/{image.rsplit('.', 1)[0]}.jpg" if (Path(__file__).resolve().parents[2] / "frontend/assets/exercises" / (image.rsplit('.', 1)[0] + ".jpg")).exists() else None), video_url=None, steps=steps, cautions=caution, met=met)
             if exercise:
                 for key, value in values.items(): setattr(exercise, key, value)
             else:
