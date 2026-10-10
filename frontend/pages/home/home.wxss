@@ -1,5 +1,103 @@
 @import "../../styles/common.wxss";
 
+.brand-lockup {
+  display: flex;
+  align-items: center;
+  gap: 18rpx;
+}
+
+.brand-logo {
+  width: 68rpx;
+  height: 68rpx;
+  border-radius: 24rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--green);
+  color: #fff;
+  font-size: 38rpx;
+  font-weight: 800;
+  transform: rotate(-8deg);
+}
+
+.brand-name {
+  font-size: 32rpx;
+  line-height: 1.2;
+  font-weight: 800;
+  color: var(--ink);
+}
+
+.overview-card {
+  padding-bottom: 24rpx;
+  border: 0;
+}
+
+.overview-grid {
+  display: grid;
+  grid-template-columns: 220rpx minmax(0, 1fr);
+  gap: 24rpx;
+  align-items: center;
+  margin-top: 26rpx;
+}
+
+.calorie-ring {
+  width: 232rpx;
+  height: 232rpx;
+  padding: 22rpx;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  transition: background 360ms cubic-bezier(0.2, 0, 0, 1);
+}
+
+.ring-center {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background: var(--green-soft);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.ring-value {
+  font-size: 40rpx;
+  font-weight: 800;
+  color: var(--ink);
+}
+
+.ring-label {
+  margin-top: 2rpx;
+  color: var(--muted);
+  font-size: 22rpx;
+}
+
+.overview-copy {
+  min-width: 0;
+}
+
+.overview-copy .section-title {
+  margin-bottom: 12rpx;
+}
+
+.overview-copy .item-title {
+  font-size: 34rpx;
+}
+
+.overview-line {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 34rpx;
+  padding-top: 18rpx;
+  border-top: 2rpx solid rgba(47, 125, 61, 0.16);
+  color: var(--muted);
+  font-size: 24rpx;
+}
+
 .macro {
   display: flex;
   justify-content: space-between;
@@ -11,7 +109,7 @@
 .bar {
   height: 16rpx;
   border-radius: 999rpx;
-  background: #e2ddd0;
+  background: var(--surface-variant);
   overflow: hidden;
   margin-bottom: 18rpx;
 }
@@ -19,5 +117,71 @@
 .fill {
   height: 100%;
   border-radius: 999rpx;
-  background: #4f8168;
+  background: var(--green);
+}
+
+.score-card {
+  border-color: var(--mint-strong);
+}
+
+.score-number {
+  margin-top: 10rpx;
+  font-size: 72rpx;
+  line-height: 1;
+  font-weight: 800;
+  color: var(--ink);
+}
+
+.score-unit {
+  font-size: 28rpx;
+  color: var(--muted);
+  font-weight: 500;
+}
+
+.score-side {
+  display: flex;
+  flex-direction: column;
+  gap: 12rpx;
+  color: var(--green-dark);
+  font-size: 26rpx;
+  text-align: right;
+}
+
+.tip-box {
+  margin-top: 22rpx;
+  padding: 20rpx;
+  border-radius: 22rpx;
+  background: var(--mint);
+  color: var(--ink-soft);
+  font-size: 26rpx;
+  line-height: 1.55;
+}
+
+.quick-input {
+  height: 92rpx;
+  padding: 0 28rpx;
+  border: 2rpx solid var(--line);
+  border-radius: 24rpx;
+  background: var(--surface);
+  box-sizing: border-box;
+  font-size: 28rpx;
+}
+
+.overview-card {
+  background: var(--green-soft);
+  border-radius: 32rpx;
+}
+
+.calorie-ring {
+  background: conic-gradient(from -90deg, var(--green) 0deg, #b8dc73 0deg 360deg);
+}
+
+.score-card {
+  background: var(--surface);
+  border-color: var(--line);
+}
+
+.tip-box {
+  background: var(--surface-low);
+  border: 1rpx solid var(--line);
 }

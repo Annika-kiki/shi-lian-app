@@ -27,7 +27,7 @@
           <view class="set-index">{{item.group}}</view>
           <view class="set-box">{{item.weight}}</view>
           <view class="set-box">{{item.reps}}</view>
-          <view class="set-done {{item.done ? 'done' : ''}}" data-index="{{index}}" bindtap="toggleDone">{{item.done ? '✓' : ''}}</view>
+          <view class="set-done {{item.done ? 'done' : ''}}" data-index="{{index}}" bindtap="toggleDone">{{item.done ? '已' : ''}}</view>
         </view>
       </block>
     </view>

@@ -2,28 +2,31 @@
 
 .chart {
   position: relative;
-  height: 320rpx;
-  margin-top: 16rpx;
-  padding-bottom: 54rpx;
+  height: 330rpx;
+  margin-top: 20rpx;
+  padding-bottom: 58rpx;
 }
 
 .chart-bar {
   position: absolute;
-  bottom: 54rpx;
-  width: 14rpx;
-  background: #4f8168;
+  bottom: 58rpx;
+  width: 16rpx;
+  background: var(--green);
   border-radius: 999rpx;
   transform: translateX(-50%);
+  opacity: 0.88;
 }
 
 .dot {
   position: absolute;
-  top: -12rpx;
-  left: -7rpx;
-  width: 32rpx;
-  height: 32rpx;
+  top: -10rpx;
+  left: -8rpx;
+  width: 34rpx;
+  height: 34rpx;
   border-radius: 50%;
-  background: #4f8168;
+  background: var(--green);
+  border: 6rpx solid var(--surface);
+  box-sizing: border-box;
 }
 
 .chart-axis {
@@ -33,6 +36,6 @@
   bottom: 0;
   display: flex;
   justify-content: space-between;
-  color: #6d8077;
+  color: var(--muted);
   font-size: 24rpx;
 }

@@ -18,5 +18,14 @@
   padding: 0 20rpx;
   justify-content: flex-start;
   font-size: 30rpx;
-  color: #243a33;
+  color: var(--green-dark);
+}
+
+.list-item {
+  border-left: 10rpx solid var(--green);
+  padding-left: 24rpx;
+}
+
+.list-item .item-title {
+  font-size: 35rpx;
 }

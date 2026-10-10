@@ -5,8 +5,9 @@
       data-route="{{item.route}}"
       bindtap="handleChange"
     >
-      <text class="icon">{{item.icon}}</text>
-      <text class="label">{{item.label}}</text>
+      <view class="icon-wrap">
+        <text class="icon" aria-label="{{item.label}}">{{item.icon}}</text>
+      </view>
     </view>
   </block>
 </view>

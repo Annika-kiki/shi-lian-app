@@ -1,14 +1,5 @@
 const { generateRecipes } = require("../../utils/api")
-function navigateBackOrRedirect(fallbackUrl) {
-  const pages = getCurrentPages()
-  if (pages.length > 1) {
-    wx.navigateBack({ delta: 1 })
-    return
-  }
-  if (fallbackUrl) {
-    wx.redirectTo({ url: fallbackUrl })
-  }
-}
+const { navigateBackOrRedirect } = require("../../utils/navigation")
 
 
 function toIngredientObject(item) {
@@ -298,6 +289,7 @@ Page({
     const cachedKey = wx.getStorageSync("generatedRecipesRequestKey")
     if (cached.length && cachedKey && cachedKey === this.requestKey) {
       this.setData({ recipes: cached })
+      return
     }
     this.reloadRecipes()
   },
@@ -326,7 +318,7 @@ Page({
         wx.setStorageSync("generatedRecipesRequestKey", this.requestKey)
         this.setData({ recipes: fallback })
         wx.showToast({
-          title: "后端未启动，已显示本地食谱",
+          title: "接口连接失败，已显示本地菜谱",
           icon: "none"
         })
       })
@@ -337,6 +329,10 @@ Page({
 
   goDetail(event) {
     const id = event.currentTarget.dataset.id
+    const recipe = this.data.recipes.find((item) => String(item.id) === String(id))
+    if (recipe) {
+      wx.setStorageSync("selectedRecipe", recipe)
+    }
     wx.navigateTo({
       url: `/pages/food/detail?id=${id}`
     })
@@ -370,7 +366,7 @@ Page({
         wx.setStorageSync("generatedRecipesRequestKey", request.requestKey)
         this.setData({ recipes: fallback })
         wx.showToast({
-          title: "后端未启动，已显示本地食谱",
+          title: "接口连接失败，已显示本地菜谱",
           icon: "none"
         })
       })

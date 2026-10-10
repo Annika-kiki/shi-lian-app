@@ -5,7 +5,7 @@ Page({
     me: (() => {
       const user = getUser()
       return {
-        avatar: user.avatar || "🍃",
+        avatar: user.avatar || "练",
         name: user.name || "用户",
         goal: user.goal || "减脂",
         height: `${user.height} cm`,
@@ -20,7 +20,7 @@ Page({
     const user = getUser()
     this.setData({
       me: {
-        avatar: user.avatar || "🍃",
+        avatar: user.avatar || "练",
         name: user.name || "用户",
         goal: user.goal || "减脂",
         height: `${user.height} cm`,
@@ -39,7 +39,7 @@ Page({
 
   goTrainingHistory() {
     wx.redirectTo({
-      url: "/pages/calendar/calendar"
+      url: "/pages/calendar/calendar?from=me"
     })
   },
 

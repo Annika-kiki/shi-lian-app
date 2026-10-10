@@ -1,7 +1,7 @@
 const MEAL_SLOTS = [
-  { key: "breakfast", label: "早餐", icon: "🥣" },
-  { key: "lunch", label: "午餐", icon: "🍱" },
-  { key: "dinner", label: "晚餐", icon: "🌙" }
+  { key: "breakfast", label: "早餐" },
+  { key: "lunch", label: "午餐" },
+  { key: "dinner", label: "晚餐" }
 ]
 
 const { getUser, calculateNutritionTargets } = require("./user")
@@ -69,7 +69,8 @@ function buildMealItems() {
       recorded: true,
       kcal: record.kcal,
       detail: record.detail,
-      recipeId: record.recipeId
+      recipeId: record.recipeId,
+      recipe: record.recipe || null
     }
   })
 }
@@ -97,7 +98,8 @@ function saveMeal(recipe, preferredSlot) {
     recipeId: recipe.id,
     label: recipe.name,
     kcal: recipe.kcal,
-    detail: formatIngredientPreview(recipe) || "已记录"
+    detail: formatIngredientPreview(recipe) || "已记录",
+    recipe
   }
 
   writeMealRecords(records)
