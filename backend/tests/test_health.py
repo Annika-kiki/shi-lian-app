@@ -37,3 +37,16 @@ def test_sensitive_endpoint_rate_limit(monkeypatch):
     assert response.status_code == 429
     assert response.headers["retry-after"] == "60"
     main_module.rate_limit_buckets.clear()
+
+
+def test_rejected_gateway_host_is_logged_without_tokens(caplog):
+    from fastapi import FastAPI
+    from backend.main import LoggedTrustedHostMiddleware
+    isolated_app = FastAPI()
+    isolated_app.add_middleware(LoggedTrustedHostMiddleware, allowed_hosts=["verified.example"])
+    with TestClient(isolated_app) as isolated_client:
+        with caplog.at_level("WARNING", logger="backend.hosts"):
+            response = isolated_client.get("/health", headers={"Host": "gateway.internal:8001", "Authorization": "Bearer do-not-log-me"})
+    assert response.status_code == 400
+    assert "gateway.internal:8001" in caplog.text
+    assert "do-not-log-me" not in caplog.text

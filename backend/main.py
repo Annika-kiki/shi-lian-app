@@ -34,9 +34,20 @@ app = FastAPI(
     openapi_url=None if settings.is_deployed else "/openapi.json",
 )
 app.add_middleware(CORSMiddleware, allow_origins=settings.cors_origins.split(","), allow_credentials=False, allow_methods=["*"], allow_headers=["*"])
+class LoggedTrustedHostMiddleware(TrustedHostMiddleware):
+    async def __call__(self, scope, receive, send):
+        if scope["type"] == "http" and not self.allow_any:
+            raw_host = next((value.decode("latin-1") for key, value in scope["headers"] if key == b"host"), "")
+            hostname = raw_host.split(":")[0]
+            if not any(hostname == host or (host.startswith("*.") and hostname.endswith(host[1:])) for host in self.allowed_hosts):
+                # Log only the host, never identity headers, tokens or request data.
+                logging.getLogger("backend.hosts").warning("Rejected request Host=%r; configure ALLOWED_HOSTS with the verified gateway hostname", raw_host[:255])
+        await super().__call__(scope, receive, send)
+
+
 configured_hosts = [host.strip() for host in settings.allowed_hosts.split(",") if host.strip()]
 app.add_middleware(
-    TrustedHostMiddleware,
+    LoggedTrustedHostMiddleware,
     allowed_hosts=list(dict.fromkeys(configured_hosts + ["127.0.0.1", "localhost"])),
 )
 
