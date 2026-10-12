@@ -321,7 +321,7 @@
     "steps": "掌心相对握铃；肘部固定；交替弯举",
     "cautions": "保持手腕中立",
     "met": 4.0,
-    "imageSrc": ""
+    "imageSrc": "/assets/exercises/hammer-curl.jpg"
   },
   {
     "id": "triceps-pushdown",
@@ -339,7 +339,7 @@
     "steps": "肘部夹紧体侧；向下伸直手臂；慢速还原",
     "cautions": "肩膀不要前移",
     "met": 4.0,
-    "imageSrc": ""
+    "imageSrc": "/assets/exercises/triceps-pushdown.jpg"
   },
   {
     "id": "overhead-triceps-extension",
@@ -357,7 +357,7 @@
     "steps": "双手托住哑铃；屈肘下放至脑后；伸肘推起",
     "cautions": "肘部保持朝前",
     "met": 4.0,
-    "imageSrc": ""
+    "imageSrc": "/assets/exercises/overhead-triceps-extension.jpg"
   },
   {
     "id": "forearm-plank",
@@ -375,7 +375,7 @@
     "steps": "肘在肩下；夹臀收腹；保持自然呼吸",
     "cautions": "腰部不要下塌",
     "met": 3.5,
-    "imageSrc": ""
+    "imageSrc": "/assets/exercises/forearm-plank.jpg"
   },
   {
     "id": "dead-bug",
@@ -393,7 +393,7 @@
     "steps": "腰背贴地；对侧手脚伸展；回位后换边",
     "cautions": "动作范围以腰背不离地为准",
     "met": 3.0,
-    "imageSrc": ""
+    "imageSrc": "/assets/exercises/dead-bug.jpg"
   },
   {
     "id": "bicycle-crunch",
@@ -411,7 +411,7 @@
     "steps": "下背贴地；对侧肘膝靠近；缓慢交替伸腿",
     "cautions": "不要拉扯颈部",
     "met": 4.5,
-    "imageSrc": ""
+    "imageSrc": "/assets/exercises/bicycle-crunch.jpg"
   },
   {
     "id": "reverse-dumbbell-fly",
@@ -429,7 +429,7 @@
     "steps": "髋部后推并俯身，背部保持中立；双肘微屈向两侧展开；控制哑铃缓慢回落",
     "cautions": "使用轻重量，不要甩动躯干或耸肩",
     "met": 4.0,
-    "imageSrc": ""
+    "imageSrc": "/assets/exercises/reverse-dumbbell-fly.jpg"
   },
   {
     "id": "dumbbell-front-raise",
@@ -447,7 +447,7 @@
     "steps": "站稳并收紧核心，哑铃置于大腿前；双肘微屈向前抬至肩高；控制下放至起始位",
     "cautions": "不抬过肩高，避免腰部后仰借力",
     "met": 4.0,
-    "imageSrc": ""
+    "imageSrc": "/assets/exercises/dumbbell-front-raise.jpg"
   },
   {
     "id": "side-plank",
@@ -465,6 +465,6 @@
     "steps": "侧卧，肘部置于肩正下方，双脚叠放；抬髋使头肩髋脚成一直线；保持自然呼吸后缓慢落髋，换侧练习",
     "cautions": "不要耸肩或塌腰，可屈膝支撑降低难度",
     "met": 3.5,
-    "imageSrc": ""
+    "imageSrc": "/assets/exercises/side-plank.jpg"
   }
 ]
