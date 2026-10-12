@@ -491,6 +491,7 @@ def init_db():
     db = SessionLocal()
     try:
         _seed_foods(db)
+        db.flush()
         _seed_recipes(db)
         _seed_exercises(db)
         _seed_training_recommendations(db)
