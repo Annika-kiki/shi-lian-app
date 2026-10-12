@@ -200,21 +200,12 @@ def _match_selected_ingredients(
                 (
                     item
                     for key, item in db_lookup.items()
-                    if key in cleaned or cleaned in key
+                    if key and (key in cleaned or cleaned in key)
                 ),
                 None,
             )
         if candidate and candidate not in selected:
             selected.append(candidate)
-
-    if not selected:
-        for name in ("鸡胸肉", "西兰花", "米饭"):
-            candidate = db_lookup.get(name)
-            if candidate and candidate not in selected:
-                selected.append(candidate)
-
-    if not selected and all_ingredients:
-        selected = all_ingredients[:3]
 
     return _unique_by_id(selected)
 

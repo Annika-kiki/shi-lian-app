@@ -1,6 +1,9 @@
-import re
-from datetime import date, datetime, timedelta
+from datetime import UTC, date, datetime, timedelta
 from calendar import monthrange
+import hmac
+import re
+from typing import Literal
+from zoneinfo import ZoneInfo
 from fastapi import APIRouter, Depends, Header, HTTPException, Query
 from pydantic import BaseModel, Field
 from sqlalchemy import func
@@ -10,14 +13,30 @@ from backend.database.session import get_db
 from backend.models.entities import *
 from backend.services.ai_provider import LocalRecipeProvider
 from backend.services.nutrition import nutrition_for_ingredients, recipe_payload
+from backend.services.auth import InvalidSession, create_session_token, verify_session_token
+from backend.services.wechat import exchange_login_code
 
 router = APIRouter(prefix="/api")
+BUSINESS_TIMEZONE = ZoneInfo("Asia/Shanghai")
+
+
+def business_date(now: datetime | None = None) -> date:
+    instant = now or datetime.now(UTC)
+    if instant.tzinfo is None:
+        instant = instant.replace(tzinfo=UTC)
+    return instant.astimezone(BUSINESS_TIMEZONE).date()
 
 def ok(data=None, message="ok"): return {"code": 0, "message": message, "data": data if data is not None else {}}
-def current_user(x_user_id: int | None = Header(None), db: Session = Depends(get_db)):
-    if not x_user_id: raise HTTPException(401, "缺少 X-User-Id；请先调用 mock-login")
-    user = db.get(User, x_user_id)
-    if not user: raise HTTPException(401, "用户不存在")
+def current_user(authorization: str | None = Header(None), db: Session = Depends(get_db)):
+    if not authorization or not authorization.startswith("Bearer "):
+        raise HTTPException(401, "登录状态无效，请重新登录")
+    try:
+        user_id, session_nonce = verify_session_token(authorization[7:], settings.session_secret)
+    except InvalidSession as exc:
+        raise HTTPException(401, "登录状态无效或已过期，请重新登录") from exc
+    user = db.get(User, user_id)
+    if not user or not hmac.compare_digest(user.session_nonce, session_nonce):
+        raise HTTPException(401, "用户不存在或登录状态已失效")
     return user
 
 def round_to_five(value: float) -> int:
@@ -54,41 +73,75 @@ def profile_dict(p):
     apply_profile_targets(p)
     return {k: getattr(p, k) for k in ("gender","age","height_cm","current_weight_kg","target_weight_kg","goal_type","daily_calorie_target","protein_target_g","carb_target_g","fat_target_g","profile_completed")}
 
-class LoginIn(BaseModel): nickname: str = Field(default="食练周期用户", max_length=64); avatar: str | None = None; mock_openid: str | None = None
+def issue_session(openid: str, db: Session, nickname: str | None = None, avatar: str | None = None):
+    user = db.query(User).filter_by(openid=openid).first()
+    if not user:
+        user = User(openid=openid, nickname=nickname, avatar=avatar)
+        db.add(user); db.flush(); db.add(UserProfile(user_id=user.id))
+    elif nickname is not None:
+        user.nickname, user.avatar = nickname, avatar
+    db.commit()
+    return ok({"user_id": user.id, "access_token": create_session_token(user.id, user.session_nonce, settings.session_secret, settings.session_ttl_seconds), "token_type": "Bearer", "expires_in": settings.session_ttl_seconds})
+
+class LoginIn(BaseModel): nickname: str = Field(default="食练周期用户", max_length=64); avatar: str | None = Field(None, max_length=512); mock_openid: str | None = Field(None, max_length=128)
+class WechatLoginIn(BaseModel): code: str = Field(min_length=1, max_length=128)
 class ProfileIn(BaseModel):
-    gender: str | None = None; age: int | None = Field(None, ge=1, le=120); height_cm: float | None = Field(None, ge=50, le=260); current_weight_kg: float | None = Field(None, gt=0, le=500); target_weight_kg: float | None = Field(None, gt=0, le=500); goal_type: str = "保持健康"; daily_calorie_target: float | None = Field(None, gt=0); protein_target_g: float | None = Field(None, ge=0); carb_target_g: float | None = Field(None, ge=0); fat_target_g: float | None = Field(None, ge=0)
-class WeightIn(BaseModel): record_date: date = Field(default_factory=date.today); weight_kg: float = Field(gt=0, le=500)
-class RecipeGenerateIn(BaseModel): ingredients: list[str] = Field(min_length=1); meal_type: str; target_calories: int = Field(500, ge=100, le=2000); preference: str | None = None; recipe_round: int = Field(0, ge=0)
+    nickname: str | None = Field(None, min_length=1, max_length=64); gender: Literal["男", "女"] | None = None; age: int | None = Field(None, ge=14, le=120); height_cm: float | None = Field(None, ge=50, le=260); current_weight_kg: float | None = Field(None, gt=0, le=500); target_weight_kg: float | None = Field(None, gt=0, le=500); goal_type: Literal["增肌", "减脂", "保持健康", "提升运动水平"] | None = None; daily_calorie_target: float | None = Field(None, gt=0, le=10000); protein_target_g: float | None = Field(None, ge=0, le=1000); carb_target_g: float | None = Field(None, ge=0, le=2000); fat_target_g: float | None = Field(None, ge=0, le=1000)
+class DeleteAccountIn(BaseModel): confirmation: str = Field(pattern="^DELETE$")
+class WeightIn(BaseModel): record_date: date = Field(default_factory=business_date); weight_kg: float = Field(gt=0, le=500)
+class RecipeGenerateIn(BaseModel): ingredients: list[str] = Field(min_length=1, max_length=50); meal_type: Literal["早餐", "午餐", "晚餐"]; target_calories: int = Field(500, ge=100, le=2000); preference: str | None = Field(None, max_length=255); recipe_round: int = Field(0, ge=0, le=1000)
 class MealIngredientIn(BaseModel): ingredient_id: int; amount_g: float = Field(gt=0, le=3000)
-class MealIn(BaseModel): record_date: date = Field(default_factory=date.today); meal_type: str; name: str | None = None; recipe_id: int | None = None; ingredients: list[MealIngredientIn] = Field(default_factory=list); note: str | None = None
-class SessionIn(BaseModel): workout_date: date = Field(default_factory=date.today); title: str = Field(min_length=1,max_length=100); duration_min: int | None = Field(None, ge=0, le=1440)
-class CardioSessionIn(BaseModel): workout_date: date = Field(default_factory=date.today); mode: str | None = Field(default=None, max_length=50); duration_min: int | None = Field(None, ge=1, le=360); detail: str | None = Field(None, max_length=255)
-class QuickLogIn(BaseModel): text: str = Field(min_length=1,max_length=255); record_date: date = Field(default_factory=date.today)
-class SessionUpdateIn(BaseModel): title: str | None = None; duration_min: int | None = Field(None, ge=0, le=1440); workout_date: date | None = None
-class SetIn(BaseModel): exercise_id: int; set_no: int = Field(ge=1); weight_kg: float | None = Field(None, ge=0); reps: int | None = Field(None, ge=0); completed: bool = False
-class SetUpdateIn(BaseModel): weight_kg: float | None = Field(None, ge=0); reps: int | None = Field(None, ge=0); completed: bool | None = None
+class MealIn(BaseModel): record_date: date = Field(default_factory=business_date); meal_type: Literal["早餐", "午餐", "晚餐"]; name: str | None = Field(None, max_length=100); recipe_id: int | None = Field(None, ge=1); ingredients: list[MealIngredientIn] = Field(default_factory=list, max_length=50); note: str | None = Field(None, max_length=255)
+class SessionIn(BaseModel): workout_date: date = Field(default_factory=business_date); title: str = Field(min_length=1,max_length=100); duration_min: int | None = Field(None, ge=0, le=1440)
+class CardioSessionIn(BaseModel): workout_date: date = Field(default_factory=business_date); mode: str | None = Field(default=None, max_length=50); duration_min: int | None = Field(None, ge=1, le=360); detail: str | None = Field(None, max_length=255)
+class QuickLogIn(BaseModel): text: str = Field(min_length=1,max_length=255); record_date: date = Field(default_factory=business_date)
+class SessionUpdateIn(BaseModel): title: str | None = Field(None, min_length=1, max_length=100); duration_min: int | None = Field(None, ge=0, le=1440); workout_date: date | None = None
+class SetIn(BaseModel): exercise_id: int; set_no: int = Field(ge=1, le=100); weight_kg: float | None = Field(None, ge=0, le=1000); reps: int | None = Field(None, ge=0, le=10000); completed: bool = False
+class SetUpdateIn(BaseModel): weight_kg: float | None = Field(None, ge=0, le=1000); reps: int | None = Field(None, ge=0, le=10000); completed: bool | None = None
 
 @router.post("/auth/mock-login")
 def mock_login(body: LoginIn, db: Session = Depends(get_db)):
+    if settings.app_env != "development":
+        raise HTTPException(404, "接口不存在")
     openid = body.mock_openid or f"mock_{body.nickname}"
-    user = db.query(User).filter_by(openid=openid).first()
-    if not user:
-        user = User(openid=openid, nickname=body.nickname, avatar=body.avatar); db.add(user); db.flush(); db.add(UserProfile(user_id=user.id))
-    else: user.nickname, user.avatar = body.nickname, body.avatar
-    db.commit(); return ok({"user_id": user.id, "access_token": f"mock-user-{user.id}", "token_type": "Use X-User-Id header"})
+    return issue_session(openid, db, body.nickname, body.avatar)
 @router.post("/auth/wechat-login")
-def wechat_login():
+def wechat_login(body: WechatLoginIn, db: Session = Depends(get_db)):
+    if settings.auth_mode != "wechat_api": raise HTTPException(404, "接口不存在")
     if not settings.wechat_app_id or not settings.wechat_app_secret: raise HTTPException(501, "微信登录尚未配置：请设置 WECHAT_APP_ID 和 WECHAT_APP_SECRET")
-    raise HTTPException(501, "微信 code 换取服务接口已预留，MVP 请使用 mock-login")
+    openid = exchange_login_code(body.code, settings.wechat_app_id, settings.wechat_app_secret)
+    return issue_session(openid, db)
+
+@router.post("/auth/cloud-login")
+def cloud_login(
+    x_wx_openid: str | None = Header(None, alias="X-WX-OPENID"),
+    x_wx_appid: str | None = Header(None, alias="X-WX-APPID"),
+    x_wx_env: str | None = Header(None, alias="X-WX-ENV"),
+    db: Session = Depends(get_db),
+):
+    # These identity headers are trusted only behind WeChat Cloud Hosting. Public
+    # access to this service must be disabled before staging or production use.
+    if settings.auth_mode != "cloud_headers" or not settings.is_deployed:
+        raise HTTPException(404, "接口不存在")
+    if x_wx_appid != settings.wechat_app_id or x_wx_env != settings.wechat_cloud_env_id:
+        raise HTTPException(401, "云托管身份校验失败")
+    if not x_wx_openid or not re.fullmatch(r"[A-Za-z0-9_-]{8,128}", x_wx_openid):
+        raise HTTPException(401, "云托管用户身份无效")
+    return issue_session(x_wx_openid, db)
 @router.get("/users/me")
 def me(user=Depends(current_user), db: Session=Depends(get_db)):
-    p=db.get(UserProfile,user.id); created_date=(user.created_at+timedelta(hours=8)).date() if user.created_at else date.today(); return ok({"id":user.id,"openid":user.openid,"nickname":user.nickname,"avatar":user.avatar,"created_at":user.created_at,"created_date":created_date,"profile":profile_dict(p)})
+    p=db.get(UserProfile,user.id); created_date=(user.created_at+timedelta(hours=8)).date() if user.created_at else business_date(); return ok({"id":user.id,"nickname":user.nickname,"avatar":user.avatar,"created_at":user.created_at,"created_date":created_date,"profile":profile_dict(p)})
 @router.put("/users/me/profile")
 def update_profile(body: ProfileIn, user=Depends(current_user), db: Session=Depends(get_db)):
     p=db.get(UserProfile,user.id)
     if not p:
         p=UserProfile(user_id=user.id); db.add(p)
-    for k,v in body.model_dump().items(): setattr(p,k,v)
+    if body.nickname is not None:
+        nickname = body.nickname.strip()
+        if not nickname:
+            raise HTTPException(422, "昵称不能为空")
+        user.nickname = nickname
+    for k,v in body.model_dump(exclude={"nickname"}, exclude_unset=True).items(): setattr(p,k,v)
     apply_profile_targets(p)
     p.profile_completed=True; db.commit(); return ok(profile_dict(p))
 @router.post("/users/me/weights")
@@ -102,7 +155,22 @@ def weight(body: WeightIn,user=Depends(current_user),db:Session=Depends(get_db))
     p.current_weight_kg=body.weight_kg; apply_profile_targets(p); db.commit(); return ok({"id":r.id,"record_date":r.record_date,"weight_kg":r.weight_kg})
 @router.get("/users/me/weights")
 def weights(days:int=Query(30,ge=1,le=366),user=Depends(current_user),db:Session=Depends(get_db)):
-    since=date.today()-timedelta(days=days-1); r=db.query(WeightRecord).filter(WeightRecord.user_id==user.id,WeightRecord.record_date>=since).order_by(WeightRecord.record_date).all(); return ok([{"date":x.record_date,"weight_kg":x.weight_kg} for x in r])
+    since=business_date()-timedelta(days=days-1); r=db.query(WeightRecord).filter(WeightRecord.user_id==user.id,WeightRecord.record_date>=since).order_by(WeightRecord.record_date).all(); return ok([{"date":x.record_date,"weight_kg":x.weight_kg} for x in r])
+
+@router.delete("/users/me")
+def delete_account(body: DeleteAccountIn, user=Depends(current_user), db: Session=Depends(get_db)):
+    session_ids = [row[0] for row in db.query(WorkoutSession.id).filter_by(user_id=user.id)]
+    if session_ids:
+        db.query(WorkoutSet).filter(WorkoutSet.session_id.in_(session_ids)).delete(synchronize_session=False)
+    db.query(WorkoutSession).filter_by(user_id=user.id).delete(synchronize_session=False)
+    db.query(FavoriteExercise).filter_by(user_id=user.id).delete(synchronize_session=False)
+    db.query(FavoriteRecipe).filter_by(user_id=user.id).delete(synchronize_session=False)
+    db.query(MealRecord).filter_by(user_id=user.id).delete(synchronize_session=False)
+    db.query(WeightRecord).filter_by(user_id=user.id).delete(synchronize_session=False)
+    db.query(UserProfile).filter_by(user_id=user.id).delete(synchronize_session=False)
+    db.delete(user)
+    db.commit()
+    return ok(message="账号及个人数据已删除")
 
 @router.get("/ingredients")
 def ingredients(q:str="",db:Session=Depends(get_db)):
@@ -115,7 +183,7 @@ def recipe(recipe_id:int,db:Session=Depends(get_db)):
     if not x: raise HTTPException(404,"食谱不存在")
     return ok(recipe_payload(db,x))
 @router.post("/recipes/generate")
-def generate(body:RecipeGenerateIn,db:Session=Depends(get_db)): return ok(LocalRecipeProvider().generate(db,body.ingredients,body.target_calories,body.preference,body.recipe_round))
+def generate(body:RecipeGenerateIn,user=Depends(current_user),db:Session=Depends(get_db)): return ok(LocalRecipeProvider().generate(db,body.ingredients,body.target_calories,body.preference,body.recipe_round))
 @router.post("/meals")
 def create_meal(body:MealIn,user=Depends(current_user),db:Session=Depends(get_db)):
     if body.recipe_id:
@@ -132,7 +200,7 @@ def create_meal(body:MealIn,user=Depends(current_user),db:Session=Depends(get_db
         n=nutrition_for_ingredients(rows); name=body.name or "自定义餐食"
     m=MealRecord(user_id=user.id,record_date=body.record_date,meal_type=body.meal_type,recipe_id=body.recipe_id,name=name,note=body.note,**n); db.add(m);db.commit();return ok({"id":m.id,"name":m.name,"nutrition":n})
 @router.get("/meals")
-def meals(date_:date=Query(default_factory=date.today,alias="date"),user=Depends(current_user),db:Session=Depends(get_db)):
+def meals(date_:date=Query(default_factory=business_date,alias="date"),user=Depends(current_user),db:Session=Depends(get_db)):
     x=db.query(MealRecord).filter_by(user_id=user.id,record_date=date_).all();return ok([{"id":m.id,"meal_type":m.meal_type,"name":m.name,"calories_kcal":m.calories_kcal,"protein_g":m.protein_g,"carb_g":m.carb_g,"fat_g":m.fat_g,"recipe_id":m.recipe_id,"note":m.note} for m in x])
 @router.delete("/meals/{meal_id}")
 def del_meal(meal_id:int,user=Depends(current_user),db:Session=Depends(get_db)):
@@ -176,37 +244,22 @@ def unfav_exercise(exercise_id:int,user=Depends(current_user),db:Session=Depends
     return ok()
 GOAL_ALIASES = {"塑形":"shaping", "保持健康":"shaping", "增肌":"shaping",
                 "减脂":"fat_loss", "提升运动水平":"performance"}
+
 CARDIO_MET = {
-    "快走": 4.3,
-    "坡度走": 5.3,
-    "爬坡": 6.5,
-    "椭圆机": 5.0,
-    "骑行": 6.0,
-    "慢跑": 7.0,
-    "跑步": 8.0,
-    "划船机": 7.0,
-    "风阻单车": 7.5,
-    "跳绳": 10.0,
-    "游泳": 8.0,
-    "蛙泳": 10.3,
-    "自由泳": 8.3,
+    "快走": 4.3, "坡度走": 5.3, "爬坡": 6.5, "椭圆机": 5.0,
+    "骑行": 6.0, "慢跑": 7.0, "跑步": 8.0, "划船机": 7.0,
+    "风阻单车": 7.5, "跳绳": 10.0, "游泳": 8.0,
+    "蛙泳": 10.3, "自由泳": 8.3,
 }
 
 CARDIO_MODE_ALIASES = [
-    ("蛙泳", "蛙泳"),
-    ("自由泳", "自由泳"),
-    ("游泳", "游泳"),
-    ("爬坡", "爬坡"),
-    ("坡度", "爬坡"),
-    ("快走", "快走"),
-    ("椭圆", "椭圆机"),
-    ("骑行", "骑行"),
-    ("单车", "骑行"),
-    ("慢跑", "慢跑"),
-    ("跑步", "跑步"),
-    ("划船", "划船机"),
+    ("蛙泳", "蛙泳"), ("自由泳", "自由泳"), ("游泳", "游泳"),
+    ("爬坡", "爬坡"), ("坡度", "爬坡"), ("快走", "快走"),
+    ("椭圆", "椭圆机"), ("骑行", "骑行"), ("单车", "骑行"),
+    ("慢跑", "慢跑"), ("跑步", "跑步"), ("划船", "划船机"),
     ("跳绳", "跳绳"),
 ]
+
 
 def detect_cardio_mode(text: str, fallback: str | None = None) -> str:
     for keyword, mode in CARDIO_MODE_ALIASES:
@@ -214,61 +267,52 @@ def detect_cardio_mode(text: str, fallback: str | None = None) -> str:
             return mode
     return (fallback or "快走").strip() or "快走"
 
-def format_cardio_number(value: float) -> str:
-    return f"{value:g}"
 
 def parse_cardio_segments(detail: str | None, mode: str | None, duration_min: int | None):
-    text=(detail or "").strip()
-    fallback_mode=detect_cardio_mode(text,mode)
-    incline_pattern=re.compile(r"(?:爬坡|坡度走)?\s*坡度\s*(\d+(?:\.\d+)?)\s*(?:速度|时速)\s*(\d+(?:\.\d+)?)\s*(?:公里/小时|km/h|kmh)?\s*(\d+(?:\.\d+)?)\s*分钟")
-    segments=[]
+    text = (detail or "").strip()
+    fallback_mode = detect_cardio_mode(text, mode)
+    incline_pattern = re.compile(
+        r"(?:爬坡|坡度走)?\s*坡度\s*(\d+(?:\.\d+)?)\s*(?:速度|时速)\s*"
+        r"(\d+(?:\.\d+)?)\s*(?:公里/小时|km/h|kmh)?\s*(\d+(?:\.\d+)?)\s*分钟"
+    )
+    segments = []
     for match in incline_pattern.finditer(text):
-        incline=float(match.group(1)); speed=float(match.group(2)); minutes=round(float(match.group(3)))
-        segments.append({
-            "mode":"爬坡",
-            "duration_min":minutes,
-            "incline_percent":incline,
-            "speed_kmh":speed,
-            "label":f"坡度{format_cardio_number(incline)}速度{format_cardio_number(speed)} {minutes}分钟"
-        })
+        incline, speed, minutes = float(match.group(1)), float(match.group(2)), round(float(match.group(3)))
+        segments.append({"mode": "爬坡", "duration_min": minutes,
+                         "incline_percent": incline, "speed_kmh": speed,
+                         "label": f"坡度{incline:g}速度{speed:g} {minutes}分钟"})
     if segments:
         return segments
-
-    mode_names="蛙泳|自由泳|游泳|快走|坡度走|爬坡|椭圆机|椭圆|骑行|慢跑|跑步|划船机|划船|风阻单车|跳绳"
-    normal_pattern=re.compile(rf"({mode_names})\s*(\d+(?:\.\d+)?)\s*分钟")
-    for match in normal_pattern.finditer(text):
-        raw_mode=match.group(1)
-        cardio_mode=detect_cardio_mode(raw_mode,mode)
-        minutes=round(float(match.group(2)))
-        segments.append({"mode":cardio_mode,"duration_min":minutes,"label":f"{cardio_mode}{minutes}分钟"})
+    mode_names = "蛙泳|自由泳|游泳|快走|坡度走|爬坡|椭圆机|椭圆|骑行|慢跑|跑步|划船机|划船|风阻单车|跳绳"
+    for match in re.finditer(rf"({mode_names})\s*(\d+(?:\.\d+)?)\s*分钟", text):
+        cardio_mode, minutes = detect_cardio_mode(match.group(1), mode), round(float(match.group(2)))
+        segments.append({"mode": cardio_mode, "duration_min": minutes,
+                         "label": f"{cardio_mode}{minutes}分钟"})
     if segments:
         return segments
-
     if duration_min:
-        return [{"mode":fallback_mode,"duration_min":duration_min,"label":f"{fallback_mode}{duration_min}分钟"}]
-
-    duration_match=re.search(r"(\d+(?:\.\d+)?)\s*分钟",text)
+        return [{"mode": fallback_mode, "duration_min": duration_min,
+                 "label": f"{fallback_mode}{duration_min}分钟"}]
+    duration_match = re.search(r"(\d+(?:\.\d+)?)\s*分钟", text)
     if duration_match:
-        minutes=round(float(duration_match.group(1)))
-        return [{"mode":fallback_mode,"duration_min":minutes,"label":f"{fallback_mode}{minutes}分钟"}]
+        minutes = round(float(duration_match.group(1)))
+        return [{"mode": fallback_mode, "duration_min": minutes,
+                 "label": f"{fallback_mode}{minutes}分钟"}]
+    raise HTTPException(422, "请输入有氧方式和时间，例如：蛙泳40分钟，或：坡度10速度5.5 10分钟")
 
-    raise HTTPException(422,"请输入有氧方式和时间，例如：蛙泳40分钟，或：坡度10速度5.5 10分钟")
 
 def cardio_segment_met(segment) -> float:
-    speed=segment.get("speed_kmh")
-    incline=segment.get("incline_percent")
+    speed, incline = segment.get("speed_kmh"), segment.get("incline_percent")
     if speed is not None and incline is not None:
-        meters_per_min=speed*1000/60
-        vo2=0.1*meters_per_min+1.8*meters_per_min*(incline/100)+3.5
-        return max(3.0, vo2/3.5)
+        meters_per_min = speed * 1000 / 60
+        return max(3.0, (0.1 * meters_per_min + 1.8 * meters_per_min * (incline / 100) + 3.5) / 3.5)
     return CARDIO_MET.get(segment["mode"], 5.0)
 
-def estimate_cardio_calories(profile, mode: str, duration_min: int, speed_kmh: float | None = None, incline_percent: float | None = None) -> float:
-    weight = profile.current_weight_kg or 60
-    height = profile.height_cm or 165
-    met = cardio_segment_met({"mode":mode,"speed_kmh":speed_kmh,"incline_percent":incline_percent})
+
+def estimate_cardio_calories(profile, segment) -> float:
+    weight, height = profile.current_weight_kg or 60, profile.height_cm or 165
     height_factor = min(1.1, max(0.95, height / 170))
-    return round(met * 3.5 * weight / 200 * duration_min * height_factor, 1)
+    return round(cardio_segment_met(segment) * 3.5 * weight / 200 * segment["duration_min"] * height_factor, 1)
 
 @router.get("/training-goals")
 def training_goals(db:Session=Depends(get_db)):
@@ -327,16 +371,16 @@ def create_session(body:SessionIn,user=Depends(current_user),db:Session=Depends(
     x=WorkoutSession(user_id=user.id,**body.model_dump());db.add(x);db.commit();return ok(session_data(db,x))
 @router.post("/workouts/cardio")
 def create_cardio_session(body:CardioSessionIn,user=Depends(current_user),db:Session=Depends(get_db)):
-    profile=db.get(UserProfile,user.id)
-    if not profile:
-        profile=UserProfile(user_id=user.id); db.add(profile); db.flush()
+    profile=profile_for_user(db,user)
     segments=parse_cardio_segments(body.detail,body.mode,body.duration_min)
     duration=sum(segment["duration_min"] for segment in segments)
-    calories=round(sum(estimate_cardio_calories(profile,segment["mode"],segment["duration_min"],segment.get("speed_kmh"),segment.get("incline_percent")) for segment in segments),1)
+    if duration < 1 or duration > 360:
+        raise HTTPException(422, "有氧总时长必须在 1 到 360 分钟之间")
+    calories=round(sum(estimate_cardio_calories(profile,segment) for segment in segments),1)
     title=segments[0]["label"] if len(segments)==1 else " + ".join(segment["label"] for segment in segments)
     x=WorkoutSession(user_id=user.id,workout_date=body.workout_date,title=title,
                      duration_min=duration,calories_kcal=calories,
-                     status="已完成",completed_at=datetime.utcnow())
+                     status="已完成",completed_at=utc_now())
     db.add(x);db.commit();return ok({**session_data(db,x),"cardio_segments":segments})
 @router.get("/workouts/sessions")
 def sessions(date_:date|None=Query(None,alias="date"),user=Depends(current_user),db:Session=Depends(get_db)):
@@ -357,10 +401,17 @@ def update_session(session_id:int,body:SessionUpdateIn,user=Depends(current_user
     x=owned_session(session_id,user,db)
     for k,v in body.model_dump(exclude_none=True).items(): setattr(x,k,v)
     db.commit();return ok(session_data(db,x))
+@router.delete("/workouts/sessions/{session_id}")
+def delete_session(session_id:int,user=Depends(current_user),db:Session=Depends(get_db)):
+    x=owned_session(session_id,user,db)
+    db.query(WorkoutSet).filter_by(session_id=x.id).delete(synchronize_session=False)
+    db.delete(x);db.commit();return ok()
 @router.post("/workouts/sessions/{session_id}/sets")
 def add_set(session_id:int,body:SetIn,user=Depends(current_user),db:Session=Depends(get_db)):
     owned_session(session_id,user,db)
     if not db.get(Exercise,body.exercise_id): raise HTTPException(404,"动作不存在")
+    if db.query(WorkoutSet).filter_by(session_id=session_id,set_no=body.set_no).first():
+        raise HTTPException(409,"该训练组编号已存在")
     x=WorkoutSet(session_id=session_id,**body.model_dump());db.add(x);db.commit();return ok({"id":x.id})
 @router.put("/workouts/sets/{set_id}")
 def update_set(set_id:int,body:SetUpdateIn,user=Depends(current_user),db:Session=Depends(get_db)):
@@ -368,6 +419,11 @@ def update_set(set_id:int,body:SetUpdateIn,user=Depends(current_user),db:Session
     if not x or not db.query(WorkoutSession).filter_by(id=x.session_id,user_id=user.id).first(): raise HTTPException(404,"训练组不存在")
     for k,v in body.model_dump(exclude_none=True).items(): setattr(x,k,v)
     db.commit();return ok({"id":x.id,"completed":x.completed})
+@router.delete("/workouts/sets/{set_id}")
+def delete_set(set_id:int,user=Depends(current_user),db:Session=Depends(get_db)):
+    x=db.get(WorkoutSet,set_id)
+    if not x or not db.query(WorkoutSession).filter_by(id=x.session_id,user_id=user.id).first(): raise HTTPException(404,"训练组不存在")
+    db.delete(x);db.commit();return ok()
 @router.post("/workouts/sessions/{session_id}/complete")
 def complete(session_id:int,user=Depends(current_user),db:Session=Depends(get_db)):
     x=owned_session(session_id,user,db); sets=db.query(WorkoutSet).filter_by(session_id=x.id).all(); duration=x.duration_min or 0
@@ -375,7 +431,7 @@ def complete(session_id:int,user=Depends(current_user),db:Session=Depends(get_db
     if duration and sets:
         met=sum(db.get(Exercise,s.exercise_id).met for s in sets)/len(sets); x.calories_kcal=round(met*3.5*weight/200*duration,1); estimated=False
     else: x.calories_kcal=0; estimated=True
-    x.status="已完成";x.completed_at=datetime.utcnow();db.commit();return ok({**session_data(db,x),"calorie_estimated":estimated})
+    x.status="已完成";x.completed_at=utc_now();db.commit();return ok({**session_data(db,x),"calorie_estimated":estimated})
 
 def clamp(value, low=0, high=100):
     return max(low, min(high, value))
@@ -495,7 +551,7 @@ def parse_quick_meal_ingredients(db,text):
 
 @router.get("/insights/today")
 def today_insight(user=Depends(current_user),db:Session=Depends(get_db)):
-    score=score_for_day(db,user,date.today())
+    score=score_for_day(db,user,business_date())
     return ok({**score,"advice":build_today_advice(score),
                "dimensions":[
                    {"label":"热量","score":score["calorie_score"]},
@@ -520,7 +576,182 @@ def quick_log(body:QuickLogIn,user=Depends(current_user),db:Session=Depends(get_
 
 @router.get("/reports/summary")
 def report_summary(days:int=Query(7,ge=7,le=31),user=Depends(current_user),db:Session=Depends(get_db)):
-    today=date.today(); start=today-timedelta(days=days-1)
+    today=business_date(); start=today-timedelta(days=days-1)
+    scores=[score_for_day(db,user,start+timedelta(days=i)) for i in range(days)]
+    meals=db.query(MealRecord).filter(MealRecord.user_id==user.id,MealRecord.record_date.between(start,today)).all()
+    workouts=db.query(WorkoutSession).filter(WorkoutSession.user_id==user.id,WorkoutSession.workout_date.between(start,today),WorkoutSession.status=="已完成").all()
+    distribution={"优秀":0,"良好":0,"一般":0,"较差":0}
+    for item in scores:
+        bucket="优秀" if item["score"]>=80 else "良好" if item["score"]>=60 else "一般" if item["score"]>=30 else "较差"
+        distribution[bucket]+=1
+    meal_groups={}
+    for meal in meals:
+        meal_groups.setdefault(meal.meal_type,[]).append(meal)
+    meal_scores=[]
+    for label,items in meal_groups.items():
+        avg_cal=sum(x.calories_kcal for x in items)/len(items)
+        avg_protein=sum(x.protein_g for x in items)/len(items)
+        meal_scores.append({"label":label,"count":len(items),"avg_calories":round(avg_cal),"avg_protein":round(avg_protein,1),
+                            "score":round(clamp(avg_protein*3+min(avg_cal,600)/8))})
+    average=round(sum(x["score"] for x in scores)/len(scores)) if scores else 0
+    suggestions=build_today_advice(scores[-1]) if scores else []
+    if len(workouts)<3:
+        suggestions.append("本周训练次数偏少，可以先安排 2-3 次抗阻训练加 1-2 次有氧。")
+    if len(meals)<days*2:
+        suggestions.append("饮食记录还不够完整，建议每天至少记录午餐和晚餐。")
+    return ok({"range":{"start":start,"end":today,"days":days},"average_score":average,
+               "trend":[{"date":x["date"],"score":x["score"],"diet_score":x["diet_score"],"workout_score":x["workout_score"]} for x in scores],
+               "distribution":distribution,
+               "meal_scores":meal_scores,
+               "summary":{"meal_count":len(meals),"workout_count":len(workouts),
+                          "workout_minutes":sum(x.duration_min or 0 for x in workouts),
+                          "workout_calories":round(sum(x.calories_kcal or 0 for x in workouts),1)},
+               "suggestions":suggestions[:4]})
+
+def clamp(value, low=0, high=100):
+    return max(low, min(high, value))
+
+def target_score(value, target, tolerance=0.12):
+    if not target:
+        return 0
+    ratio=value/target
+    if 1-tolerance <= ratio <= 1+tolerance:
+        return 100
+    return round(clamp(100-abs(1-ratio)*120))
+
+def protein_score(value, target):
+    if not target:
+        return 0
+    return round(clamp(value/target*100))
+
+def profile_for_user(db,user):
+    p=db.get(UserProfile,user.id)
+    if not p:
+        p=UserProfile(user_id=user.id); db.add(p); db.flush()
+    apply_profile_targets(p)
+    return p
+
+def day_totals(db,user,day):
+    meals=db.query(MealRecord).filter_by(user_id=user.id,record_date=day).all()
+    workouts=db.query(WorkoutSession).filter_by(user_id=user.id,workout_date=day,status="已完成").all()
+    nutrients={k:round(sum(getattr(m,k) for m in meals),1) for k in ("calories_kcal","protein_g","carb_g","fat_g")}
+    duration=sum(w.duration_min or 0 for w in workouts)
+    burned=round(sum(w.calories_kcal or 0 for w in workouts),1)
+    return meals,workouts,nutrients,duration,burned
+
+def score_for_day(db,user,day):
+    p=profile_for_user(db,user)
+    meals,workouts,nutrients,duration,burned=day_totals(db,user,day)
+    daily_budget=round((p.daily_calorie_target or 1800)+burned,1)
+    calorie=target_score(nutrients["calories_kcal"],daily_budget,0.15) if meals else 0
+    protein=protein_score(nutrients["protein_g"],p.protein_target_g) if meals else 0
+    carb=target_score(nutrients["carb_g"],p.carb_target_g,0.2) if meals else 0
+    fat=target_score(nutrients["fat_g"],p.fat_target_g,0.25) if meals else 0
+    balance=round((protein+carb+fat)/3) if meals else 0
+    workout=round(clamp((duration/45)*70+(burned/300)*30)) if workouts else 0
+    diet=round(calorie*0.35+protein*0.35+balance*0.3) if meals else 0
+    total=round(diet*0.65+workout*0.35)
+    return {
+        "date":day,
+        "score":total,
+        "diet_score":diet,
+        "workout_score":workout,
+        "calorie_score":calorie,
+        "protein_score":protein,
+        "balance_score":balance,
+        "daily_calorie_target":daily_budget,
+        "intake_calories_kcal":nutrients["calories_kcal"],
+        "workout_calories_kcal":burned,
+        "workout_duration_min":duration,
+        "nutrition":{
+            "protein":{"consumed":nutrients["protein_g"],"target":p.protein_target_g},
+            "carb":{"consumed":nutrients["carb_g"],"target":p.carb_target_g},
+            "fat":{"consumed":nutrients["fat_g"],"target":p.fat_target_g},
+        },
+        "meal_count":len(meals),
+        "workout_count":len(workouts),
+    }
+
+def build_today_advice(score):
+    advice=[]
+    if score["meal_count"] == 0:
+        advice.append("今天还没有饮食记录，先记录一餐，系统才能判断营养是否达标。")
+    elif score["intake_calories_kcal"] < score["daily_calorie_target"]*0.65:
+        advice.append("今天摄入偏低，下一餐可以补充一份主食和优质蛋白。")
+    elif score["intake_calories_kcal"] > score["daily_calorie_target"]*1.1:
+        advice.append("今天热量已经偏高，后续优先选择清淡蔬菜和低脂蛋白。")
+    else:
+        advice.append("今天热量在目标附近，继续保持稳定记录。")
+    protein=score["nutrition"]["protein"]
+    if protein["consumed"] < protein["target"]*0.75:
+        advice.append(f"蛋白质还差约 {round(protein['target']-protein['consumed'])} g，可以优先安排鸡蛋、虾仁、豆腐或瘦肉。")
+    if score["workout_count"] == 0:
+        advice.append("今天还没有训练记录，哪怕 20-30 分钟快走也能让当天评分更完整。")
+    elif score["workout_duration_min"] < 30:
+        advice.append("训练时长偏短，如果体力允许，可以补 10-15 分钟低强度有氧。")
+    else:
+        advice.append("今天已经完成训练，晚餐注意补充蛋白质并保证睡眠恢复。")
+    return advice[:3]
+
+def meal_type_from_text(text):
+    for label in ("早餐","午餐","晚餐","加餐"):
+        if label in text:
+            return label
+    return "加餐"
+
+def default_amount_for_ingredient(item):
+    if item.calories_kcal > 180 and item.carb_g > item.protein_g:
+        return 110
+    if item.protein_g >= 10:
+        return 120
+    if item.fat_g >= 20:
+        return 8
+    return 160
+
+def parse_quick_meal_ingredients(db,text):
+    rows=[]
+    seen=set()
+    ingredients=db.query(Ingredient).all()
+    for item in sorted(ingredients,key=lambda x:len(x.name),reverse=True):
+        aliases=[x.strip() for x in (item.aliases or "").split(",") if x.strip()]
+        names=[item.name]+aliases
+        if any(name and name in text for name in names):
+            if item.id in seen:
+                continue
+            seen.add(item.id)
+            amount_match=re.search(rf"{re.escape(item.name)}\s*(\d+(?:\.\d+)?)\s*(?:g|克)",text)
+            amount=float(amount_match.group(1)) if amount_match else default_amount_for_ingredient(item)
+            rows.append((item,amount))
+    return rows
+
+@router.get("/insights/today")
+def today_insight(user=Depends(current_user),db:Session=Depends(get_db)):
+    score=score_for_day(db,user,business_date())
+    return ok({**score,"advice":build_today_advice(score),
+               "dimensions":[
+                   {"label":"热量","score":score["calorie_score"]},
+                   {"label":"蛋白质","score":score["protein_score"]},
+                   {"label":"营养均衡","score":score["balance_score"]},
+                   {"label":"训练","score":score["workout_score"]},
+               ]})
+
+@router.post("/quick-log")
+def quick_log(body:QuickLogIn,user=Depends(current_user),db:Session=Depends(get_db)):
+    text=body.text.strip()
+    if "分钟" in text or any(keyword in text for keyword,_ in CARDIO_MODE_ALIASES):
+        payload=CardioSessionIn(workout_date=body.record_date,detail=text)
+        return create_cardio_session(payload,user,db)
+    rows=parse_quick_meal_ingredients(db,text)
+    if not rows:
+        raise HTTPException(422,"没有识别到食材。可以输入：午餐 鸡蛋100g 燕麦80g，或：蛙泳40分钟")
+    n=nutrition_for_ingredients(rows)
+    name=text.replace(meal_type_from_text(text),"").strip() or "快速记录餐"
+    m=MealRecord(user_id=user.id,record_date=body.record_date,meal_type=meal_type_from_text(text),name=name[:100],note=text,**n)
+    db.add(m);db.commit();return ok({"type":"meal","record":{"id":m.id,"name":m.name,"meal_type":m.meal_type,"nutrition":n,**n}})
+
+@router.get("/reports/summary")
+def report_summary(days:int=Query(7,ge=7,le=31),user=Depends(current_user),db:Session=Depends(get_db)):
+    today=business_date(); start=today-timedelta(days=days-1)
     scores=[score_for_day(db,user,start+timedelta(days=i)) for i in range(days)]
     meals=db.query(MealRecord).filter(MealRecord.user_id==user.id,MealRecord.record_date.between(start,today)).all()
     workouts=db.query(WorkoutSession).filter(WorkoutSession.user_id==user.id,WorkoutSession.workout_date.between(start,today),WorkoutSession.status=="已完成").all()
@@ -554,7 +785,7 @@ def report_summary(days:int=Query(7,ge=7,le=31),user=Depends(current_user),db:Se
 
 @router.get("/dashboard/today")
 def dashboard(user=Depends(current_user),db:Session=Depends(get_db)):
-    today=date.today(); p=db.get(UserProfile,user.id); meals=db.query(MealRecord).filter_by(user_id=user.id,record_date=today).all(); ws=db.query(WorkoutSession).filter_by(user_id=user.id,workout_date=today,status="已完成").all()
+    today=business_date(); p=db.get(UserProfile,user.id); meals=db.query(MealRecord).filter_by(user_id=user.id,record_date=today).all(); ws=db.query(WorkoutSession).filter_by(user_id=user.id,workout_date=today,status="已完成").all()
     if not p:
         p=UserProfile(user_id=user.id); db.add(p)
     apply_profile_targets(p)
@@ -565,8 +796,8 @@ def dashboard(user=Depends(current_user),db:Session=Depends(get_db)):
     while cursor in active_dates: streak+=1;cursor-=timedelta(days=1)
     return ok({"date":today,"base_calorie_target":p.daily_calorie_target,"daily_calorie_target":daily_budget,"intake_calories_kcal":nutrients["calories_kcal"],"remaining_calories_kcal":round(daily_budget-nutrients["calories_kcal"],1),"nutrition":{"protein":{"consumed":nutrients["protein_g"],"target":p.protein_target_g},"carb":{"consumed":nutrients["carb_g"],"target":p.carb_target_g},"fat":{"consumed":nutrients["fat_g"],"target":p.fat_target_g}},"workout_duration_min":duration,"workout_calories_kcal":burned,"streak_days":streak})
 @router.get("/stats/calendar")
-def calendar(year:int,month:int,user=Depends(current_user),db:Session=Depends(get_db)):
-    start=date(year,month,1); end=date(year,month,monthrange(year,month)[1]); today=date.today(); login_date=(user.created_at+timedelta(hours=8)).date() if user.created_at else today
+def calendar(year:int=Query(ge=2000,le=2100),month:int=Query(ge=1,le=12),user=Depends(current_user),db:Session=Depends(get_db)):
+    start=date(year,month,1); end=date(year,month,monthrange(year,month)[1]); today=business_date(); login_date=(user.created_at+timedelta(hours=8)).date() if user.created_at else today
     visible_start=max(start,login_date); visible_end=min(end,today)
     if visible_start>visible_end: return ok([])
     xs=db.query(WorkoutSession).filter(WorkoutSession.user_id==user.id,WorkoutSession.workout_date.between(visible_start,visible_end),WorkoutSession.status=="已完成").all()
@@ -582,11 +813,14 @@ def calendar(year:int,month:int,user=Depends(current_user),db:Session=Depends(ge
         item=out[str(m.record_date)]; item["meal_count"]+=1; item["intake_calories_kcal"]=round(item["intake_calories_kcal"]+(m.calories_kcal or 0),1)
     return ok(list(out.values()))
 @router.get("/stats/monthly")
-def monthly(year:int,month:int,user=Depends(current_user),db:Session=Depends(get_db)):
+def monthly(year:int=Query(ge=2000,le=2100),month:int=Query(ge=1,le=12),user=Depends(current_user),db:Session=Depends(get_db)):
     start=date(year,month,1);end=date(year,month,monthrange(year,month)[1]); xs=db.query(WorkoutSession).filter(WorkoutSession.user_id==user.id,WorkoutSession.workout_date.between(start,end),WorkoutSession.status=="已完成").all(); parts=[]
     for x in xs:
         for s in db.query(WorkoutSet).filter_by(session_id=x.id): parts.append(db.get(Exercise,s.exercise_id).body_part)
     return ok({"workout_count":len(xs),"total_duration_min":sum(x.duration_min or 0 for x in xs),"total_calories_kcal":round(sum(x.calories_kcal for x in xs),1),"most_trained_body_part":max(set(parts),key=parts.count) if parts else None})
 @router.get("/stats/body-trend")
 def body_trend(days:int=Query(30,ge=1,le=366),user=Depends(current_user),db:Session=Depends(get_db)):
-    since=date.today()-timedelta(days=days-1); xs=db.query(WeightRecord).filter(WeightRecord.user_id==user.id,WeightRecord.record_date>=since).order_by(WeightRecord.record_date).all();p=db.get(UserProfile,user.id); current=xs[-1].weight_kg if xs else p.current_weight_kg;return ok({"weights":[{"date":x.record_date,"weight_kg":x.weight_kg} for x in xs],"current_weight_kg":current,"target_difference_kg":round((current-p.target_weight_kg),1) if current and p.target_weight_kg else None,"period_change_kg":round(xs[-1].weight_kg-xs[0].weight_kg,1) if len(xs)>1 else 0})
+    since=business_date()-timedelta(days=days-1); xs=db.query(WeightRecord).filter(WeightRecord.user_id==user.id,WeightRecord.record_date>=since).order_by(WeightRecord.record_date).all();p=db.get(UserProfile,user.id)
+    current=xs[-1].weight_kg if xs else (p.current_weight_kg if p else None)
+    target=p.target_weight_kg if p else None
+    return ok({"weights":[{"date":x.record_date,"weight_kg":x.weight_kg} for x in xs],"current_weight_kg":current,"target_weight_kg":target,"target_difference_kg":round((current-target),1) if current is not None and target is not None else None,"period_change_kg":round(xs[-1].weight_kg-xs[0].weight_kg,1) if len(xs)>1 else 0})

@@ -1,0 +1,76 @@
+name: WeChat backend deployment checks
+on:
+  push:
+    branches: [main, 'codex/wechat-cloud-deploy-*']
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    services:
+      mysql:
+        image: mysql:5.7
+        env:
+          MYSQL_ROOT_PASSWORD: ci-root-password
+          MYSQL_DATABASE: shi_lian_staging
+          MYSQL_USER: sl_migrator
+          MYSQL_PASSWORD: ci-migration-password
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -uroot -pci-root-password --silent"
+          --health-interval=10s --health-timeout=5s --health-retries=12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+      - name: Install backend dependencies
+        run: python -m pip install -r backend/requirements-dev.txt
+      - name: Backend regression tests
+        run: python -m pytest
+      - name: Migrate and seed MySQL 5.7
+        env:
+          APP_ENV: staging
+          MYSQL_ADDRESS: 127.0.0.1:3306
+          MYSQL_USERNAME: sl_migrator
+          MYSQL_PASSWORD: ci-migration-password
+          MYSQL_DATABASE: shi_lian_staging
+        run: sh scripts/migrate_staging.sh
+      - name: Create a limited business account for the container check
+        run: |
+          python - <<'PY'
+          import pymysql
+          with pymysql.connect(host='127.0.0.1', user='root', password='ci-root-password') as db:
+              with db.cursor() as cursor:
+                  cursor.execute("CREATE USER 'shi_lian_app'@'%' IDENTIFIED BY 'ci-app-password'")
+                  cursor.execute(r"GRANT SELECT, INSERT, UPDATE, DELETE ON `shi\_lian\_staging`.* TO 'shi_lian_app'@'%'")
+          PY
+      - name: Build and check the deployed container against MySQL
+        run: |
+          docker build --tag shi-lian-api:wechat .
+          docker run --detach --name shi-lian-wechat-check --network host \
+            --env APP_ENV=staging --env AUTH_MODE=cloud_headers \
+            --env MYSQL_ADDRESS=127.0.0.1:3306 --env MYSQL_USERNAME=shi_lian_app \
+            --env MYSQL_PASSWORD=ci-app-password --env MYSQL_DATABASE=shi_lian_staging \
+            --env WECHAT_APP_ID=wx26dfe00bf5f3258b \
+            --env WECHAT_CLOUD_ENV_ID=prod-d4g1s6f9gaef2c320 \
+            --env SESSION_SECRET=ci-only-session-secret-at-least-32-characters \
+            --env CORS_ORIGINS= --env ALLOWED_HOSTS=localhost,127.0.0.1 \
+            shi-lian-api:wechat
+          trap 'docker logs shi-lian-wechat-check; docker rm --force shi-lian-wechat-check' EXIT
+          for attempt in $(seq 1 45); do
+            if curl --fail --silent http://127.0.0.1:8001/health; then
+              curl --fail --silent --request POST \
+                --header 'X-WX-APPID: wx26dfe00bf5f3258b' \
+                --header 'X-WX-ENV: prod-d4g1s6f9gaef2c320' \
+                --header 'X-WX-OPENID: ci-test-openid' \
+                http://127.0.0.1:8001/api/auth/cloud-login > /dev/null
+              exit 0
+            fi
+            sleep 2
+          done
+          exit 1
