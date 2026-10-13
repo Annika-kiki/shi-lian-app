@@ -5,7 +5,9 @@
       data-route="{{item.route}}"
       bindtap="handleChange"
     >
-      <text class="icon">{{item.icon}}</text>
+      <view class="icon-wrap" aria-hidden="true">
+        <view class="nav-icon nav-icon-{{item.key}}"></view>
+      </view>
       <text class="label">{{item.label}}</text>
     </view>
   </block>

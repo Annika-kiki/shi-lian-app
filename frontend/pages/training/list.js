@@ -1,15 +1,6 @@
 const { getExerciseList } = require("../../utils/mock")
 const { getExercises } = require("../../utils/api")
-function navigateBackOrRedirect(fallbackUrl) {
-  const pages = getCurrentPages()
-  if (pages.length > 1) {
-    wx.navigateBack({ delta: 1 })
-    return
-  }
-  if (fallbackUrl) {
-    wx.redirectTo({ url: fallbackUrl })
-  }
-}
+const { navigateBackOrRedirect } = require("../../utils/navigation")
 
 
 function titleForPart(part) {
@@ -28,7 +19,7 @@ Page({
     part: "chest",
     keyword: "",
     equipment: "全部",
-    equipmentTabs: ["全部", "杠铃", "哑铃", "固定器械"],
+    equipmentTabs: ["全部", "杠铃", "哑铃", "固定器械", "徒手", "绳索"],
     exercises: [],
     filteredExercises: [],
     title: "胸部动作"

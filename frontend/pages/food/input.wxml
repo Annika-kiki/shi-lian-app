@@ -46,7 +46,7 @@
       <view class="card card-pad muted">AI 将决定菜品和食材克数，营养数据由数据库计算。</view>
 
       <view class="spacer-24"></view>
-      <view class="btn" bindtap="generate">✨ 生成食谱</view>
+      <view class="btn" bindtap="generate">生成食谱</view>
     </view>
   </scroll-view>
 

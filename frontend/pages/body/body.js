@@ -1,15 +1,6 @@
 const { bodyTrend } = require("../../utils/mock")
 const { getBodyTrend, recordWeight } = require("../../utils/api")
-function navigateBackOrRedirect(fallbackUrl) {
-  const pages = getCurrentPages()
-  if (pages.length > 1) {
-    wx.navigateBack({ delta: 1 })
-    return
-  }
-  if (fallbackUrl) {
-    wx.redirectTo({ url: fallbackUrl })
-  }
-}
+const { navigateBackOrRedirect } = require("../../utils/navigation")
 
 
 function buildChart(points) {

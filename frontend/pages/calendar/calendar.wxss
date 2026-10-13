@@ -1,38 +1,131 @@
 @import "../../styles/common.wxss";
 
+.month-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 4rpx 0 20rpx;
+}
+
+.month-label {
+  font-size: 34rpx;
+  line-height: 1.2;
+  font-weight: 800;
+  color: var(--ink);
+}
+
+.month-arrow {
+  width: 64rpx;
+  height: 56rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 18rpx;
+  background: var(--surface-high);
+  color: var(--green-dark);
+  font-size: 38rpx;
+  line-height: 1;
+}
+
 .week-row,
 .calendar-grid {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
-  gap: 14rpx;
+  gap: 10rpx;
 }
 
 .week-row {
-  margin-bottom: 18rpx;
-  color: #7b8e84;
-  font-size: 26rpx;
+  margin-bottom: 16rpx;
+  color: var(--muted);
+  font-size: 24rpx;
   text-align: center;
 }
 
 .day {
-  height: 92rpx;
-  border-radius: 20rpx;
+  height: 88rpx;
+  border-radius: 22rpx;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-direction: column;
   background: transparent;
-  font-size: 28rpx;
+  font-size: 27rpx;
+  color: var(--muted);
+  border: 2rpx solid transparent;
+  box-sizing: border-box;
 }
 
-.marked {
-  background: #dfeedd;
+.started {
+  color: var(--ink-soft);
+}
+
+.rest-day {
+  background: rgba(201, 234, 199, 0.7);
+}
+
+.marked,
+.training-day {
+  background: var(--green-soft);
+}
+
+.day-dot {
+  height: 16rpx;
+  line-height: 16rpx;
+  color: var(--green);
 }
 
 .selected {
-  border: 4rpx solid #4f8168;
+  border: 4rpx solid var(--green);
+  background: var(--surface);
+  color: var(--green-dark);
+  font-weight: 800;
 }
 
 .summary-line {
   padding-top: 18rpx;
+}
+
+.mini-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 12rpx;
+  min-height: 142rpx;
+}
+
+.mini-summary .item-title {
+  font-size: 28rpx;
+  line-height: 1.35;
+}
+
+.record-row {
+  padding: 22rpx 0;
+  border-top: 1rpx solid var(--line);
+}
+
+.record-row:first-of-type {
+  border-top: 0;
+}
+
+.record-title {
+  font-size: 30rpx;
+}
+
+.empty-line {
+  padding: 20rpx 0 4rpx;
+  color: var(--muted);
+  font-size: 26rpx;
+}
+
+.day {
+  height: 82rpx;
+  border-radius: 20rpx;
+}
+
+.rest-day {
+  background: var(--green-soft);
+}
+
+.selected {
+  border-color: var(--green);
+  color: var(--green-dark);
 }

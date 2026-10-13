@@ -4,11 +4,16 @@
       <view class="header">
         <view class="icon-btn back-btn" bindtap="goBack">←</view>
         <text class="header-title">食谱详情</text>
-        <view class="icon-btn">♡</view>
+        <view class="header-action-spacer" aria-hidden="true"></view>
       </view>
 
       <view class="hero card">
-        <view class="hero-mark">🍅</view>
+        <view class="dish-plate">
+          <view class="dish-center">
+            <view class="dish-leaf"></view>
+            <view class="dish-dot"></view>
+          </view>
+        </view>
       </view>
 
       <view class="spacer-24"></view>

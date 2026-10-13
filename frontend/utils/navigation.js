@@ -1,7 +1,14 @@
 function navigateBackOrRedirect(fallbackUrl) {
-  const pages = getCurrentPages()
+  const pages = typeof getCurrentPages === "function" ? getCurrentPages() : []
   if (pages.length > 1) {
-    wx.navigateBack({ delta: 1 })
+    wx.navigateBack({
+      delta: 1,
+      fail: () => {
+        if (fallbackUrl) {
+          wx.redirectTo({ url: fallbackUrl })
+        }
+      }
+    })
     return
   }
 
