@@ -1,0 +1,69 @@
+<view class="page">
+  <scroll-view class="page-scroll" scroll-y="true">
+    <view class="page-body">
+
+      <!-- 顶部标题 -->
+      <view class="header">
+        <view class="icon-btn back-btn" bindtap="goBack">←</view>
+        <text class="header-title">用现有食材做一餐</text>
+      </view>
+      <text class="header-tip">输入家里已有的食材，AI 帮你搭配</text>
+
+      <!-- 已有食材 -->
+      <view class="section">
+        <view class="row-between">
+          <text class="section-title">我已有的食材</text>
+        </view>
+        <view class="card card-pad">
+          <view class="pill-row">
+            <block wx:for="{{chips}}" wx:key="index">
+              <view class="pill chip" data-index="{{index}}" bindtap="removeChip">
+                <text>{{item}}</text>
+                <text class="chip-x">×</text>
+              </view>
+            </block>
+          </view>
+        </view>
+      </view>
+
+      <!-- 继续输入食材 -->
+      <view class="section">
+        <text class="section-title">继续输入食材</text>
+        <view class="card card-pad">
+          <input class="input-box" placeholder="输入食材名称，如：番茄" value="{{inputValue}}" bindinput="onInput" confirm-type="done" bindconfirm="addChip" />
+          <view class="spacer-24"></view>
+          <view class="btn btn-outline" bindtap="addChip">＋ 添加食材</view>
+        </view>
+      </view>
+
+      <!-- 选择热量 -->
+      <view class="section">
+        <text class="section-title">选择热量（可选）</text>
+        <view class="pill-row">
+          <block wx:for="{{calorieOptions}}" wx:key="*this">
+            <view class="pill {{calories === item ? 'pill-active' : ''}}" data-value="{{item}}" bindtap="setCalories">{{item}}</view>
+          </block>
+        </view>
+      </view>
+
+      <!-- 偏好 -->
+      <view class="section">
+        <text class="section-title">偏好（可多选）</text>
+        <view class="pill-row">
+          <block wx:for="{{tastes}}" wx:key="label">
+            <view class="pill {{item.selected ? 'pill-active' : ''}}" data-value="{{item.label}}" bindtap="toggleTaste">{{item.label}}</view>
+          </block>
+        </view>
+      </view>
+
+      <!-- AI 说明 -->
+      <view class="card card-pad muted ai-note">AI 将决定菜品和食材克数，营养数据由数据库计算。</view>
+
+    </view>
+  </scroll-view>
+
+  <!-- 底部固定按钮 -->
+  <view class="bottom-bar">
+    <view class="btn btn-primary btn-generate" bindtap="generate">生成食谱</view>
+  </view>
+</view>

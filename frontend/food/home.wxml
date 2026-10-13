@@ -1,0 +1,125 @@
+<view class="page">
+  <view class="page-body">
+
+    <!-- 顶部标题栏 -->
+    <view class="header">
+      <view class="header-title">饮食</view>
+      <view class="icon-btn food-calendar" bindtap="goCalendar">▦</view>
+    </view>
+
+    <!-- 今日摄入热量卡片（圆环版） -->
+    <view class="card card-pad intake-card">
+      <view class="intake-top">
+        <view class="intake-copy">
+          <view class="muted">今日摄入热量</view>
+          <view class="item-title intake-total">{{totalText}} <text class="muted">/ {{targetText}} kcal</text></view>
+          <view class="intake-foot">目标 {{targetText}} kcal · 已完成 {{intakePercent}}</view>
+        </view>
+        <view class="calorie-ring" style="background: conic-gradient(from -90deg, var(--green) {{ringAngle}}deg, var(--surface-variant) {{ringAngle}}deg 360deg);">
+          <view class="ring-center">
+            <view class="ring-value">{{remain}}</view>
+            <view class="ring-label">kcal</view>
+            <view class="ring-label">剩余</view>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <view class="spacer-24"></view>
+
+    <!-- 饮食评分卡片 -->
+    <view class="card card-pad analysis-card">
+      <view class="analysis-left">
+        <view class="muted">饮食评分</view>
+        <view class="analysis-score">
+          {{dietScore}}<text class="score-unit">/100</text>
+        </view>
+        <view class="analysis-tag">良好</view>
+      </view>
+      <view class="analysis-right">
+        <view class="analysis-row">
+          <view class="dot dot-green"></view>
+          <view class="analysis-row-copy">
+            <view class="row-title">营养均衡</view>
+            <view class="row-status">良好</view>
+          </view>
+        </view>
+        <view class="analysis-row">
+          <view class="dot dot-green"></view>
+          <view class="analysis-row-copy">
+            <view class="row-title">膳食纤维</view>
+            <view class="row-status">充足</view>
+          </view>
+        </view>
+        <view class="analysis-row">
+          <view class="dot dot-green"></view>
+          <view class="analysis-row-copy">
+            <view class="row-title">清爽程度</view>
+            <view class="row-status">良好</view>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <view class="item-meta analysis-tip">{{insightText}}</view>
+
+    <view class="spacer-24"></view>
+
+    <!-- 快速记录卡片 -->
+    <view class="card card-pad">
+      <view class="row-between">
+        <view class="section-title">快速记录</view>
+        <text class="muted">饮食或运动</text>
+      </view>
+      <view class="quick-input-wrap">
+        <input class="quick-input" value="{{quickInput}}" bindinput="onQuickInput" confirm-type="done" bindconfirm="saveQuickLog" placeholder="输入食物名称或热量" />
+        <view class="quick-camera">📷</view>
+      </view>
+      <view class="spacer-24"></view>
+      <view class="btn btn-outline" bindtap="saveQuickLog">{{quickSaving ? "记录中..." : "记录"}}</view>
+    </view>
+
+    <view class="spacer-24"></view>
+
+    <!-- 用现有食材生成一餐入口 -->
+    <view class="btn btn-outline generate-entry" bindtap="goInput">
+      <view class="generate-mark">🍳</view>
+      <view class="generate-copy">
+        <text>用现有食材生成一餐</text>
+        <text>按你的目标搭配，快速出餐</text>
+      </view>
+      <text class="generate-arrow">›</text>
+    </view>
+
+    <view class="spacer-24"></view>
+
+    <!-- 今日饮食列表 -->
+    <view class="row-between">
+      <text class="section-title">今日饮食</text>
+      <text class="section-title" catchtap="goInput" data-meal-type="早餐">+ 添加</text>
+    </view>
+
+    <view class="list">
+      <block wx:for="{{meals}}" wx:key="key">
+        <view class="list-item" data-index="{{index}}" bindtap="goRecipe">
+          <view class="row-between">
+            <view>
+              <view class="item-title">{{item.label}}</view>
+              <view class="item-meta">{{item.detail}}</view>
+            </view>
+            <view class="item-title meal-status">
+              {{item.kcal}}
+              <text wx:if="{{item.recorded}}"> kcal</text>
+              <text wx:else class="meal-add"
+                    catchtap="goInput"
+                    data-meal-type="{{item.label}}">＋</text>
+            </view>
+          </view>
+        </view>
+      </block>
+    </view>
+
+  </view>
+
+  <bottom-nav active="/pages/food/home" current="/pages/food/home" bind:change="onBottomNav" />
+</view>

@@ -1,0 +1,61 @@
+<view class="page">
+  <scroll-view class="page-scroll" scroll-y="true">
+    <view class="page-body">
+
+      <!-- 顶部 -->
+      <view class="header">
+        <view class="icon-btn back-btn" bindtap="goBack">←</view>
+        <text class="header-title">为你生成多种方案</text>
+        <view class="icon-btn refresh-btn" bindtap="regenerate">↻</view>
+      </view>
+
+      <!-- 摘要 -->
+      <view class="result-summary">{{summaryText}}</view>
+
+      <view class="spacer-24"></view>
+
+      <!-- 食谱列表 -->
+      <view class="list">
+        <block wx:for="{{recipes}}" wx:key="id">
+          <view class="list-item recipe-card" data-id="{{item.id}}" bindtap="goDetail">
+
+            <!-- 第一行：菜名 + 热量 -->
+            <view class="recipe-head">
+              <view class="item-title recipe-name">{{item.name}}</view>
+              <view class="recipe-kcal">{{item.kcal}}<text>kcal</text></view>
+            </view>
+
+            <!-- 第二行：时长 + 食材 -->
+            <view class="item-meta recipe-line">
+              ⏱ {{item.minutes}} 分钟
+            </view>
+            <view class="item-meta recipe-line">
+              {{item.ingredientSummary}}
+            </view>
+
+            <!-- 标签 -->
+            <view class="pill-row recipe-tags">
+              <block wx:for="{{item.tags}}" wx:for-item="tag" wx:key="*this">
+                <view class="pill">{{tag}}</view>
+              </block>
+            </view>
+
+          </view>
+        </block>
+      </view>
+
+      <!-- 空状态 -->
+      <view wx:if="{{!recipes.length && !loading}}" class="empty-state">
+        <view class="empty-title">暂时没有可显示的菜谱</view>
+        <view class="muted">返回食材页补充食材后再试试</view>
+        <view class="btn btn-outline empty-action" bindtap="goBack">返回食材页</view>
+      </view>
+
+      <view class="spacer-24"></view>
+
+      <!-- 底部重新生成 -->
+      <view class="btn btn-primary" bindtap="regenerate">重新生成</view>
+
+    </view>
+  </scroll-view>
+</view>
