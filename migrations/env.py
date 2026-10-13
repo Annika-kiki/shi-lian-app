@@ -5,7 +5,7 @@ from sqlalchemy import engine_from_config, pool
 
 from backend.config.settings import settings
 from backend.database.session import Base
-from backend.models import entities  # noqa: F401
+from backend.models import entities, food  # noqa: F401
 
 
 config = context.config

@@ -4,7 +4,7 @@ import hmac
 import re
 from typing import Literal
 from zoneinfo import ZoneInfo
-from fastapi import APIRouter, Depends, Header, HTTPException, Query
+from fastapi import APIRouter, Depends, Header, HTTPException, Query, Request
 from pydantic import BaseModel, Field
 from sqlalchemy import func
 from sqlalchemy.orm import Session
@@ -539,7 +539,21 @@ def today_insight(user=Depends(current_user),db:Session=Depends(get_db)):
                ]})
 
 @router.post("/quick-log")
-def quick_log(body:QuickLogIn,user=Depends(current_user),db:Session=Depends(get_db)):
+async def quick_log(request:Request,user=Depends(current_user),db:Session=Depends(get_db)):
+    from backend.services.confirmed_meal import save_confirmed, FIELDS
+    from pydantic import ValidationError
+    try:
+        payload = await request.json()
+    except ValueError:
+        raise HTTPException(400, "请求必须为JSON对象")
+    if not isinstance(payload, dict):
+        raise HTTPException(400, "请求必须为JSON对象")
+    if any(field in payload for field in FIELDS):
+        return save_confirmed(db, user, payload)
+    try:
+        body = QuickLogIn.model_validate(payload)
+    except ValidationError:
+        raise HTTPException(400, "请求参数校验失败")
     text=body.text.strip()
     if "分钟" in text or any(keyword in text for keyword,_ in CARDIO_MODE_ALIASES):
         payload=CardioSessionIn(workout_date=body.record_date,detail=text)

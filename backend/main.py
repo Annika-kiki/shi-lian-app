@@ -87,7 +87,15 @@ async def validation_errors(request: Request, exc: RequestValidationError):
 async def errors(request:Request, exc:Exception):
     if hasattr(exc,"status_code"): return JSONResponse(status_code=exc.status_code,content={"code":exc.status_code,"message":str(exc.detail),"data":{}})
     logging.exception("Unhandled API error"); return JSONResponse(status_code=500,content={"code":500,"message":"服务器内部错误","data":{}})
+from a2wsgi import WSGIMiddleware
+from backend.api.food import food_app
+app.mount("/api/food", WSGIMiddleware(food_app))
 app.include_router(router)
+
+@app.get("/__tcb_probe__")
+def tcb_probe():
+    from fastapi.responses import PlainTextResponse
+    return PlainTextResponse("ok")
 @app.get("/health")
 def health():
     try:
