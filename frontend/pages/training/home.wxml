@@ -5,18 +5,15 @@
         <text class="header-subtitle">今天练什么？</text>
         <view class="header-title">训练</view>
       </view>
-      <view class="icon-btn training-calendar" bindtap="goCalendar">▦</view>
+      <view class="icon-btn">⌕</view>
     </view>
 
-    <view class="card card-pad training-progress">
-      <view class="row-between progress-heading">
-        <view>
-          <view class="muted">今日训练建议</view>
-          <view class="item-title">{{summary.focus}}</view>
-        </view>
-        <view class="progress-ring"><view class="progress-ring-inner"><text>{{summary.moves}}</text><text>动作</text></view></view>
-      </view>
-      <view class="item-meta">约 {{summary.minutes}} 分钟 · 按计划完成训练</view>
+    <view class="card card-soft card-pad">
+      <view class="muted">今日建议</view>
+      <view class="spacer-24"></view>
+      <view class="item-title">{{summary.focus}}</view>
+      <view class="item-meta">{{summary.moves}} 个动作 · 约 {{summary.minutes}} 分钟</view>
+      <view class="spacer-24"></view>
       <view class="btn" bindtap="openRecent">开始训练</view>
     </view>
 

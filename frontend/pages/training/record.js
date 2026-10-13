@@ -1,6 +1,15 @@
 const { recordWorkout } = require("../../utils/mock")
 const { getExercise, createWorkoutSession, addWorkoutSet, completeWorkoutSession } = require("../../utils/api")
-const { navigateBackOrRedirect } = require("../../utils/navigation")
+function navigateBackOrRedirect(fallbackUrl) {
+  const pages = getCurrentPages()
+  if (pages.length > 1) {
+    wx.navigateBack({ delta: 1 })
+    return
+  }
+  if (fallbackUrl) {
+    wx.redirectTo({ url: fallbackUrl })
+  }
+}
 
 
 function cloneSets(sets) {

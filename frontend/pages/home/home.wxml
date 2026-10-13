@@ -1,5 +1,7 @@
 <view class="page">
   <view class="page-body">
+
+    <!-- 顶部问候 -->
     <view class="header home-header">
       <view>
         <text class="header-subtitle">{{summary.date}}</text>
@@ -8,50 +10,62 @@
       <view class="header-bell" aria-hidden="true"></view>
     </view>
 
+    <!-- 今日摄入热量卡片（圆环版） -->
     <view class="card card-pad overview-card">
       <view class="overview-top">
         <view class="overview-copy">
           <view class="muted">今日摄入热量</view>
-          <view class="calorie-total">{{summary.kcalText}}<text class="calorie-target"> / {{summary.dailyTargetText}} kcal</text></view>
+          <view class="calorie-total">
+            {{totalText}}<text class="calorie-target"> / {{targetText}} kcal</text>
+          </view>
+          <view class="intake-foot">目标 {{targetText}} kcal · 已完成 {{intakePercent}}</view>
         </view>
-        <view class="calorie-ring" style="{{summary.ringStyle}}">
+        <view class="calorie-ring" style="background: conic-gradient(from -90deg, var(--green) {{ringAngle}}deg, var(--surface-variant) {{ringAngle}}deg 360deg);">
           <view class="ring-center">
-            <view class="ring-value">{{summary.remainText}}</view>
+            <view class="ring-value">{{remain}}</view>
             <view class="ring-label">kcal</view>
             <view class="ring-label">剩余</view>
           </view>
         </view>
       </view>
+
       <view class="macro-list">
-      <view class="macro">
-        <text class="macro-name">蛋白质 <text class="macro-target">目标{{summary.protein.target}}g</text></text>
-        <view class="macro-track"><view class="fill" style="width: {{summary.proteinPercent}};"></view></view>
-        <text class="macro-value">{{summary.protein.current}} / {{summary.protein.target}}g</text>
-      </view>
-      <view class="macro">
-        <text class="macro-name">碳水化合物 <text class="macro-target">目标{{summary.carbs.target}}g</text></text>
-        <view class="macro-track"><view class="fill" style="width: {{summary.carbsPercent}};"></view></view>
-        <text class="macro-value">{{summary.carbs.current}} / {{summary.carbs.target}}g</text>
-      </view>
-      <view class="macro">
-        <text class="macro-name">脂肪 <text class="macro-target">目标{{summary.fat.target}}g</text></text>
-        <view class="macro-track"><view class="fill" style="width: {{summary.fatPercent}};"></view></view>
-        <text class="macro-value">{{summary.fat.current}} / {{summary.fat.target}}g</text>
-      </view>
+        <view class="macro">
+          <text class="macro-name">蛋白质</text>
+          <view class="macro-track"><view class="fill" style="width: {{summary.proteinPercent}};"></view></view>
+          <text class="macro-value">{{summary.protein.current}} / {{summary.protein.target}}g</text>
+        </view>
+        <view class="macro">
+          <text class="macro-name">碳水化合物</text>
+          <view class="macro-track"><view class="fill" style="width: {{summary.carbsPercent}};"></view></view>
+          <text class="macro-value">{{summary.carbs.current}} / {{summary.carbs.target}}g</text>
+        </view>
+        <view class="macro">
+          <text class="macro-name">脂肪</text>
+          <view class="macro-track"><view class="fill" style="width: {{summary.fatPercent}};"></view></view>
+          <text class="macro-value">{{summary.fat.current}} / {{summary.fat.target}}g</text>
+        </view>
       </view>
     </view>
 
-    <view class="spacer-24"></view>
+    <!-- 两个操作按钮 -->
     <view class="btn-row">
-      <view class="btn btn-outline home-action" bindtap="goFood"><text class="action-symbol">＋</text>记录一餐</view>
-      <view class="btn home-action" bindtap="goTraining"><text class="action-symbol">↗</text>开始训练</view>
+      <view class="btn btn-outline home-action" bindtap="goFood">
+        <text class="action-symbol">＋</text>记录一餐
+      </view>
+      <view class="btn home-action" bindtap="goTraining">
+        <text class="action-symbol">↗</text>开始训练
+      </view>
     </view>
 
     <view class="spacer-24"></view>
+
+    <!-- 今日饮食记录 -->
     <view class="row-between">
       <text class="section-title">今日饮食记录</text>
       <text class="muted" bindtap="goFood">全部</text>
     </view>
+
     <view class="list">
       <block wx:for="{{meals}}" wx:key="key">
         <view class="list-item" data-index="{{index}}" bindtap="goMealDetail">
@@ -60,11 +74,14 @@
               <view class="item-title">{{item.label}}</view>
               <view class="item-meta">{{item.detail}}</view>
             </view>
-            <view class="meal-kcal">{{item.kcal}}<text wx:if="{{item.recorded}}"> kcal</text><text wx:else class="meal-add">＋</text></view>
+            <view class="meal-kcal">
+              {{item.kcal}}<text wx:if="{{item.recorded}}"> kcal</text><text wx:else class="meal-add">＋</text>
+            </view>
           </view>
         </view>
       </block>
     </view>
+
   </view>
 
   <bottom-nav active="/pages/home/home" current="/pages/home/home" bind:change="onBottomNav" />

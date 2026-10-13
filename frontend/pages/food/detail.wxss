@@ -13,64 +13,22 @@
 }
 
 .hero {
-  height: 280rpx;
+  height: 300rpx;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--green-soft);
-  border-color: transparent;
-  box-shadow: none;
+  background: linear-gradient(180deg, #4f8168 0%, #9ab99f 100%);
 }
 
-.dish-plate {
-  width: 216rpx;
-  height: 216rpx;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 50%;
-  background: #fff;
-  border: 8rpx solid #d7e7d2;
-  box-shadow: 0 10rpx 26rpx rgba(35, 73, 39, 0.1);
-  box-sizing: border-box;
-}
-
-.dish-center {
-  position: relative;
-  width: 152rpx;
-  height: 152rpx;
-  border-radius: 50%;
-  background: #edf5e8;
-  overflow: hidden;
-}
-
-.dish-leaf {
-  position: absolute;
-  width: 72rpx;
-  height: 104rpx;
-  left: 38rpx;
-  top: 24rpx;
-  border-radius: 80% 8% 80% 8%;
-  background: #73b75f;
-  transform: rotate(35deg);
-}
-
-.dish-dot {
-  position: absolute;
-  width: 38rpx;
-  height: 38rpx;
-  right: 24rpx;
-  top: 28rpx;
-  border-radius: 50%;
-  background: #e7c95b;
+.hero-mark {
+  font-size: 96rpx;
 }
 
 .ingredient,
 .step {
   font-size: 28rpx;
   padding: 18rpx 0;
-  border-bottom: 2rpx solid var(--line);
-  line-height: 1.45;
+  border-bottom: 2rpx solid #eee6d8;
 }
 
 .step:last-child,

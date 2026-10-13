@@ -1,7 +1,7 @@
 @import "../../styles/common.wxss";
 
 .part-card {
-  min-height: 176rpx;
+  min-height: 168rpx;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -11,16 +11,7 @@
 }
 
 .part-icon {
-  width: 64rpx;
-  height: 64rpx;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 22rpx;
-  background: var(--green-soft);
-  color: var(--green-dark);
-  font-size: 28rpx;
-  font-weight: 800;
+  font-size: 42rpx;
 }
 
 .part-label {
@@ -32,14 +23,13 @@
   display: flex;
   flex-direction: column;
   gap: 14rpx;
-  background: var(--surface);
 }
 
 .plan-rule,
 .plan-note {
   font-size: 26rpx;
   line-height: 1.55;
-  color: var(--muted);
+  color: #53665d;
 }
 
 .exercise-row {
@@ -52,8 +42,8 @@
 .exercise-thumb {
   width: 150rpx;
   height: 150rpx;
-  border-radius: 22rpx;
-  background: var(--mint);
+  border-radius: 18rpx;
+  background: #dfeedd;
   display: block;
 }
 
@@ -68,14 +58,13 @@
 
 .cardio-card {
   position: relative;
-  border-color: var(--mint-strong);
 }
 
 .cardio-action {
   padding: 8rpx 18rpx;
   border-radius: 999rpx;
-  background: var(--green-soft);
-  color: var(--green-dark);
+  background: #e8f2ea;
+  color: #4f8b6f;
   font-size: 24rpx;
   font-weight: 700;
 }
@@ -87,16 +76,16 @@
   display: flex;
   align-items: flex-end;
   padding: 32rpx;
-  background: var(--scrim);
+  background: rgba(31, 44, 39, 0.32);
   box-sizing: border-box;
 }
 
 .modal-card {
   width: 100%;
   padding: 32rpx;
-  border-radius: 30rpx 30rpx 0 0;
-  background: var(--surface);
-  box-shadow: 0 18rpx 50rpx rgba(25, 51, 29, 0.18);
+  border-radius: 24rpx;
+  background: #fffcf4;
+  box-shadow: 0 18rpx 50rpx rgba(31, 44, 39, 0.18);
   box-sizing: border-box;
 }
 
@@ -109,13 +98,13 @@
 
 .cardio-input {
   width: 100%;
-  min-height: 160rpx;
+  min-height: 148rpx;
   margin: 28rpx 0 18rpx;
   padding: 22rpx 24rpx;
-  border: 1rpx solid var(--line);
-  border-radius: 24rpx;
-  background: var(--surface-low);
-  color: var(--ink);
+  border: 1rpx solid #d9dfd2;
+  border-radius: 18rpx;
+  background: #fffef9;
+  color: #233c34;
   font-size: 30rpx;
   line-height: 1.5;
   box-sizing: border-box;
@@ -123,97 +112,4 @@
 
 .cardio-textarea {
   display: block;
-}
-
-.plan-card {
-  border-color: var(--line);
-  background: var(--surface);
-}
-
-.cardio-card {
-  background: var(--green-soft);
-  border-color: transparent;
-}
-
-.cardio-action {
-  background: var(--surface);
-}
-
-.part-card {
-  min-height: 158rpx;
-  background: var(--surface);
-}
-
-.training-calendar {
-  color: var(--green-dark);
-  font-size: 32rpx;
-}
-
-.exercise-row {
-  border-radius: 16rpx;
-  padding: 16rpx;
-}
-
-.exercise-thumb {
-  width: 138rpx;
-  height: 138rpx;
-  border-radius: 12rpx;
-}
-
-.exercise-row .item-title {
-  font-size: 28rpx;
-}
-
-.exercise-row .item-meta {
-  margin-top: 5rpx;
-}
-
-.training-progress {
-  padding: 24rpx;
-  background: var(--surface);
-}
-
-.progress-heading {
-  gap: 16rpx;
-}
-
-.progress-heading .item-title {
-  margin-top: 10rpx;
-  font-size: 29rpx;
-}
-
-.progress-ring {
-  width: 108rpx;
-  height: 108rpx;
-  flex: none;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 50%;
-  background: var(--green-soft);
-}
-
-.progress-ring-inner {
-  width: 84rpx;
-  height: 84rpx;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  border-radius: 50%;
-  background: var(--surface);
-  color: var(--green-dark);
-  font-weight: 800;
-}
-
-.progress-ring-inner text:first-child {
-  font-size: 28rpx;
-  line-height: 1.1;
-}
-
-.progress-ring-inner text:last-child {
-  margin-top: 2rpx;
-  color: var(--muted);
-  font-size: 18rpx;
-  font-weight: 500;
 }

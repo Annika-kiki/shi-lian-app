@@ -1,17 +1,15 @@
 ﻿const { getUser, calculateNutritionTargets } = require("../../utils/user")
 const { getMealSummary } = require("../../utils/meal")
-const { getTodayDashboard, getMeals, getTodayInsight, quickLog } = require("../../utils/api")
+const { getTodayDashboard, getMeals } = require("../../utils/api")
 
 function mapMealItems(records) {
-  const localItems = getMealSummary().items
   const slots = [
-    { key: "breakfast", label: "早餐" },
-    { key: "lunch", label: "午餐" },
-    { key: "dinner", label: "晚餐" }
+    { key: "breakfast", label: "早餐", icon: "🍲" },
+    { key: "lunch", label: "午餐", icon: "🍱" },
+    { key: "dinner", label: "晚餐", icon: "🌙" }
   ]
   return slots.map((slot) => {
     const record = records.find((item) => item.meal_type === slot.label || item.meal_type === slot.key)
-    const local = localItems.find((item) => item.key === slot.key) || {}
     if (!record) {
       return {
         ...slot,
@@ -24,25 +22,15 @@ function mapMealItems(records) {
     return {
       ...slot,
       recorded: true,
-      kcal: record && record.calories_kcal != null
-        ? Math.round(record.calories_kcal)
-        : local.kcal,
-      detail: record && (record.name || record.note) || local.detail || "已记录",
-      // Local records keep fallback recipe IDs when the backend cannot persist a local recipe.
-      recipeId: record && record.recipe_id || local.recipeId || "",
-      recipe: local.recipe || null
+      kcal: Math.round(record.calories_kcal),
+      detail: record.name || record.note || "已记录",
+      recipeId: record.recipe_id || ""
     }
   })
 }
 
 function percent(current, target) {
   return `${Math.min(100, (Number(current || 0) / Number(target || 1)) * 100)}%`
-}
-
-function ringStyle(current, target) {
-  const ratio = Math.min(1, Math.max(0, Number(current || 0) / Number(target || 1)))
-  const angle = Math.round(ratio * 360)
-  return `background: conic-gradient(from -90deg, #4e9d43 0deg ${angle}deg, #e5eae3 ${angle}deg 360deg);`
 }
 
 function buildGreeting(name) {
@@ -58,33 +46,6 @@ function buildDateText() {
 }
 
 const initialTargets = calculateNutritionTargets(getUser())
-const fallbackInsight = {
-  score: 0,
-  dietScore: 0,
-  workoutScore: 0,
-  advice: ["记录一餐或一次训练后，食练周期会给出今日评分和建议。"],
-  dimensions: [
-    { label: "热量", score: 0, width: "0%" },
-    { label: "蛋白质", score: 0, width: "0%" },
-    { label: "均衡", score: 0, width: "0%" },
-    { label: "训练", score: 0, width: "0%" }
-  ]
-}
-
-function normalizeInsight(insight) {
-  if (!insight) return fallbackInsight
-  return {
-    score: Math.round(insight.score || 0),
-    dietScore: Math.round(insight.diet_score || 0),
-    workoutScore: Math.round(insight.workout_score || 0),
-    advice: insight.advice && insight.advice.length ? insight.advice : fallbackInsight.advice,
-    dimensions: (insight.dimensions || []).map((item) => ({
-      label: item.label,
-      score: Math.round(item.score || 0),
-      width: `${Math.min(100, Math.max(0, item.score || 0))}%`
-    }))
-  }
-}
 
 Page({
   data: {
@@ -93,7 +54,6 @@ Page({
       greeting: buildGreeting(getUser().name || "用户"),
       kcalText: "0",
       remainText: initialTargets.dailyCalorieTarget,
-      dailyTargetText: Math.round(initialTargets.dailyCalorieTarget).toLocaleString(),
       intakePercent: "0%",
       workout: 0,
       protein: { current: 0, target: initialTargets.proteinTargetG },
@@ -101,13 +61,9 @@ Page({
       fat: { current: 0, target: initialTargets.fatTargetG },
       proteinPercent: "0%",
       carbsPercent: "0%",
-      fatPercent: "0%",
-      ringStyle: ringStyle(0, initialTargets.dailyCalorieTarget)
+      fatPercent: "0%"
     },
-    meals: [],
-    insight: fallbackInsight,
-    quickInput: "",
-    quickSaving: false
+    meals: []
   },
 
   onShow() {
@@ -119,9 +75,8 @@ Page({
     const localTargets = calculateNutritionTargets(user)
     Promise.all([
       getTodayDashboard().catch(() => null),
-      getMeals().catch(() => null),
-      getTodayInsight().catch(() => null)
-    ]).then(([dashboard, records, insight]) => {
+      getMeals().catch(() => [])
+    ]).then(([dashboard, records]) => {
       if (dashboard) {
         const dailyTarget = Number(dashboard.daily_calorie_target) ||
           Number(dashboard.intake_calories_kcal || 0) + Number(dashboard.remaining_calories_kcal || 0) ||
@@ -132,9 +87,7 @@ Page({
             greeting: buildGreeting(user.name || "用户"),
             kcalText: Math.round(dashboard.intake_calories_kcal).toLocaleString(),
             remainText: Math.round(dashboard.remaining_calories_kcal),
-            dailyTargetText: Math.round(dailyTarget).toLocaleString(),
             intakePercent: percent(dashboard.intake_calories_kcal, dailyTarget),
-            ringStyle: ringStyle(dashboard.intake_calories_kcal, dailyTarget),
             workout: dashboard.workout_duration_min,
             protein: {
               current: dashboard.nutrition.protein.consumed,
@@ -152,8 +105,7 @@ Page({
             carbsPercent: percent(dashboard.nutrition.carb.consumed, dashboard.nutrition.carb.target),
             fatPercent: percent(dashboard.nutrition.fat.consumed, dashboard.nutrition.fat.target)
           },
-          meals: Array.isArray(records) ? mapMealItems(records) : getMealSummary().items,
-          insight: normalizeInsight(insight)
+          meals: mapMealItems(records)
         })
         return
       }
@@ -165,7 +117,6 @@ Page({
           greeting: buildGreeting(user.name || "用户"),
           kcalText: local.total.toLocaleString(),
           remainText: local.remain,
-          dailyTargetText: Math.round(local.dailyTarget || local.total + local.remain).toLocaleString(),
           intakePercent: local.percent,
           workout: 0,
           protein: { current: 0, target: localTargets.proteinTargetG },
@@ -173,35 +124,11 @@ Page({
           fat: { current: 0, target: localTargets.fatTargetG },
           proteinPercent: "0%",
           carbsPercent: "0%",
-          fatPercent: "0%",
-          ringStyle: ringStyle(local.total, local.dailyTarget)
+          fatPercent: "0%"
         },
-        meals: local.items,
-        insight: normalizeInsight(insight)
+        meals: local.items
       })
     }).catch(() => {})
-  },
-
-  onQuickInput(event) {
-    this.setData({ quickInput: event.detail.value })
-  },
-
-  saveQuickLog() {
-    const text = String(this.data.quickInput || "").trim()
-    if (!text) {
-      wx.showToast({ title: "先输入一餐或运动", icon: "none" })
-      return
-    }
-    this.setData({ quickSaving: true })
-    quickLog(text).then(() => {
-      wx.showToast({ title: "已记录", icon: "success" })
-      this.setData({ quickInput: "" })
-      this.loadDashboard()
-    }).catch((error) => {
-      wx.showToast({ title: error.message || "记录失败", icon: "none" })
-    }).finally(() => {
-      this.setData({ quickSaving: false })
-    })
   },
 
   goFood() {
@@ -219,11 +146,6 @@ Page({
       wx.redirectTo({ url: "/pages/food/input" })
       return
     }
-    if (!item.recipeId) {
-      wx.showToast({ title: "这餐没有可查看的菜谱", icon: "none" })
-      return
-    }
-    if (item.recipe) wx.setStorageSync("selectedRecipe", item.recipe)
     wx.navigateTo({ url: `/pages/food/detail?id=${item.recipeId}` })
   },
 

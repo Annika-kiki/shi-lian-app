@@ -1,25 +1,21 @@
 ﻿const { getRecipe, getMeals, createMealFromRecipe } = require("../../utils/api")
-const { saveMeal: saveMealRecord, getMealSummary, MEAL_SLOTS } = require("../../utils/meal")
-const { navigateBackOrRedirect } = require("../../utils/navigation")
+const { saveMeal: saveMealRecord, MEAL_SLOTS } = require("../../utils/meal")
+function navigateBackOrRedirect(fallbackUrl) {
+  const pages = getCurrentPages()
+  if (pages.length > 1) {
+    wx.navigateBack({ delta: 1 })
+    return
+  }
+  if (fallbackUrl) {
+    wx.redirectTo({ url: fallbackUrl })
+  }
+}
 
 
 function findLocalRecipe(id) {
   const cached = wx.getStorageSync("generatedRecipes")
   if (!Array.isArray(cached)) return null
   return cached.find((item) => String(item.id) === String(id)) || null
-}
-
-function findSelectedRecipe(id) {
-  const selected = wx.getStorageSync("selectedRecipe")
-  if (!selected || String(selected.id) !== String(id)) return null
-  return selected
-}
-
-function findSavedRecipe(id) {
-  const item = getMealSummary().items.find((meal) => (
-    String(meal.recipeId) === String(id) && meal.recipe
-  ))
-  return item ? item.recipe : null
 }
 
 function pickMealSlot(records = []) {
@@ -34,12 +30,9 @@ Page({
 
   onLoad(query) {
     const id = String(query.id || "")
-    if (!id) {
-      wx.showToast({ title: "这餐没有可查看的菜谱", icon: "none" })
-      return
-    }
+    if (!id) return
 
-    const local = findSelectedRecipe(id) || findLocalRecipe(id) || findSavedRecipe(id)
+    const local = findLocalRecipe(id)
     if (local) {
       this.setData({ recipe: local })
       return
@@ -62,10 +55,6 @@ Page({
       })
   },
 
-  goBack() {
-    navigateBackOrRedirect("/pages/food/home")
-  },
-
   saveMeal() {
     if (!this.data.recipe) return
 
@@ -75,8 +64,7 @@ Page({
       .then((records) => {
         const slot = pickMealSlot(records)
         saveMealRecord(this.data.recipe, slot.key)
-        // 本地记录是主流程；后端同步失败不应阻止用户看到已保存的结果。
-        return createMealFromRecipe(this.data.recipe, slot.label).catch(() => null)
+        return createMealFromRecipe(this.data.recipe, slot.label)
       })
       .then(() => {
         wx.showToast({
@@ -88,6 +76,12 @@ Page({
               url: "/pages/food/home"
             })
           }
+        })
+      })
+      .catch(() => {
+        wx.showToast({
+          title: "后端未启动，已保留本地数据",
+          icon: "none"
         })
       })
       .finally(() => {

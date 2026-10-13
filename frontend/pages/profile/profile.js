@@ -1,6 +1,5 @@
 const { getUser, saveUser } = require("../../utils/user")
 const { saveProfile } = require("../../utils/api")
-const { navigateBackOrRedirect } = require("../../utils/navigation")
 
 Page({
   data: {
@@ -15,10 +14,6 @@ Page({
 
   onLoad() {
     this.setData(getUser())
-  },
-
-  goBack() {
-    navigateBackOrRedirect("/pages/index/index")
   },
 
   setGoal(event) {

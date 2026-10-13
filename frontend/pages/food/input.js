@@ -1,6 +1,15 @@
 const { ingredientChips: fallbackIngredientChips, calorieOptions, tasteOptions } = require("../../utils/mock")
 const { generateRecipes, getIngredients } = require("../../utils/api")
-const { navigateBackOrRedirect } = require("../../utils/navigation")
+function navigateBackOrRedirect(fallbackUrl) {
+  const pages = getCurrentPages()
+  if (pages.length > 1) {
+    wx.navigateBack({ delta: 1 })
+    return
+  }
+  if (fallbackUrl) {
+    wx.redirectTo({ url: fallbackUrl })
+  }
+}
 
 
 const SUGGESTED_INGREDIENTS = [
@@ -169,7 +178,7 @@ Page({
       })
       .catch(() => {
         wx.showToast({
-          title: "接口连接失败，已显示本地菜谱",
+          title: "后端未启动，先用本地食谱",
           icon: "none"
         })
       })

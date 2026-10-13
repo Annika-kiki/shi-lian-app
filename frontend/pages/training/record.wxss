@@ -8,10 +8,10 @@
 
 .set-index,
 .set-done {
-  width: 84rpx;
-  height: 84rpx;
+  width: 82rpx;
+  height: 82rpx;
   border-radius: 50%;
-  background: var(--green-soft);
+  background: #e1eee0;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -21,24 +21,22 @@
 
 .set-box {
   flex: 1;
-  height: 84rpx;
-  border: 2rpx solid var(--line);
-  border-radius: 26rpx;
+  height: 82rpx;
+  border: 2rpx solid #ddd5c3;
+  border-radius: 24rpx;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--surface);
+  background: #fffdf8;
   font-size: 32rpx;
-  color: var(--ink);
 }
 
 .set-done {
-  background: var(--green-soft);
+  background: #dfeedd;
 }
 
 .done {
-  background: var(--green);
-  color: #fff;
+  background: #d6e9d9;
 }
 
 .add-row {

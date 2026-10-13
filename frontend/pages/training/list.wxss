@@ -2,13 +2,12 @@
 
 .search-box {
   width: 100%;
-  height: 96rpx;
-  border-radius: 26rpx;
-  border: 2rpx solid var(--line);
+  height: 100rpx;
+  border-radius: 24rpx;
+  border: 2rpx solid #d8cfbe;
   padding: 0 28rpx;
   box-sizing: border-box;
-  background: var(--surface);
-  box-shadow: inset 0 0 0 2rpx rgba(56, 142, 60, 0.025);
+  background: #fffdf8;
   font-size: 30rpx;
 }
 
@@ -22,8 +21,8 @@
 .exercise-thumb {
   width: 140rpx;
   height: 140rpx;
-  border-radius: 22rpx;
-  background: var(--mint);
+  border-radius: 18rpx;
+  background: #dfeedd;
   display: block;
 }
 

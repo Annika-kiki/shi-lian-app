@@ -1,5 +1,14 @@
 const { generateRecipes } = require("../../utils/api")
-const { navigateBackOrRedirect } = require("../../utils/navigation")
+function navigateBackOrRedirect(fallbackUrl) {
+  const pages = getCurrentPages()
+  if (pages.length > 1) {
+    wx.navigateBack({ delta: 1 })
+    return
+  }
+  if (fallbackUrl) {
+    wx.redirectTo({ url: fallbackUrl })
+  }
+}
 
 
 function toIngredientObject(item) {
@@ -271,7 +280,7 @@ function buildFallbackRecipes(request) {
 Page({
   data: {
     recipes: [],
-    loading: true,
+    loading: false,
     summaryText: "\u7ea6500 kcal"
   },
 
@@ -289,7 +298,6 @@ Page({
     const cachedKey = wx.getStorageSync("generatedRecipesRequestKey")
     if (cached.length && cachedKey && cachedKey === this.requestKey) {
       this.setData({ recipes: cached })
-      return
     }
     this.reloadRecipes()
   },
@@ -298,12 +306,12 @@ Page({
     const last = wx.getStorageSync("lastRecipeRequest")
     if (!last) {
       const cached = readCachedRecipes()
-      this.setData({ recipes: cached, loading: false })
+      this.setData({ recipes: cached })
       return
     }
 
     this.requestKey = getRequestKey(last)
-    this.setData({ summaryText: buildSummaryText(last), loading: true })
+    this.setData({ summaryText: buildSummaryText(last) })
     wx.showLoading({ title: "更新中" })
     generateRecipes(last.ingredients || [], last.targetCalories, last.preferences || [], Number(last.recipeRound) || 0)
       .then((recipes) => {
@@ -318,22 +326,17 @@ Page({
         wx.setStorageSync("generatedRecipesRequestKey", this.requestKey)
         this.setData({ recipes: fallback })
         wx.showToast({
-          title: "接口连接失败，已显示本地菜谱",
+          title: "后端未启动，已显示本地食谱",
           icon: "none"
         })
       })
       .finally(() => {
-        this.setData({ loading: false })
         wx.hideLoading()
       })
   },
 
   goDetail(event) {
     const id = event.currentTarget.dataset.id
-    const recipe = this.data.recipes.find((item) => String(item.id) === String(id))
-    if (recipe) {
-      wx.setStorageSync("selectedRecipe", recipe)
-    }
     wx.navigateTo({
       url: `/pages/food/detail?id=${id}`
     })
@@ -351,7 +354,7 @@ Page({
     }
     request.requestKey = getRequestKey(request)
     wx.setStorageSync("lastRecipeRequest", request)
-    this.setData({ summaryText: buildSummaryText(request), loading: true })
+    this.setData({ summaryText: buildSummaryText(request) })
 
     wx.showLoading({ title: "生成中" })
     generateRecipes(request.ingredients || [], request.targetCalories, request.preferences || [], request.recipeRound)
@@ -367,12 +370,11 @@ Page({
         wx.setStorageSync("generatedRecipesRequestKey", request.requestKey)
         this.setData({ recipes: fallback })
         wx.showToast({
-          title: "接口连接失败，已显示本地菜谱",
+          title: "后端未启动，已显示本地食谱",
           icon: "none"
         })
       })
       .finally(() => {
-        this.setData({ loading: false })
         wx.hideLoading()
       })
   },

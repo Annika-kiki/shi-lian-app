@@ -378,9 +378,5 @@ Page({
     wx.redirectTo({
       url: event.detail.route
     })
-  },
-
-  goCalendar() {
-    wx.redirectTo({ url: "/pages/calendar/calendar" })
   }
 })

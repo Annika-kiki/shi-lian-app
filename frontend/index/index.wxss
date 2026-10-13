@@ -1,0 +1,183 @@
+@import "../../styles/common.wxss";
+
+/* ============================================================
+   登录/欢迎页
+   ============================================================ */
+
+page {
+  height: 100vh;
+  overflow: hidden;
+  background: var(--canvas);
+}
+
+.page-body {
+  min-height: 100vh;
+  padding: 72rpx 48rpx 60rpx;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+/* ============ 品牌区 ============ */
+.brand {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20rpx;
+  margin-bottom: 56rpx;
+}
+
+.logo {
+  width: 140rpx;
+  height: 140rpx;
+  border-radius: 40rpx;
+  background: linear-gradient(135deg, #4e9d43 0%, #347a35 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 64rpx;
+  font-weight: 800;
+  box-shadow: 0 16rpx 32rpx rgba(78, 157, 67, 0.28);
+}
+
+.logo-leaf {
+  transform: rotate(-8deg);
+  line-height: 1;
+}
+
+.brand-title {
+  font-size: 52rpx;
+  font-weight: 800;
+  color: var(--ink);
+  letter-spacing: 2rpx;
+}
+
+.brand-subtitle {
+  color: var(--muted);
+  font-size: 26rpx;
+  letter-spacing: 1rpx;
+}
+
+/* ============ 中间 hero 卡片 ============ */
+.hero {
+  width: 100%;
+  height: 420rpx;
+  margin-bottom: 60rpx;
+  padding: 0 32rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: var(--surface);
+  border: 1rpx solid var(--line);
+  border-radius: 32rpx;
+  box-sizing: border-box;
+  box-shadow: 0 10rpx 32rpx rgba(28, 47, 31, 0.06);
+}
+
+.hero-orbit {
+  width: 250rpx;
+  height: 250rpx;
+  border: 3rpx solid var(--mint-strong);
+  border-radius: 50%;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--mint);
+}
+
+.hero-figure {
+  width: 148rpx;
+  height: 148rpx;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #4e9d43 0%, #347a35 100%);
+  color: #fff;
+  font-size: 62rpx;
+  font-weight: 800;
+  box-shadow: 0 8rpx 24rpx rgba(78, 157, 67, 0.35);
+  line-height: 1;
+}
+
+.hero-dot {
+  position: absolute;
+  width: 24rpx;
+  height: 24rpx;
+  border-radius: 50%;
+}
+
+.dot-one {
+  top: 24rpx;
+  right: 34rpx;
+  background: var(--green);
+  box-shadow: 0 2rpx 8rpx rgba(78, 157, 67, 0.35);
+}
+
+.dot-two {
+  bottom: 28rpx;
+  left: 32rpx;
+  background: var(--yellow);
+  box-shadow: 0 2rpx 8rpx rgba(215, 172, 67, 0.35);
+}
+
+.hero-copy {
+  margin-top: 32rpx;
+  color: var(--ink-soft);
+  font-size: 28rpx;
+  font-weight: 600;
+  letter-spacing: 1rpx;
+}
+
+/* ============ 按钮区 ============ */
+.btn {
+  width: 100%;
+  height: 96rpx;
+  border-radius: 999rpx;
+  background: linear-gradient(135deg, #4e9d43 0%, #347a35 100%);
+  color: #fff;
+  font-size: 32rpx;
+  font-weight: 700;
+  letter-spacing: 2rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 10rpx 24rpx rgba(78, 157, 67, 0.28);
+  box-sizing: border-box;
+}
+
+.btn:active {
+  transform: scale(0.98);
+  box-shadow: 0 4rpx 12rpx rgba(78, 157, 67, 0.2);
+}
+
+.btn-outline {
+  background: var(--surface);
+  border: 2rpx solid var(--green);
+  color: var(--green-dark);
+  box-shadow: none;
+}
+
+.btn-outline:active {
+  background: var(--mint);
+}
+
+/* ============ 底部协议 ============ */
+.agreement {
+  text-align: center;
+  color: var(--muted);
+  font-size: 22rpx;
+  line-height: 1.6;
+  margin-top: 40rpx;
+  padding: 0 40rpx;
+}
+
+/* ============ 间距工具 ============ */
+.spacer-24 {
+  height: 24rpx;
+  width: 100%;
+}

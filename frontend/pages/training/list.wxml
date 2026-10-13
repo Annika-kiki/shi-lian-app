@@ -25,7 +25,7 @@
               <view class="item-title">{{item.title}}</view>
               <view class="item-meta">{{item.muscle}} · {{item.equipment}} · {{item.level}}</view>
             </view>
-            <view class="item-title">›</view>
+            <view class="item-title">{{item.icon}} ></view>
           </view>
         </view>
       </block>
