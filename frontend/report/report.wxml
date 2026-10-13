@@ -1,0 +1,103 @@
+<view class="page">
+  <scroll-view class="page-scroll" scroll-y="true">
+    <view class="page-body">
+      <view class="header">
+        <view>
+          <text class="header-subtitle">食练周期</text>
+          <view class="header-title">报告</view>
+        </view>
+        <view class="icon-btn" bindtap="goCalendar">▦</view>
+      </view>
+
+      <view class="pill-row">
+        <view class="pill {{days === 7 ? 'pill-active' : ''}}" data-days="7" bindtap="setDays">近 7 天</view>
+        <view class="pill {{days === 30 ? 'pill-active' : ''}}" data-days="30" bindtap="setDays">近 30 天</view>
+      </view>
+
+      <view class="spacer-24"></view>
+      <view class="card card-soft card-pad">
+        <view class="muted">{{report.rangeText}}</view>
+        <view class="report-score">{{report.averageScore}}<text class="score-unit"> / 100</text></view>
+        <view class="item-meta">阶段平均评分</view>
+      </view>
+
+      <view class="spacer-24"></view>
+      <view class="grid-2">
+        <view class="card card-pad mini-card">
+          <text class="muted">饮食记录</text>
+          <text class="item-title">{{report.summary.mealCount}} 次</text>
+        </view>
+        <view class="card card-pad mini-card">
+          <text class="muted">训练记录</text>
+          <text class="item-title">{{report.summary.workoutCount}} 次</text>
+        </view>
+        <view class="card card-pad mini-card">
+          <text class="muted">训练时长</text>
+          <text class="item-title">{{report.summary.workoutMinutes}} 分钟</text>
+        </view>
+        <view class="card card-pad mini-card">
+          <text class="muted">运动消耗</text>
+          <text class="item-title">{{report.summary.workoutCalories}} kcal</text>
+        </view>
+      </view>
+
+      <view class="spacer-24"></view>
+      <view class="card card-pad">
+        <view class="row-between">
+          <text class="section-title">评分趋势</text>
+          <text class="muted">{{loading ? "更新中" : "已更新"}}</text>
+        </view>
+        <block wx:for="{{report.trend}}" wx:key="date">
+          <view class="trend-row">
+            <text>{{item.date}}</text>
+            <view class="trend-bar"><view class="trend-fill" style="width: {{item.width}};"></view></view>
+            <text>{{item.score}}</text>
+          </view>
+        </block>
+        <view wx:if="{{!report.trend.length}}" class="empty-line">暂无趋势数据</view>
+      </view>
+
+      <view class="spacer-24"></view>
+      <view class="card card-pad">
+        <text class="section-title">评分分布</text>
+        <block wx:for="{{report.distribution}}" wx:key="label">
+          <view class="distribution-row">
+            <text>{{item.label}}</text>
+            <view class="trend-bar"><view class="distribution-fill" style="width: {{item.width}};"></view></view>
+            <text>{{item.count}} 天</text>
+          </view>
+        </block>
+      </view>
+
+      <view class="spacer-24"></view>
+      <view class="card card-pad">
+        <text class="section-title">三餐表现</text>
+        <view wx:if="{{!report.mealScores.length}}" class="empty-line">还没有足够的饮食记录</view>
+        <block wx:for="{{report.mealScores}}" wx:key="label">
+          <view class="meal-row">
+            <view>
+              <view class="item-title">{{item.label}} {{item.score}}</view>
+              <view class="item-meta">{{item.detail}}</view>
+            </view>
+          </view>
+        </block>
+      </view>
+
+      <view class="spacer-24"></view>
+      <view class="card card-pad">
+        <text class="section-title">AI 建议</text>
+        <block wx:for="{{report.suggestions}}" wx:key="index">
+          <view class="suggestion">{{item}}</view>
+        </block>
+      </view>
+
+      <view class="spacer-24"></view>
+      <view class="btn-row">
+        <view class="btn btn-outline" bindtap="goCalendar">日历记录</view>
+        <view class="btn" bindtap="goBody">身体数据</view>
+      </view>
+    </view>
+  </scroll-view>
+
+  <bottom-nav active="/pages/report/report" current="/pages/report/report" bind:change="onBottomNav" />
+</view>

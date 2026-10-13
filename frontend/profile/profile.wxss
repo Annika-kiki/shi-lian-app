@@ -1,0 +1,180 @@
+@import "../../styles/common.wxss";
+
+/* ============================================================
+   个人资料页（了解你的身体）
+   ============================================================ */
+
+/* ============ 顶部 ============ */
+.header {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+  min-height: 72rpx;
+  margin-bottom: 8rpx;
+}
+
+.back-btn {
+  width: 64rpx;
+  height: 64rpx;
+  flex: none;
+  background: var(--surface-high);
+  border-radius: 18rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 36rpx;
+  color: var(--ink-soft);
+}
+
+.header-title {
+  flex: 1;
+  font-size: 40rpx;
+  font-weight: 800;
+  color: var(--ink);
+  line-height: 1.2;
+}
+
+.header-subtitle {
+  flex: none;
+  color: var(--muted);
+  font-size: 26rpx;
+  font-weight: 600;
+}
+
+/* ============ 说明文字 ============ */
+.page-body > .muted {
+  display: block;
+  font-size: 24rpx;
+  color: var(--muted);
+  margin-bottom: 8rpx;
+}
+
+/* ============ 字段标题 ============ */
+.section-title {
+  display: block;
+  font-size: 28rpx;
+  font-weight: 700;
+  color: var(--ink-soft);
+  margin-bottom: 16rpx;
+  letter-spacing: 0;
+}
+
+/* ============ 输入框 ============ */
+.input-box,
+.input-like {
+  width: 100%;
+  min-height: 96rpx;
+  display: flex;
+  align-items: center;
+  box-sizing: border-box;
+  background: var(--surface);
+  color: var(--ink);
+  border: 1rpx solid var(--line);
+  border-radius: 20rpx;
+  padding: 0 28rpx;
+  font-size: 32rpx;
+  font-weight: 600;
+  box-shadow: none;
+}
+
+.input-box:focus {
+  border-color: var(--green);
+  box-shadow: 0 0 0 4rpx rgba(78, 157, 67, 0.14);
+}
+
+/* ============ 药丸（目标 / 性别） ============ */
+.pill-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16rpx;
+}
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 76rpx;
+  padding: 0 32rpx;
+  border-radius: 999rpx;
+  background: var(--surface);
+  color: var(--ink-soft);
+  border: 2rpx solid var(--line);
+  font-size: 28rpx;
+  font-weight: 600;
+  box-sizing: border-box;
+  transition: all 180ms ease;
+}
+
+.pill-active {
+  background: var(--green);
+  color: #fff;
+  border-color: var(--green);
+  box-shadow: 0 6rpx 16rpx rgba(78, 157, 67, 0.22);
+}
+
+.pill:active {
+  transform: scale(0.97);
+}
+
+/* ============ 性别按钮（两列） ============ */
+.btn-row {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20rpx;
+}
+
+.gender {
+  min-height: 96rpx;
+  border-radius: 20rpx;
+  background: var(--surface);
+  border: 1rpx solid var(--line);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 32rpx;
+  font-weight: 700;
+  color: var(--ink-soft);
+  box-shadow: none;
+  transition: all 180ms ease;
+}
+
+.gender.pill-active {
+  background: var(--green);
+  color: #fff;
+  border-color: var(--green);
+  box-shadow: 0 6rpx 16rpx rgba(78, 157, 67, 0.22);
+}
+
+/* ============ 两列布局（身高 / 体重） ============ */
+.grid-2 {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 24rpx;
+}
+
+/* ============ 主按钮 ============ */
+.btn {
+  width: 100%;
+  height: 100rpx;
+  border-radius: 999rpx;
+  background: linear-gradient(135deg, #4e9d43 0%, #347a35 100%);
+  color: #fff;
+  font-size: 32rpx;
+  font-weight: 800;
+  letter-spacing: 2rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 10rpx 24rpx rgba(78, 157, 67, 0.28);
+  box-sizing: border-box;
+  margin-top: 16rpx;
+}
+
+.btn:active {
+  transform: scale(0.98);
+  box-shadow: 0 4rpx 12rpx rgba(78, 157, 67, 0.2);
+}
+
+/* ============ 间距工具 ============ */
+.spacer-24 { height: 24rpx; }
+.spacer-32 { height: 32rpx; }
