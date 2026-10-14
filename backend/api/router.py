@@ -100,11 +100,22 @@ class SetIn(BaseModel): exercise_id: int; set_no: int = Field(ge=1); weight_kg: 
 class SetUpdateIn(BaseModel): weight_kg: float | None = Field(None, ge=0); reps: int | None = Field(None, ge=0); completed: bool | None = None
 
 @router.post("/auth/mock-login")
-def mock_login(body: LoginIn, db: Session = Depends(get_db)):
+async def mock_login(request: Request, db: Session = Depends(get_db)):
+    from fastapi.responses import JSONResponse
+    from starlette.concurrency import run_in_threadpool
+    from sqlalchemy.exc import SQLAlchemyError
+    from backend.services.mock_login import mock_login_payload
     if settings.app_env != "development":
-        raise HTTPException(404, "接口不存在")
-    openid = body.mock_openid or f"mock_{body.nickname}"
-    return issue_session(openid, db, body.nickname, body.avatar)
+        return JSONResponse(status_code=404, content={"code": -1, "message": "mock登录仅用于开发环境；请使用微信登录"})
+    if request.headers.get("content-type", "").split(";")[0].strip().lower() != "application/json":
+        return JSONResponse(status_code=400, content={"code": -1, "message": "Content-Type必须为application/json"})
+    try:
+        payload = await request.json()
+        return await run_in_threadpool(mock_login_payload, db, settings, payload)
+    except ValueError as exc:
+        return JSONResponse(status_code=400, content={"code": -1, "message": str(exc)})
+    except SQLAlchemyError:
+        return JSONResponse(status_code=503, content={"code": -1, "message": "登录暂时不可用，请稍后重试"})
 @router.post("/auth/wechat-login")
 def wechat_login(body: WechatLoginIn, db: Session = Depends(get_db)):
     if settings.auth_mode != "wechat_api": raise HTTPException(404, "接口不存在")

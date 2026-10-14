@@ -49,6 +49,12 @@ rate_limited_paths = {
 }
 
 
+def error_content(request: Request, code: int, message: str, data=None):
+    if request.url.path == "/api/auth/mock-login":
+        return {"code": -1, "message": message}
+    return {"code": code, "message": message, "data": data if data is not None else {}}
+
+
 @app.middleware("http")
 async def security_headers(request: Request, call_next):
     if request.url.path in rate_limited_paths:
@@ -61,16 +67,16 @@ async def security_headers(request: Request, call_next):
             return JSONResponse(
                 status_code=429,
                 headers={"Retry-After": "60", "Cache-Control": "no-store"},
-                content={"code": 429, "message": "请求过于频繁，请稍后重试", "data": {}},
+                content=error_content(request, 429, "请求过于频繁，请稍后重试"),
             )
         bucket.append(now)
     content_length = request.headers.get("content-length")
     if content_length:
         try:
             if int(content_length) > 1024 * 1024:
-                return JSONResponse(status_code=413, content={"code": 413, "message": "请求内容过大", "data": {}})
+                return JSONResponse(status_code=413, content=error_content(request, 413, "请求内容过大"))
         except ValueError:
-            return JSONResponse(status_code=400, content={"code": 400, "message": "Content-Length 无效", "data": {}})
+            return JSONResponse(status_code=400, content=error_content(request, 400, "Content-Length 无效"))
     response = await call_next(request)
     response.headers["X-Content-Type-Options"] = "nosniff"
     response.headers["X-Frame-Options"] = "DENY"
@@ -79,14 +85,14 @@ async def security_headers(request: Request, call_next):
     return response
 @app.exception_handler(HTTPException)
 async def http_errors(request: Request, exc: HTTPException):
-    return JSONResponse(status_code=exc.status_code, content={"code": exc.status_code, "message": str(exc.detail), "data": {}})
+    return JSONResponse(status_code=exc.status_code, content=error_content(request, exc.status_code, str(exc.detail)))
 @app.exception_handler(RequestValidationError)
 async def validation_errors(request: Request, exc: RequestValidationError):
-    return JSONResponse(status_code=422, content={"code": 422, "message": "请求参数校验失败", "data": {"errors": exc.errors()}})
+    return JSONResponse(status_code=422, content=error_content(request, 422, "请求参数校验失败", {"errors": exc.errors()}))
 @app.exception_handler(Exception)
 async def errors(request:Request, exc:Exception):
-    if hasattr(exc,"status_code"): return JSONResponse(status_code=exc.status_code,content={"code":exc.status_code,"message":str(exc.detail),"data":{}})
-    logging.exception("Unhandled API error"); return JSONResponse(status_code=500,content={"code":500,"message":"服务器内部错误","data":{}})
+    if hasattr(exc,"status_code"): return JSONResponse(status_code=exc.status_code,content=error_content(request, exc.status_code, str(exc.detail)))
+    logging.exception("Unhandled API error"); return JSONResponse(status_code=500,content=error_content(request, 500, "服务器内部错误"))
 from a2wsgi import WSGIMiddleware
 from backend.api.food import food_app
 app.mount("/api/food", WSGIMiddleware(food_app))
