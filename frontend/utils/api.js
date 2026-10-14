@@ -1,90 +1,92 @@
+const CLOUD_ENV_ID = "prod-d4gls6f9gaef2c320"
+const CLOUD_SERVICE = "flask-3xwi"
+const CLOUD_AUTH_TARGET = `${CLOUD_ENV_ID}/${CLOUD_SERVICE}`
 const { getUser, calculateNutritionTargets } = require("./user")
-const { getEnvVersion, getTransportConfig } = require("../config/env")
 let loginPromise = null
 let cloudInitPromise = null
+// Re-establish the session once per runtime; cached userId alone is never login.
+let sessionValidated = false
 const PRIVACY_AGREEMENT_VERSION = "2026-09-05"
 
+function getAccessToken() {
+  return wx.getStorageSync("cloudAuthTarget") === CLOUD_AUTH_TARGET
+    ? wx.getStorageSync("accessToken") || ""
+    : ""
+}
+
+function initCloud() {
+  if (!wx.cloud || typeof wx.cloud.callContainer !== "function") {
+    return Promise.reject(new Error("当前基础库不支持云托管，请更新微信开发者工具或微信版本"))
+  }
+  if (!cloudInitPromise) {
+    cloudInitPromise = Promise.resolve().then(() => wx.cloud.init({ env: CLOUD_ENV_ID, traceUser: false })).catch((error) => {
+      cloudInitPromise = null
+      throw error
+    })
+  }
+  return cloudInitPromise
+}
+
 function request(path, options = {}) {
-  const accessToken = wx.getStorageSync("accessToken")
-  if (!accessToken && !path.startsWith("/api/auth/") && path !== "/health") {
+  const accessToken = getAccessToken()
+  if ((!accessToken || !sessionValidated) && !path.startsWith("/api/auth/") && path !== "/health") {
     return ensureLogin(getUser()).then(() => request(path, options))
   }
   const headers = {
     "content-type": "application/json",
-    ...(options.header || {})
+    ...(options.header || {}),
+    "X-WX-SERVICE": CLOUD_SERVICE
   }
+  Object.keys(headers).forEach((key) => {
+    if (["authorization", "x-user-id"].includes(key.toLowerCase())) delete headers[key]
+  })
+  if (accessToken && !path.startsWith("/api/auth/")) headers.Authorization = `Bearer ${accessToken}`
 
-  if (accessToken) headers.Authorization = `Bearer ${accessToken}`
-
-  return new Promise((resolve, reject) => {
-    let transport
-    try { transport = getTransportConfig() } catch (error) { reject(error); return }
-    const handleSuccess = (res) => {
-      const body = res.data || {}
-      if (res.statusCode >= 200 && res.statusCode < 300 && body.code === 0) {
-        resolve(body.data)
-        return
-      }
-      const error = new Error(body.message || `请求失败 ${res.statusCode}`)
-      error.statusCode = res.statusCode
-      reject(error)
+  return initCloud().then(() => wx.cloud.callContainer({
+    config: { env: CLOUD_ENV_ID },
+    path,
+    method: options.method || "GET",
+    data: options.data || {},
+    header: headers
+  })).then((res) => {
+    const body = res.data || {}
+    if (res.statusCode >= 200 && res.statusCode < 300 && body.code === 0) {
+      return body.data
     }
-    if (transport.type === "cloud") {
-      if (!wx.cloud || typeof wx.cloud.callContainer !== "function") {
-        reject(new Error("当前微信版本不支持云托管调用，请升级微信后重试"))
-        return
-      }
-      if (!cloudInitPromise) {
-        try { cloudInitPromise = Promise.resolve(wx.cloud.init({ traceUser: false })) }
-        catch (error) { cloudInitPromise = Promise.reject(error) }
-      }
-      cloudInitPromise.then(() => wx.cloud.callContainer({
-        config: { env: transport.env }, path,
-        header: { ...headers, "X-WX-SERVICE": transport.service },
-        method: options.method || "GET", data: options.data || {}
-      })).then(handleSuccess, reject)
-      return
-    }
-    wx.request({
-      url: `${transport.base}${path}`,
-      method: options.method || "GET",
-      data: options.data || {},
-      header: headers,
-      success: handleSuccess,
-      fail: reject
-    })
+    const error = new Error(body.message || `请求失败 ${res.statusCode}`)
+    error.statusCode = res.statusCode
+    throw error
   }).catch((error) => {
-    const canRetry = error.statusCode === 401 && options.authRetry !== false && !path.startsWith("/api/auth/")
-    if (!canRetry) throw error
-    wx.removeStorageSync("accessToken")
+    if (error.statusCode !== 401 || path.startsWith("/api/auth/") || path === "/health") throw error
+    if (getAccessToken() === accessToken) {
+      sessionValidated = false
+      wx.removeStorageSync("accessToken")
+    }
+    if (options.authRetry === false) throw error
     return ensureLogin(getUser()).then(() => request(path, { ...options, authRetry: false }))
   })
 }
 
 function ensureLogin(user = {}) {
-  const cachedToken = wx.getStorageSync("accessToken")
-  if (cachedToken) return Promise.resolve(cachedToken)
+  // Keep the existing user ID return value for compatibility with your pages.
+  // Requests authenticate with the server-issued token, never X-User-Id.
+  if (sessionValidated && getAccessToken() && wx.getStorageSync("userId")) {
+    return Promise.resolve(wx.getStorageSync("userId"))
+  }
   if (loginPromise) return loginPromise
   if (wx.getStorageSync("privacyAgreedVersion") !== PRIVACY_AGREEMENT_VERSION) {
     return Promise.reject(new Error("请先阅读并同意用户协议和隐私政策"))
   }
-  wx.removeStorageSync("userId")
-
-  const nickname = user.name || user.nickName || "练食记用户"
-  const loginWithWechat = () => new Promise((resolve, reject) => wx.login({
-    success: (result) => result.code ? resolve(result.code) : reject(new Error("微信登录未返回有效凭证")),
-    fail: reject
-  })).then((code) => request("/api/auth/wechat-login", { method: "POST", data: { code } }))
-  const loginForDevelopment = () => request("/api/auth/mock-login", {
+  loginPromise = request("/api/auth/cloud-login", {
     method: "POST",
-    data: { nickname, avatar: user.avatar || user.avatarUrl || "", mock_openid: `mock_${nickname}` }
-  })
-  const loginRequest = getEnvVersion() === "develop"
-    ? loginWithWechat().catch((error) => error.statusCode === 501 ? loginForDevelopment() : Promise.reject(error))
-    : request("/api/auth/cloud-login", { method: "POST" })
-  loginPromise = loginRequest.then((data) => {
+    data: {}
+  }).then((data) => {
+    if (!data || !data.access_token || !data.user_id) throw new Error("云托管登录未返回有效会话")
     wx.setStorageSync("accessToken", data.access_token)
-    return data.access_token
+    wx.setStorageSync("userId", data.user_id)
+    wx.setStorageSync("cloudAuthTarget", CLOUD_AUTH_TARGET)
+    sessionValidated = true
+    return data.user_id
   }).finally(() => { loginPromise = null })
   return loginPromise
 }
