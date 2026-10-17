@@ -4,13 +4,11 @@
     <!-- 顶部问候 -->
     <view class="header home-header">
       <view>
-        <text class="header-subtitle">{{summary.date}}</text>
         <view class="header-title">{{summary.greeting}}</view>
       </view>
-      <view class="header-bell" aria-hidden="true"></view>
     </view>
 
-    <!-- 今日摄入热量卡片（圆环版） -->
+    <!-- 今日摄入热量卡片 -->
     <view class="card card-pad overview-card">
       <view class="overview-top">
         <view class="overview-copy">
@@ -48,7 +46,7 @@
       </view>
     </view>
 
-    <!-- 两个操作按钮 -->
+    <!-- 操作按钮 -->
     <view class="btn-row">
       <view class="btn btn-outline home-action" bindtap="goFood">
         <text class="action-symbol">＋</text>记录一餐
@@ -84,5 +82,28 @@
 
   </view>
 
-  <bottom-nav active="/pages/home/home" current="/pages/home/home" bind:change="onBottomNav" />
+  <!-- 原生防遮挡底部导航栏（使用文字图标或emoji，绝对不被吞） -->
+  <view class="custom-bottom-nav">
+    <view class="nav-item active" bindtap="goFood">
+      <view class="nav-icon">🏠</view>
+      <view class="nav-text">首页</view>
+    </view>
+    <view class="nav-item" bindtap="goFood">
+      <view class="nav-icon">🍴</view>
+      <view class="nav-text">饮食</view>
+    </view>
+    <view class="nav-item" bindtap="goTraining">
+      <view class="nav-icon">🏋️</view>
+      <view class="nav-text">训练</view>
+    </view>
+    <view class="nav-item" bindtap="goFood">
+      <view class="nav-icon">📝</view>
+      <view class="nav-text">记录</view>
+    </view>
+    <view class="nav-item" bindtap="goFood">
+      <view class="nav-icon">👤</view>
+      <view class="nav-text">我的</view>
+    </view>
+  </view>
+
 </view>
