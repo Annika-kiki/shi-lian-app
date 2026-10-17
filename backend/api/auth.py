@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Request
+from fastapi import APIRouter
 from pydantic import BaseModel
 
 router = APIRouter()
@@ -10,7 +10,6 @@ class LoginRequest(BaseModel):
 
 @router.post("/mock-login")
 async def mock_login(req: LoginRequest):
-    # 为了让你立刻测通，这里直接返回写死的 user_id = 1
     return {
         "code": 0,
         "data": {
