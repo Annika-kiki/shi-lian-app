@@ -67,6 +67,14 @@
       {
         "type": "file",
         "value": "shi_lian.db"
+      },
+      {
+        "type": "folder",
+        "value": "components/navigation-bar"
+      },
+      {
+        "type": "folder",
+        "value": "styles/styles"
       }
     ],
     "include": []

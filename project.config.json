@@ -1,0 +1,87 @@
+{
+  "setting": {
+    "urlCheck": false,
+    "es6": true,
+    "postcss": true,
+    "minified": true,
+    "uglifyFileName": false,
+    "enhance": true,
+    "packNpmRelationList": [],
+    "babelSetting": {
+      "ignore": [],
+      "disablePlugins": [],
+      "outputPath": ""
+    },
+    "useCompilerPlugins": false,
+    "minifyWXML": true,
+    "compileWorklet": false,
+    "uploadWithSourceMap": true,
+    "packNpmManually": false,
+    "minifyWXSS": true,
+    "localPlugins": false,
+    "disableUseStrict": false,
+    "condition": false,
+    "swc": false,
+    "disableSWC": true
+  },
+  "compileType": "miniprogram",
+  "simulatorPluginLibVersion": {},
+  "packOptions": {
+    "ignore": [
+      {
+        "type": "folder",
+        "value": "frontend"
+      },
+      {
+        "type": "folder",
+        "value": "pages/pages"
+      },
+      {
+        "type": "folder",
+        "value": "utils/utils"
+      },
+      {
+        "type": "folder",
+        "value": "components/components"
+      },
+      {
+        "type": "folder",
+        "value": "navigation-bar"
+      },
+      {
+        "type": "folder",
+        "value": "bottom-nav"
+      },
+      {
+        "type": "folder",
+        "value": "images/images"
+      },
+      {
+        "type": "folder",
+        "value": "assets"
+      },
+      {
+        "type": "file",
+        "value": ".eslintrc.js"
+      },
+      {
+        "type": "file",
+        "value": "shi_lian.db"
+      },
+      {
+        "type": "folder",
+        "value": "components/navigation-bar"
+      },
+      {
+        "type": "folder",
+        "value": "styles/styles"
+      }
+    ],
+    "include": []
+  },
+  "appid": "wx26dfe00bf5f3258b",
+  "editorSetting": {},
+  "libVersion": "3.17.1",
+  "miniprogramRoot": "releases/miniprogram-2/",
+  "projectname": "shilian-integration"
+}

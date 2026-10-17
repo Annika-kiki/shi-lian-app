@@ -34,5 +34,6 @@ node scripts/test_upload_guards.js
 node scripts/test_frontend_auth.js
 python3 scripts/check_frontend_contracts.py
 python3 scripts/check_package_size.py
+python3 scripts/check_release_package.py
 
 echo "All repository checks passed."

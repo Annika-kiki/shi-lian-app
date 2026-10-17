@@ -1,5 +1,6 @@
-Source: /Users/wangjiahui/Downloads/miniprogram-2
-Snapshot date: 2026-10-17
+Baseline: 6d66ce731e89ccde9ce1dbeb8e1723adb21363fe
+Integrated teammate homepage: 8c30d1e
+Integration date: 2026-10-17
 Format: path | bytes | SHA-256
 
 app.js | 308 | 2cee4259a119d5541521a699c76b8628115e4b1f5a7434228f0571d69c4627f0
@@ -58,10 +59,10 @@ pages/food/result.js | 11959 | 528ccbf3311bc1d6ac9c2811a5f7ae60f82616cd9b3b42e85
 pages/food/result.json | 90 | 92455f867b5c16bcc5c2c1aea3b58050d96d6aecbac415f5406c20329708ddf8
 pages/food/result.wxml | 1979 | 4204a6e50e06df81192429fde627c43b903612f92358f7fedb0cc0a1014335ab
 pages/food/result.wxss | 2496 | ea0f1af0112e27c82e65685ca31adc4f7696667fefe7f173077596e01a74c449
-pages/home/home.js | 8301 | 0f89c90c435689c50f1db6d41c06a2b62f9fdcbe2996f98e050ce155703ec953
+pages/home/home.js | 8104 | 41b682f381b65043cd6f58aa5285416d1bdf3240838b83abed518495c54e97ee
 pages/home/home.json | 90 | 92455f867b5c16bcc5c2c1aea3b58050d96d6aecbac415f5406c20329708ddf8
-pages/home/home.wxml | 3395 | 4e771d923267e3e42ccccf6e49a8b1a27337b96faf899e3695447c6809a8c0db
-pages/home/home.wxss | 5364 | 60735cb594482ff0a7e324bf391d117e98996e20fc3de779d0377d566886ec31
+pages/home/home.wxml | 4218 | ace31f9b4c764f15d892b4e38e04c6b0e29c77710b3be62edcd70af354315d6a
+pages/home/home.wxss | 3850 | 8e85f7f98e71a1887546b4119260d3cbb09e4af47fae3f7a15a5aa3377023095
 pages/index/index.js | 1132 | e8758fccf8c8c6d4eb94c6f110f11c8b5a26277fe5c72d666d3a2467c4e89a6d
 pages/index/index.json | 31 | 39ca794ddee7c88a096a6ec7a25c0018e0d79751af9586eedf9dfbd1f437234a
 pages/index/index.wxml | 1263 | 8f4277f537260bfcee2a411a96afe14c3637afa2a25cdd88cb7988fb234eeb8f
@@ -102,11 +103,11 @@ pages/training/record.js | 3597 | 9dfb8cc13bd29fab990133090287c2cab057b7289a164a
 pages/training/record.json | 90 | 92455f867b5c16bcc5c2c1aea3b58050d96d6aecbac415f5406c20329708ddf8
 pages/training/record.wxml | 1687 | dc8c9bc8c89b95f939499376c5840b4e6fc49bb35292c5a1d7959582bfa098a3
 pages/training/record.wxss | 781 | bd6655be75f17990f366ee9219aa3b8aa467bc2cd87e7c606cd31109568faec4
-project.config.json | 1539 | 00b42aeac91acbf6ed200ef45806a3aba76502b461968a17f092262457ad7427
+project.config.json | 1703 | b6ec047274b25e6a81445079bee06832bbfd4150bc83c9386e43ccc1e073a383
 sitemap.json | 207 | b83f6058825bf604a5b791204a2c78f6050eb00b20eb92d7318b3addb6f36e05
 styles/common.wxss | 5533 | bf0f188de2506d6e2d0e2bf623f4d8a9b6ebb75e6a76a419dc5c8dc1457d4647
 styles/styles/common.wxss | 2877 | b95e4b59edbd76aa475f432753888a7340eb51055d3242025272f11df688bf96
-utils/api.js | 12844 | 0a8790e164a4ffa5827e9f5aca0034dc8a8cd64e005051733813b761b86979fd
+utils/api.js | 15084 | 9c1605d1b39942c15a323e4146d7711a930bedb43b874227ccb5169829bfb9a6
 utils/meal.js | 2709 | d7ad30ff24894a2bc73fae958da02f6e90aabfdcc18eb5e55031ada6b60914ec
 utils/mock.js | 11089 | 74b32d3406b61053fb00604afdafa91bee307ea86f9b5db2e0f9ba2d576f4c5d
 utils/navigation.js | 460 | a8fa195bd0f2525e5726b80d6a1fd9d7f116bdde63b9af5f7fe30dbafa99eae8

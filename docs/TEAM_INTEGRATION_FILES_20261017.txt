@@ -1,0 +1,19 @@
+Repository: Annika-kiki/shi-lian-app
+Branch: codex/team-cloud-integration-20261017
+Base: 6d66ce731e89ccde9ce1dbeb8e1723adb21363fe
+User-approved commit and push scope.
+
+docs/TEAM_INTEGRATION_20261017.md
+docs/TEAM_INTEGRATION_FILES_20261017.txt
+project.config.json
+releases/README.md
+releases/miniprogram-2-manifest.txt
+releases/miniprogram-2/pages/home/home.js
+releases/miniprogram-2/pages/home/home.wxml
+releases/miniprogram-2/pages/home/home.wxss
+releases/miniprogram-2/project.config.json
+releases/miniprogram-2/utils/api.js
+scripts/check_release_package.py
+scripts/test_frontend_auth.js
+scripts/test_release_integration.cjs
+scripts/verify.sh

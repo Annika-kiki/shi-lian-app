@@ -365,7 +365,44 @@ function recordWeight(weight) {
   }))
 }
 
+let foodParseUnavailable = false
+
+function parseFoodFromIngredients(text) {
+  const input = String(text || "").trim().replace(/^(早餐|午餐|晚餐|加餐)\s*/, "")
+  const match = input.match(/^(?:(\d+(?:\.\d+)?)\s*(?:g|克)\s*(.+)|(.+?)\s*(\d+(?:\.\d+)?)\s*(?:g|克))$/i)
+  if (!match) return Promise.reject(new Error("请输入一种食物及克数，如鸡胸肉150g"))
+  const name = String(match[2] || match[3]).trim()
+  const grams = Number(match[1] || match[4])
+  if (!Number.isFinite(grams) || grams <= 0 || grams > 3000) return Promise.reject(new Error("克数须大于0且不超过3000g"))
+  return getIngredients(name).then(items => {
+    const item = (items || []).find(row => row.name === name || String(row.aliases || "").split(/[,，;；]/).map(s => s.trim()).includes(name))
+    if (!item) throw new Error("食材库暂未收录该食物，请换用已收录的食材名称")
+    const values = [item.calories_kcal_per_100g, item.protein_g, item.carb_g, item.fat_g]
+    if (!Number.isInteger(Number(item.id)) || Number(item.id) <= 0 || values.some(value => value == null || !Number.isFinite(Number(value)) || Number(value) < 0)) throw new Error("该食材营养资料不完整，暂不能记录")
+    const scale = value => Math.round(Number(value) * grams / 100 * 10) / 10
+    return { matched: true, source: "ingredient_catalog", ingredient_id: Number(item.id), food_name: item.name, quantity_g: grams, kcal: scale(values[0]), protein_g: scale(values[1]), carbs_g: scale(values[2]), fat_g: scale(values[3]) }
+  })
+}
+
+function parseFood(text) {
+  if (foodParseUnavailable) return parseFoodFromIngredients(text)
+  return request("/api/food/parse", { method: "POST", data: { text } }).catch(error => {
+    if (error.statusCode !== 404) throw error
+    foodParseUnavailable = true
+    return parseFoodFromIngredients(text)
+  })
+}
+
+function quickLogFull(data) {
+  if (Number.isInteger(data.ingredient_id) && data.ingredient_id > 0) {
+    return request("/api/meals", { method: "POST", data: { meal_type: data.meal_type, name: data.food_name, ingredients: [{ ingredient_id: data.ingredient_id, amount_g: data.quantity_g }] } })
+  }
+  return request("/api/quick-log", { method: "POST", data })
+}
+
 module.exports = {
+  parseFood,
+  quickLogFull,
   setPrivacyConsent,
   ensureLogin,
   saveProfile,
