@@ -1,0 +1,14 @@
+<view class="page">
+  <view class="header">
+    <view class="icon-btn" bindtap="goBack">←</view>
+    <view class="header-title">用户协议</view>
+    <view class="icon-btn"></view>
+  </view>
+  <view class="section">
+    <view class="paragraph">食练周期首版仅面向14周岁以上用户。使用本服务前，请阅读并理解本协议及隐私政策。</view>
+    <view class="paragraph">本服务用于记录饮食、体重和训练，并提供一般性的营养与运动估算。相关内容不构成医疗诊断、治疗、处方或效果承诺。</view>
+    <view class="paragraph">用户应根据自身健康状况合理使用本服务，不应提交违法内容、冒用他人身份或干扰服务运行。如有疾病、伤病、过敏、孕期或其他特殊情况，请先咨询专业人员。</view>
+    <view class="paragraph">用户应妥善保管微信账号。发现异常访问时，应停止使用并通过运营者公布的渠道反馈。</view>
+    <view class="paragraph">因维护、安全事件或不可抗力需要暂停服务时，我们会尽力减少影响并恢复服务。运营者：王嘉会。联系邮箱：2797825558@qq.com。本协议自小程序首次正式发布之日起生效。</view>
+  </view>
+</view>

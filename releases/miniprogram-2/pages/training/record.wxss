@@ -1,0 +1,48 @@
+@import "../../styles/common.wxss";
+
+.set-row {
+  align-items: center;
+  gap: 14rpx;
+  margin-bottom: 18rpx;
+}
+
+.set-index,
+.set-done {
+  width: 84rpx;
+  height: 84rpx;
+  border-radius: 50%;
+  background: var(--green-soft);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 30rpx;
+  flex: none;
+}
+
+.set-box {
+  flex: 1;
+  height: 84rpx;
+  border: 2rpx solid var(--line);
+  border-radius: 26rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--surface);
+  font-size: 32rpx;
+  color: var(--ink);
+}
+
+.set-done {
+  background: var(--green-soft);
+}
+
+.done {
+  background: var(--green);
+  color: #fff;
+}
+
+.add-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}

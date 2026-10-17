@@ -1,0 +1,151 @@
+@import "../../styles/common.wxss";
+
+.page {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.page-scroll {
+  flex: 1;
+  min-height: 0;
+}
+
+.back-btn {
+  width: auto;
+  min-width: 96rpx;
+  padding: 0 20rpx;
+  justify-content: flex-start;
+  font-size: 30rpx;
+  color: var(--green-dark);
+}
+
+.list-item {
+  border-left: 10rpx solid var(--green);
+  padding-left: 24rpx;
+}
+
+.list-item .item-title {
+  font-size: 29rpx;
+}
+
+.refresh-btn {
+  color: var(--green-dark);
+  font-size: 36rpx;
+}
+
+.result-summary {
+  padding: 4rpx 2rpx 10rpx;
+  color: var(--muted);
+  font-size: 24rpx;
+}
+
+.empty-state {
+  padding: 58rpx 28rpx;
+  text-align: center;
+  background: var(--surface);
+  border: 1rpx solid var(--line);
+  border-radius: 18rpx;
+}
+
+.empty-title {
+  margin-bottom: 12rpx;
+  color: var(--ink);
+  font-size: 30rpx;
+  font-weight: 700;
+}
+
+.empty-action {
+  margin-top: 28rpx;
+}
+
+.recipe-card {
+  border-left: 0;
+  padding: 18rpx;
+  border-radius: 16rpx;
+}
+
+.recipe-main {
+  display: grid;
+  grid-template-columns: 110rpx minmax(0, 1fr) auto;
+  gap: 14rpx;
+  align-items: center;
+  margin-bottom: 14rpx;
+}
+
+.recipe-plate {
+  position: relative;
+  width: 106rpx;
+  height: 106rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 5rpx solid #dfe9dc;
+  border-radius: 50%;
+  background: #fff;
+  box-sizing: border-box;
+}
+
+.recipe-plate::before {
+  position: absolute;
+  content: "";
+  width: 76rpx;
+  height: 76rpx;
+  border-radius: 50%;
+  background: #eff5eb;
+}
+
+.recipe-food {
+  position: relative;
+  z-index: 1;
+  width: 30rpx;
+  height: 30rpx;
+  margin-left: -14rpx;
+  border-radius: 50%;
+  background: #e8c65c;
+}
+
+.recipe-leaf {
+  position: relative;
+  z-index: 1;
+  width: 22rpx;
+  height: 38rpx;
+  margin-left: 6rpx;
+  border-radius: 85% 10% 85% 10%;
+  background: #72ad5e;
+  transform: rotate(35deg);
+}
+
+.recipe-main .item-meta:last-child {
+  max-width: 350rpx;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.recipe-kcal {
+  align-self: start;
+  color: var(--ink);
+  font-size: 30rpx;
+  line-height: 1;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.recipe-kcal text {
+  margin-left: 4rpx;
+  color: var(--muted);
+  font-size: 18rpx;
+  font-weight: 500;
+}
+
+.recipe-card .pill-row {
+  gap: 8rpx;
+}
+
+.recipe-card .pill {
+  min-height: 46rpx;
+  padding: 0 14rpx;
+  font-size: 21rpx;
+}

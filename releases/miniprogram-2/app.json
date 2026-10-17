@@ -1,0 +1,28 @@
+{
+  "pages": [
+    "pages/index/index",
+    "pages/profile/profile",
+    "pages/home/home",
+    "pages/food/home",
+    "pages/food/input",
+    "pages/food/result",
+    "pages/food/detail",
+    "pages/training/home",
+    "pages/training/list",
+    "pages/training/detail",
+    "pages/training/record",
+    "pages/report/report",
+    "pages/calendar/calendar",
+    "pages/body/body",
+    "pages/me/me",
+    "pages/privacy/privacy",
+    "pages/terms/terms"
+  ],
+  "window": {
+    "navigationBarTextStyle": "black",
+    "navigationStyle": "custom"
+  },
+  "style": "v2",
+  "sitemapLocation": "sitemap.json",
+  "lazyCodeLoading": "requiredComponents"
+}

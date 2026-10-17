@@ -1,0 +1,29 @@
+<view class="page">
+  <view class="page-body">
+    <view class="brand">
+      <view class="logo"><text class="logo-leaf">食</text></view>
+      <text class="brand-title">食练周期</text>
+      <text class="brand-subtitle">记录每一次训练，吃好每一餐</text>
+    </view>
+
+    <view class="hero card">
+      <view class="hero-orbit">
+        <view class="hero-dot dot-one"></view>
+        <view class="hero-dot dot-two"></view>
+        <view class="hero-figure">练</view>
+      </view>
+      <view class="hero-copy">今天也要好好照顾自己</view>
+    </view>
+
+    <view class="btn" bindtap="goProfile">微信一键登录</view>
+    <view class="spacer-24"></view>
+    <view class="btn btn-outline" bindtap="skip">登录后进入首页</view>
+
+    <view class="agreement">
+      <checkbox-group bindchange="onAgreementChange">
+        <label class="agreement-choice"><checkbox value="agreed" checked="{{agreed}}" color="#4e9d43" disabled="{{loggingIn}}" />我已阅读并同意</label>
+      </checkbox-group>
+      <view class="agreement-links"><text class="agreement-link" bindtap="viewTerms">《用户服务协议》</text>与<text class="agreement-link" bindtap="viewPrivacy">《隐私政策》</text></view>
+    </view>
+  </view>
+</view>

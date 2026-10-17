@@ -1,0 +1,12 @@
+<view class="page">
+  <view class="header"><view class="icon-btn" bindtap="goBack">←</view><view class="header-title">隐私政策</view><view class="icon-btn"></view></view>
+  <view class="section">
+    <view class="paragraph">请先阅读本政策。登录页的同意选项默认不勾选；你可选择不勾选并退出，阅读本页面不会发起登录或提交个人资料。</view>
+    <view class="paragraph">同意并主动点击登录后，食练周期通过微信云托管获取微信账号标识以建立会话，并在本地保存会话令牌，用于识别账号及保存你的记录。</view>
+    <view class="paragraph">我们处理你主动提交的昵称、性别、年龄、身高、体重、目标及饮食和训练记录，用于个人档案、一般性营养目标计算、记录和趋势展示。当前版本不调用微信头像昵称授权接口；已有本地头像仍仅在本地展示。</view>
+    <view class="paragraph">资料经微信云托管服务传输并存储于服务端；本地也保存你的档案用于展示。我们不出售你的个人信息。</view>
+    <view class="paragraph">你可在个人档案页面查看和修改资料。如需删除账号、记录或就个人信息处理提出请求，请联系运营者：王嘉会，邮箱：2797825558@qq.com。个人信息仅在提供服务所需期间保存；停止服务或不再需要时按适用要求处理。</view>
+    <view class="paragraph">本服务面向14周岁以上用户。相关营养与运动估算不构成医疗诊断或治疗建议。</view>
+    <view class="paragraph">更新日期：2026年10月16日。后台《用户隐私保护指引》应与本政策和实际处理行为保持一致。</view>
+  </view>
+</view>

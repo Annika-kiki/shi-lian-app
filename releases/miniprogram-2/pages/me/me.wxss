@@ -1,0 +1,75 @@
+@import "../../styles/common.wxss";
+
+.profile-card {
+  display: flex;
+  align-items: center;
+  gap: 26rpx;
+  border: 0;
+  background: var(--mint);
+  box-shadow: none;
+}
+
+.avatar {
+  width: 124rpx;
+  height: 124rpx;
+  border-radius: 38rpx;
+  background: var(--green);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 48rpx;
+  font-weight: 800;
+  box-shadow: 0 12rpx 24rpx rgba(56, 142, 60, 0.2);
+}
+
+.profile-main {
+  flex: 1;
+}
+
+.profile-arrow {
+  font-size: 52rpx;
+  color: var(--green-dark);
+}
+
+.menu {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 30rpx;
+  min-height: 84rpx;
+}
+
+.profile-card {
+  background: var(--green-soft);
+}
+
+.avatar {
+  background: var(--green-dark);
+}
+
+.menu {
+  background: var(--surface);
+}
+
+.profile-card {
+  min-height: 156rpx;
+  background: var(--surface);
+  border: 1rpx solid var(--line);
+  box-shadow: 0 4rpx 14rpx var(--shadow);
+}
+
+.avatar {
+  width: 104rpx;
+  height: 104rpx;
+  border-radius: 50%;
+  background: var(--green-soft);
+  color: var(--green-dark);
+  box-shadow: none;
+}
+
+.menu {
+  min-height: 76rpx;
+  border-radius: 14rpx;
+  box-shadow: none;
+}

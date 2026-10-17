@@ -1,0 +1,64 @@
+@import "../../styles/common.wxss";
+
+.page {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.page-scroll {
+  flex: 1;
+  min-height: 0;
+}
+
+.input-box {
+  width: 100%;
+  height: 98rpx;
+  border: 2rpx solid var(--line);
+  border-radius: 26rpx;
+  padding: 0 30rpx;
+  box-sizing: border-box;
+  font-size: 30rpx;
+  background: var(--surface);
+  box-shadow: inset 0 0 0 2rpx rgba(56, 142, 60, 0.025);
+}
+
+.chip {
+  gap: 10rpx;
+}
+
+.chip-x {
+  font-size: 24rpx;
+  color: var(--muted);
+}
+
+.chip {
+  background: var(--green-soft);
+  color: var(--green-dark);
+  min-height: 52rpx;
+  border-radius: 999rpx;
+}
+
+.input-box {
+  height: 82rpx;
+  padding: 0 22rpx;
+  border-width: 1rpx;
+  border-radius: 14rpx;
+  background: var(--surface-low);
+  font-size: 26rpx;
+}
+
+.chip-x {
+  color: var(--muted);
+}
+
+.page-body > .card.muted {
+  color: var(--muted);
+  font-size: 24rpx;
+  line-height: 1.5;
+}
+
+.page-body > .btn:last-of-type {
+  margin-bottom: 12rpx;
+}

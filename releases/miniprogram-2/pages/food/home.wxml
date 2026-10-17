@@ -1,0 +1,69 @@
+<view class="page">
+  <view class="page-body">
+    <view class="header">
+      <view class="header-title">饮食</view>
+      <view class="icon-btn food-calendar" bindtap="goCalendar">▦</view>
+    </view>
+
+    <view class="card card-pad intake-card">
+      <view class="intake-top">
+        <view>
+          <view class="muted">今日摄入热量</view>
+          <view class="item-title intake-total">{{totalText}} <text class="muted">/ {{targetText}} kcal</text></view>
+        </view>
+        <view class="remain-total">{{remain}}<text>kcal 剩余</text></view>
+      </view>
+      <view class="bar intake-bar"><view class="fill" style="width: {{intakePercent}};"></view></view>
+      <view class="row-between intake-foot"><text>目标 {{targetText}} kcal</text><text>{{intakePercent}}</text></view>
+    </view>
+
+    <view class="spacer-24"></view>
+    <view class="card card-pad analysis-card">
+      <view class="row-between">
+        <view>
+          <view class="muted">饮食评分</view>
+          <view class="item-title">{{dietScore}} / 100</view>
+        </view>
+        <view class="analysis-mark">评分</view>
+      </view>
+      <view class="item-meta">{{insightText}}</view>
+    </view>
+
+    <view class="spacer-24"></view>
+    <view class="card card-pad">
+      <view class="row-between"><view class="section-title">快速记录</view><text class="muted">饮食或运动</text></view>
+      <input class="quick-input" value="{{quickInput}}" bindinput="onQuickInput" confirm-type="done" bindconfirm="saveQuickLog" placeholder="输入食物名称或热量" />
+      <view class="spacer-24"></view>
+      <view class="btn btn-outline" bindtap="saveQuickLog">{{quickSaving ? "记录中..." : "记录"}}</view>
+    </view>
+
+    <view class="spacer-24"></view>
+    <view class="btn btn-outline generate-entry" bindtap="goInput">
+      <view class="generate-mark">＋</view>
+      <view class="generate-copy"><text>用现有食材生成一餐</text><text>按你的目标搭配，快速出餐</text></view>
+      <text class="generate-arrow">›</text>
+    </view>
+
+    <view class="spacer-24"></view>
+    <view class="row-between">
+      <text class="section-title">今日饮食</text>
+      <text class="section-title" bindtap="goInput">+ 添加</text>
+    </view>
+
+    <view class="list">
+      <block wx:for="{{meals}}" wx:key="key">
+        <view class="list-item" data-index="{{index}}" bindtap="goRecipe">
+          <view class="row-between">
+            <view>
+              <view class="item-title">{{item.label}}</view>
+              <view class="item-meta">{{item.detail}}</view>
+            </view>
+            <view class="item-title meal-status">{{item.kcal}}<text wx:if="{{item.recorded}}"> kcal</text><text wx:else class="meal-add">＋</text></view>
+          </view>
+        </view>
+      </block>
+    </view>
+  </view>
+
+  <bottom-nav active="/pages/food/home" current="/pages/food/home" bind:change="onBottomNav" />
+</view>
