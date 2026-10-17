@@ -4,6 +4,7 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from backend.api.router import router
+from backend.api import auth  # <--- 新增导入 auth
 from backend.config.settings import settings
 from backend.database.seed import init_db
 
@@ -38,8 +39,11 @@ async def errors(request:Request, exc:Exception):
     logging.exception("Unhandled API error")
     return JSONResponse(status_code=500,content={"code":500,"message":"服务器内部错误","data":{}})
 
-# 挂载总路由
+# 挂载原有的路由
 app.include_router(router)
+
+# 强制挂载新建的登录路由，加上 /api 前缀（因为前端请求的是 /api/auth/mock-login）
+app.include_router(auth.router, prefix="/api/auth", tags=["auth"])
 
 @app.get("/health")
 def health(): 
